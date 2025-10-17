@@ -1,0 +1,136 @@
+name: Performance Optimized Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install performance toolchain
+      run: |
+        sudo apt-get update
+        # 安装系统最新Clang/LLVM（性能最好）
+        sudo apt-get install -y clang lld llvm build-essential libncurses-dev libssl-dev bc flex bison libelf-dev dwarves python3 git
+        
+        # 安装最新GCC交叉编译工具链
+        sudo apt-get install -y gcc-11-aarch64-linux-gnu g++-11-aarch64-linux-gnu
+        sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-11 100
+
+    - name: Configure kernel for performance
+      run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
+        
+        # 使用Clang作为主要编译器（性能更好）
+        export CC=clang
+        export LD=ld.lld
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        mkdir -p out
+        
+        # 使用默认配置
+        cp arch/arm64/configs/alioth_defconfig out/.config
+        
+        # 性能优化配置
+        {
+          echo "# 压缩功能"
+          echo "CONFIG_ZSTD_COMPRESS=y"
+          echo "CONFIG_ZSTD_DECOMPRESS=y"
+          echo "CONFIG_KERNEL_ZSTD=y"
+          
+          echo "# 内存管理"
+          echo "CONFIG_ZRAM=y"
+          echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y"
+          echo "CONFIG_SWAP=y"
+          echo "CONFIG_CGROUP_FREEZER=y"
+          
+          echo "# 调试功能"
+          echo "CONFIG_DEBUG_FS=y"
+          
+          echo "# 修复VDSO错误"
+          echo "CONFIG_VDSO=y"
+          echo "CONFIG_ARM64_VDSO=y"
+          echo "CONFIG_COMPAT_VDSO=y"
+          echo "CONFIG_GENERIC_COMPAT_VDSO=y"
+          
+          echo "# 性能优化选项"
+          echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y"
+          echo "CONFIG_ARM64_PTR_AUTH=y"
+          echo "CONFIG_ARM64_BTI=y"
+          
+          echo "# 禁用有问题的选项"
+          echo "CONFIG_KSU=n"
+        } >> out/.config
+        
+        make O=out ARCH=arm64 olddefconfig
+
+    - name: Build with performance flags
+      run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export CC=clang
+        export LD=ld.lld
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        # 添加性能优化编译标志
+        export KCFLAGS="-O2 -mcpu=cortex-a77 -mtune=cortex-a77"
+        export AFLAGS="-O2 -mcpu=cortex-a77"
+        
+        make O=out ARCH=arm64 -j$(nproc)
+        
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "✅ 高性能内核构建成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+        else
+          echo "❌ 构建失败！"
+          exit 1
+        fi
+
+    - name: Prepare AnyKernel3
+      run: |
+        git clone https://github.com/osm0sis/AnyKernel3
+        cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
+        
+        cat > AnyKernel3/anykernel.sh << 'EOF'
+        #!/system/bin/sh
+        # AnyKernel3 Ramdisk Mod Script
+        
+        ## AnyKernel setup
+        properties() { '
+        kernel.string=Performance Optimized Kernel
+        do.devicecheck=1
+        do.modules=0
+        do.systemless=1
+        do.cleanup=1
+        do.cleanuponabort=0
+        device.name1=alioth
+        device.name2=aliothin
+        '; }
+        
+        ## AnyKernel methods
+        . tools/ak3-core.sh;
+        
+        ## AnyKernel install
+        dump_boot;
+        write_boot;
+        EOF
+
+    - name: Create flashable zip
+      run: |
+        cd AnyKernel3
+        zip -r9 ../Performance_Kernel_$(date +%Y%m%d_%H%M%S).zip . -x "*.git*"
+        cd ..
+        ls -lh *.zip
+
+    - name: Upload kernel
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-kernel
+        path: |
+          *.zip
+          out/arch/arm64/boot/Image.gz-dtb
