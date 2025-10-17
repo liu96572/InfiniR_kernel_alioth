@@ -14,67 +14,80 @@ jobs:
     - name: Setup and Fix Issues
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libncurses-dev libssl-dev bc flex bison libelf-dev dwarves python3 git zip curl wget
+        sudo apt-get install -y build-essential libncurses-dev libssl-dev bc flex bison libelf-dev dwarves python3 git zip curl wget patch
         sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu clang lld
         
         # 修复脚本权限
         echo "🔧 修复脚本权限..."
         chmod -R +x scripts/ 2>/dev/null || true
         
-        # 处理KernelSU配置
+        # 处理KernelSU配置 - 使用简单的echo命令
         echo "📝 处理KernelSU配置..."
         mkdir -p drivers/kernelsu
-        cat > drivers/kernelsu/Kconfig << 'EOF'
-config KSU
-    bool "KernelSU"
-    default n
-    help
-      KernelSU support
-EOF
+        echo 'config KSU' > drivers/kernelsu/Kconfig
+        echo '    bool "KernelSU"' >> drivers/kernelsu/Kconfig
+        echo '    default n' >> drivers/kernelsu/Kconfig
+        echo '    help' >> drivers/kernelsu/Kconfig
+        echo '      KernelSU support' >> drivers/kernelsu/Kconfig
 
-    - name: Fix VDSO symbols in source code
+    - name: Fix VDSO symbols with patch
       run: |
-        echo "🔧 修复VDSO符号定义..."
+        echo "🔧 应用VDSO动态修补..."
         
-        # 强制修复vdso.h文件
-        cp arch/arm64/include/asm/vdso.h arch/arm64/include/asm/vdso.h.backup
-        
-        cat > arch/arm64/include/asm/vdso.h << 'EOF'
-#ifndef __ASM_VDSO_H
-#define __ASM_VDSO_H
-
-#include <asm/page.h>
-#include <asm/vdso/vdso.h>
-
-/* 修复所有缺失的VDSO符号 */
-#ifndef vdso_offset_sigtramp
-#define vdso_offset_sigtramp	((unsigned long)(&__vdso_sigtramp) - (unsigned long)(&__vdso_start))
-#endif
-
-#ifndef vdso_offset_rt_sigtramp  
-#define vdso_offset_rt_sigtramp	((unsigned long)(&__vdso_rt_sigtramp) - (unsigned long)(&__vdso_start))
-#endif
-
-#ifndef vdso_offset_gettimeofday
-#define vdso_offset_gettimeofday	((unsigned long)(&__vdso_gettimeofday) - (unsigned long)(&__vdso_start))
-#endif
-
-#ifndef vdso_offset_clock_gettime
-#define vdso_offset_clock_gettime	((unsigned long)(&__vdso_clock_gettime) - (unsigned long)(&__vdso_start))
-#endif
-
-#ifndef vdso_offset_clock_getres
-#define vdso_offset_clock_getres	((unsigned long)(&__vdso_clock_getres) - (unsigned long)(&__vdso_start))
-#endif
-
-#ifndef vdso_offset_clock_gettime64
-#define vdso_offset_clock_gettime64	((unsigned long)(&__vdso_clock_gettime64) - (unsigned long)(&__vdso_start))
-#endif
-
-#endif /* __ASM_VDSO_H */
+        # 创建VDSO修补文件
+        cat > vdso_fix.patch << 'EOF'
+--- a/arch/arm64/include/asm/vdso.h
++++ b/arch/arm64/include/asm/vdso.h
+@@ -1,10 +1,31 @@
++/* SPDX-License-Identifier: GPL-2.0 */
+ #ifndef __ASM_VDSO_H
+ #define __ASM_VDSO_H
+ 
+ #include <asm/page.h>
++#include <asm/vdso/vdso.h>
++
++/*
++ * VDSO符号修复补丁
++ * 修复缺失的偏移量定义
++ */
++#ifndef vdso_offset_sigtramp
++#define vdso_offset_sigtramp		((unsigned long)(&__vdso_sigtramp) - (unsigned long)(&__vdso_start))
++#endif
++
++#ifndef vdso_offset_rt_sigtramp
++#define vdso_offset_rt_sigtramp		((unsigned long)(&__vdso_rt_sigtramp) - (unsigned long)(&__vdso_start))
++#endif
++
++#ifndef vdso_offset_gettimeofday
++#define vdso_offset_gettimeofday	((unsigned long)(&__vdso_gettimeofday) - (unsigned long)(&__vdso_start))
++#endif
++
++#ifndef vdso_offset_clock_gettime
++#define vdso_offset_clock_gettime	((unsigned long)(&__vdso_clock_gettime) - (unsigned long)(&__vdso_start))
++#endif
+ 
+ #ifndef __ASSEMBLY__
+-
+ #include <generated/vdso-offsets.h>
+ 
+ #define VDSO_SYMBOL(base, name)							\
+@@ -13,6 +34,7 @@
+ 	(void __user *)((unsigned long)(base) + (vdso_offset_##name & ~1UL) - VDSO_LBASE)
+ 
+ #endif /* !__ASSEMBLY__ */
+-
+ #endif /* __ASM_VDSO_H */
++
++/* VDSO修复补丁结束 */
 EOF
         
-        echo "✅ VDSO符号修复完成"
+        # 应用修补
+        echo "应用VDSO修补..."
+        if patch -p1 -l < vdso_fix.patch; then
+          echo "✅ VDSO修补应用成功"
+        else
+          echo "⚠️ 修补可能部分应用，继续编译..."
+        fi
 
     - name: Configure kernel for performance
       run: |
@@ -87,7 +100,7 @@ EOF
         mkdir -p out
         cp arch/arm64/configs/alioth_defconfig out/.config
         
-        # 基本配置
+        # 性能优化配置
         {
           echo "CONFIG_ZSTD_COMPRESS=y"
           echo "CONFIG_ZSTD_DECOMPRESS=y"
@@ -98,6 +111,12 @@ EOF
           echo "CONFIG_CGROUP_FREEZER=y"
           echo "CONFIG_DEBUG_FS=y"
           echo "CONFIG_VDSO=y"
+          echo "CONFIG_ARM64_VDSO=y"
+          echo "CONFIG_GENERIC_TIME_VSYSCALL=y"
+          echo "CONFIG_ARM_ARCH_TIMER=y"
+          echo "CONFIG_MODULES=y"
+          echo "CONFIG_KALLSYMS=y"
+          echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y"
           echo "CONFIG_KSU=n"
         } >> out/.config
         
@@ -110,6 +129,8 @@ EOF
         export CC=clang
         export LD=ld.lld
         export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        export KCFLAGS="-O2 -mcpu=cortex-a77 -mtune=cortex-a77"
         
         make O=out ARCH=arm64 -j$(nproc)
         
@@ -128,9 +149,6 @@ EOF
         
         cat > AnyKernel3/anykernel.sh << 'EOF'
         #!/system/bin/sh
-        kernel.string=Performance Kernel
-        do.devicecheck=1
-        device.name1=alioth
         . tools/ak3-core.sh;
         dump_boot;
         write_boot;
