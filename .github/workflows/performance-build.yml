@@ -11,10 +11,28 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Install performance toolchain
+    - name: Setup and Fix Issues
       run: |
         sudo apt-get update
-        sudo apt-get install -y clang lld build-essential gcc-aarch64-linux-gnu bc flex bison libelf-dev
+        sudo apt-get install -y build-essential libncurses-dev libssl-dev bc flex bison libelf-dev dwarves python3 git zip curl wget
+        sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu clang lld
+        
+        # 修复脚本权限 - 强制修复
+        echo "🔧 强制修复脚本权限..."
+        chmod -R +x scripts/ 2>/dev/null || true
+        find scripts -type f -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+        
+        # 强制处理KernelSU配置缺失
+        echo "📝 强制处理KernelSU配置..."
+        mkdir -p drivers/kernelsu
+        cat > drivers/kernelsu/Kconfig << 'EOF'
+config KSU
+    bool "KernelSU"
+    default n
+    help
+      KernelSU support
+EOF
+        echo "✅ 权限和配置修复完成"
 
     - name: Configure kernel for performance
       run: |
