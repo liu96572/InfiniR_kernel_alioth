@@ -1,0 +1,86 @@
+name: Working Kernel Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libncurses-dev libssl-dev bc flex bison libelf-dev dwarves python3 git
+        sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+        
+        chmod -R +x scripts/ 2>/dev/null || true
+        
+        mkdir -p drivers/kernelsu
+        echo 'config KSU' > drivers/kernelsu/Kconfig
+        echo '    bool "KernelSU"' >> drivers/kernelsu/Kconfig
+        echo '    default n' >> drivers/kernelsu/Kconfig
+
+    - name: Configure kernel
+      run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        mkdir -p out
+        
+        make O=out ARCH=arm64 alioth_defconfig
+        
+        # 最小配置，避免所有复杂功能
+        {
+          echo "CONFIG_ZSTD_COMPRESS=y"
+          echo "CONFIG_KERNEL_ZSTD=y"
+          echo "CONFIG_ZRAM=y"
+          echo "CONFIG_SWAP=y"
+          echo "CONFIG_VDSO=n"
+          echo "CONFIG_KSU=n"
+        } >> out/.config
+        
+        make O=out ARCH=arm64 olddefconfig
+
+    - name: Build kernel
+      run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        make O=out ARCH=arm64 -j2
+        
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "✅ 内核构建成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+        else
+          echo "❌ 构建失败"
+          exit 1
+        fi
+
+    - name: Create flashable zip
+      run: |
+        git clone https://github.com/osm0sis/AnyKernel3
+        cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
+        
+        cat > AnyKernel3/anykernel.sh << 'EOF'
+        #!/system/bin/sh
+        . tools/ak3-core.sh;
+        dump_boot;
+        write_boot;
+        EOF
+        
+        cd AnyKernel3
+        zip -r9 ../kernel.zip .
+        cd ..
+        ls -lh *.zip
+
+    - name: Upload kernel
+      uses: actions/upload-artifact@v4
+      with:
+        name: working-kernel
+        path: kernel.zip
