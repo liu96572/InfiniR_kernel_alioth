@@ -1,0 +1,35 @@
+name: Working Config Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup (Minimal)
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential gcc-aarch64-linux-gnu bc flex bison libelf-dev
+
+    - name: Build (Simple)
+      run: |
+        # 绝对最简单的构建命令
+        ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make alioth_defconfig
+        echo "✅ 配置完成"
+        
+        ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make -j2
+        echo "✅ 构建完成"
+        
+        # 检查输出
+        if [ -f "arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "🎉 构建成功！"
+          ls -lh arch/arm64/boot/Image.gz-dtb
+        else
+          echo "❌ 无输出文件"
+          find . -name "Image*" -type f | head -10
+        fi
