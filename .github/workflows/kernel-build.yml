@@ -1,8 +1,6 @@
-name: Build Enhanced Kernel
+name: Performance Optimized Build
 
 on:
-  push:
-    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -13,52 +11,24 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup environment
+    - name: Install performance toolchain
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libncurses-dev libssl-dev bc flex bison libelf-dev dwarves python3 git zip curl wget
-        sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+        # 安装系统最新Clang/LLVM（性能最好）
+        sudo apt-get install -y clang lld llvm build-essential libncurses-dev libssl-dev bc flex bison libelf-dev dwarves python3 git
+        
+        # 安装最新GCC交叉编译工具链
+        sudo apt-get install -y gcc-11-aarch64-linux-gnu g++-11-aarch64-linux-gnu
+        sudo update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-11 100
 
-    - name: Fix permissions and prepare
-      run: |
-        # 修复所有脚本权限
-        find scripts -name "*.sh" -exec chmod +x {} \;
-        
-        # 处理KernelSU配置
-        if [ ! -d "drivers/kernelsu" ]; then
-          mkdir -p drivers/kernelsu
-          echo 'config KSU' > drivers/kernelsu/Kconfig
-          echo '    bool "KernelSU"' >> drivers/kernelsu/Kconfig
-          echo '    default n' >> drivers/kernelsu/Kconfig
-          echo '    help' >> drivers/kernelsu/Kconfig
-          echo '      KernelSU support' >> drivers/kernelsu/Kconfig
-        fi
-
-    - name: Apply kernel compatibility fixes
-      run: |
-        # 修复 vdso_offset_sigtramp 错误
-        echo "🔧 应用内核兼容性修复..."
-        
-        # 方法1: 替换为新的符号
-        if [ -f "arch/arm64/kernel/signal.c" ]; then
-          sed -i 's/vdso_offset_sigtramp/vdso_rt_sigreturn/g' arch/arm64/kernel/signal.c
-        fi
-        
-        # 方法2: 如果还有问题，使用更保守的修复
-        if grep -q "vdso_offset_sigtramp" arch/arm64/kernel/signal.c 2>/dev/null; then
-          echo "⚠️ 应用替代修复方案"
-          sed -i 's/vdso_offset_sigtramp/0/g' arch/arm64/kernel/signal.c
-        fi
-        
-        # 修复可能的其他兼容性问题
-        if [ -f "arch/arm64/include/asm/vdso.h" ]; then
-          sed -i 's/vdso_offset_sigtramp/vdso_rt_sigreturn/g' arch/arm64/include/asm/vdso.h 2>/dev/null || true
-        fi
-
-    - name: Configure kernel
+    - name: Configure kernel for performance
       run: |
         export ARCH=arm64
         export SUBARCH=arm64
+        
+        # 使用Clang作为主要编译器（性能更好）
+        export CC=clang
+        export LD=ld.lld
         export CROSS_COMPILE=aarch64-linux-gnu-
         
         mkdir -p out
@@ -66,44 +36,58 @@ jobs:
         # 使用默认配置
         cp arch/arm64/configs/alioth_defconfig out/.config
         
-        # 添加功能配置，禁用有问题的选项
+        # 性能优化配置
         {
+          echo "# 压缩功能"
           echo "CONFIG_ZSTD_COMPRESS=y"
           echo "CONFIG_ZSTD_DECOMPRESS=y"
           echo "CONFIG_KERNEL_ZSTD=y"
+          
+          echo "# 内存管理"
           echo "CONFIG_ZRAM=y"
           echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y"
           echo "CONFIG_SWAP=y"
           echo "CONFIG_CGROUP_FREEZER=y"
+          
+          echo "# 调试功能"
           echo "CONFIG_DEBUG_FS=y"
+          
+          echo "# 修复VDSO错误"
+          echo "CONFIG_VDSO=y"
+          echo "CONFIG_ARM64_VDSO=y"
+          echo "CONFIG_COMPAT_VDSO=y"
+          echo "CONFIG_GENERIC_COMPAT_VDSO=y"
+          
+          echo "# 性能优化选项"
+          echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y"
+          echo "CONFIG_ARM64_PTR_AUTH=y"
+          echo "CONFIG_ARM64_BTI=y"
+          
+          echo "# 禁用有问题的选项"
           echo "CONFIG_KSU=n"
-          echo "# CONFIG_COMPAT_BRK is not set"
-          echo "CONFIG_ARM64_VA_BITS=48"
         } >> out/.config
         
         make O=out ARCH=arm64 olddefconfig
 
-    - name: Build kernel
+    - name: Build with performance flags
       run: |
         export ARCH=arm64
         export SUBARCH=arm64
+        export CC=clang
+        export LD=ld.lld
         export CROSS_COMPILE=aarch64-linux-gnu-
         
-        # 尝试编译，如果失败使用更简单的配置
-        make O=out ARCH=arm64 -j$(nproc) || {
-          echo "⚠️ 第一次编译失败，尝试简化配置..."
-          # 禁用更多可能有问题的功能
-          echo "CONFIG_VDSO=n" >> out/.config
-          echo "CONFIG_ARM64_PTR_AUTH=n" >> out/.config
-          make O=out ARCH=arm64 olddefconfig
-          make O=out ARCH=arm64 -j$(nproc)
-        }
+        # 添加性能优化编译标志
+        export KCFLAGS="-O2 -mcpu=cortex-a77 -mtune=cortex-a77"
+        export AFLAGS="-O2 -mcpu=cortex-a77"
+        
+        make O=out ARCH=arm64 -j$(nproc)
         
         if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
-          echo "✅ Kernel build successful!"
+          echo "✅ 高性能内核构建成功！"
           ls -lh out/arch/arm64/boot/Image.gz-dtb
         else
-          echo "❌ Kernel build failed!"
+          echo "❌ 构建失败！"
           exit 1
         fi
 
@@ -115,11 +99,10 @@ jobs:
         cat > AnyKernel3/anykernel.sh << 'EOF'
         #!/system/bin/sh
         # AnyKernel3 Ramdisk Mod Script
-        # osm0sis @ xda-developers
         
         ## AnyKernel setup
         properties() { '
-        kernel.string=Enhanced Kernel by GitHub Actions
+        kernel.string=Performance Optimized Kernel
         do.devicecheck=1
         do.modules=0
         do.systemless=1
@@ -132,10 +115,6 @@ jobs:
         ## AnyKernel methods
         . tools/ak3-core.sh;
         
-        ## AnyKernel file attributes
-        set_perm_recursive 0 0 755 644 $ramdisk/*;
-        set_perm_recursive 0 0 750 750 $ramdisk/init* $ramdisk/sbin;
-        
         ## AnyKernel install
         dump_boot;
         write_boot;
@@ -144,14 +123,14 @@ jobs:
     - name: Create flashable zip
       run: |
         cd AnyKernel3
-        zip -r9 ../Enhanced_Kernel_$(date +%Y%m%d_%H%M%S).zip . -x "*.git*"
+        zip -r9 ../Performance_Kernel_$(date +%Y%m%d_%H%M%S).zip . -x "*.git*"
         cd ..
         ls -lh *.zip
 
     - name: Upload kernel
       uses: actions/upload-artifact@v4
       with:
-        name: enhanced-kernel
+        name: performance-kernel
         path: |
           *.zip
           out/arch/arm64/boot/Image.gz-dtb
