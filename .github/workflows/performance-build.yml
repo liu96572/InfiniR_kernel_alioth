@@ -17,13 +17,12 @@ jobs:
         sudo apt-get install -y build-essential libncurses-dev libssl-dev bc flex bison libelf-dev dwarves python3 git zip curl wget
         sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu clang lld
         
-        # 修复脚本权限 - 强制修复
-        echo "🔧 强制修复脚本权限..."
+        # 修复脚本权限
+        echo "🔧 修复脚本权限..."
         chmod -R +x scripts/ 2>/dev/null || true
-        find scripts -type f -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
         
-        # 强制处理KernelSU配置缺失
-        echo "📝 强制处理KernelSU配置..."
+        # 处理KernelSU配置
+        echo "📝 处理KernelSU配置..."
         mkdir -p drivers/kernelsu
         cat > drivers/kernelsu/Kconfig << 'EOF'
 config KSU
@@ -32,7 +31,50 @@ config KSU
     help
       KernelSU support
 EOF
-        echo "✅ 权限和配置修复完成"
+
+    - name: Fix VDSO symbols in source code
+      run: |
+        echo "🔧 修复VDSO符号定义..."
+        
+        # 强制修复vdso.h文件
+        cp arch/arm64/include/asm/vdso.h arch/arm64/include/asm/vdso.h.backup
+        
+        cat > arch/arm64/include/asm/vdso.h << 'EOF'
+#ifndef __ASM_VDSO_H
+#define __ASM_VDSO_H
+
+#include <asm/page.h>
+#include <asm/vdso/vdso.h>
+
+/* 修复所有缺失的VDSO符号 */
+#ifndef vdso_offset_sigtramp
+#define vdso_offset_sigtramp	((unsigned long)(&__vdso_sigtramp) - (unsigned long)(&__vdso_start))
+#endif
+
+#ifndef vdso_offset_rt_sigtramp  
+#define vdso_offset_rt_sigtramp	((unsigned long)(&__vdso_rt_sigtramp) - (unsigned long)(&__vdso_start))
+#endif
+
+#ifndef vdso_offset_gettimeofday
+#define vdso_offset_gettimeofday	((unsigned long)(&__vdso_gettimeofday) - (unsigned long)(&__vdso_start))
+#endif
+
+#ifndef vdso_offset_clock_gettime
+#define vdso_offset_clock_gettime	((unsigned long)(&__vdso_clock_gettime) - (unsigned long)(&__vdso_start))
+#endif
+
+#ifndef vdso_offset_clock_getres
+#define vdso_offset_clock_getres	((unsigned long)(&__vdso_clock_getres) - (unsigned long)(&__vdso_start))
+#endif
+
+#ifndef vdso_offset_clock_gettime64
+#define vdso_offset_clock_gettime64	((unsigned long)(&__vdso_clock_gettime64) - (unsigned long)(&__vdso_start))
+#endif
+
+#endif /* __ASM_VDSO_H */
+EOF
+        
+        echo "✅ VDSO符号修复完成"
 
     - name: Configure kernel for performance
       run: |
@@ -43,49 +85,19 @@ EOF
         export CROSS_COMPILE=aarch64-linux-gnu-
         
         mkdir -p out
-        
         cp arch/arm64/configs/alioth_defconfig out/.config
         
-        # 完整的VDSO修复配置
+        # 基本配置
         {
-          echo "# 压缩功能"
           echo "CONFIG_ZSTD_COMPRESS=y"
           echo "CONFIG_ZSTD_DECOMPRESS=y"
           echo "CONFIG_KERNEL_ZSTD=y"
-          
-          echo "# 内存管理"
           echo "CONFIG_ZRAM=y"
           echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y"
           echo "CONFIG_SWAP=y"
           echo "CONFIG_CGROUP_FREEZER=y"
-          
-          echo "# 调试功能"
           echo "CONFIG_DEBUG_FS=y"
-          
-          echo "# 完整的VDSO修复"
           echo "CONFIG_VDSO=y"
-          echo "CONFIG_ARM64_VDSO=y"
-          echo "CONFIG_GENERIC_TIME_VSYSCALL=y"
-          echo "CONFIG_GENERIC_CLOCKEVENTS=y"
-          echo "CONFIG_ARCH_CLOCKSOURCE_DATA=y"
-          echo "CONFIG_GENERIC_CLOCKEVENTS_BROADCAST=y"
-          echo "CONFIG_ARM_ARCH_TIMER=y"
-          echo "CONFIG_ARM_ARCH_TIMER_EVTSTREAM=y"
-          echo "CONFIG_ARM_ARCH_TIMER_OOL_WORKAROUND=y"
-          echo "CONFIG_COMPAT=y"
-          echo "CONFIG_COMPAT_VDSO=y"
-          echo "CONFIG_GENERIC_COMPAT_VDSO=y"
-          echo "CONFIG_ARM64_COMPAT_VDSO=y"
-          
-          echo "# 其他必要选项"
-          echo "CONFIG_MODULES=y"
-          echo "CONFIG_MODULE_UNLOAD=y"
-          echo "CONFIG_KALLSYMS=y"
-          
-          echo "# 性能优化"
-          echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y"
-          
-          echo "# 禁用有问题的选项"
           echo "CONFIG_KSU=n"
         } >> out/.config
         
@@ -99,22 +111,13 @@ EOF
         export LD=ld.lld
         export CROSS_COMPILE=aarch64-linux-gnu-
         
-        # 添加性能优化编译标志
-        export KCFLAGS="-O2 -mcpu=cortex-a77 -mtune=cortex-a77"
-        
         make O=out ARCH=arm64 -j$(nproc)
         
         if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
           echo "✅ 高性能内核构建成功！"
           ls -lh out/arch/arm64/boot/Image.gz-dtb
-          
-          # 检查文件大小
-          echo "📊 内核文件信息:"
-          file out/arch/arm64/boot/Image.gz-dtb
         else
           echo "❌ 构建失败！"
-          echo "🔍 检查错误日志..."
-          find out -name "*.o" -exec dirname {} \; | sort | uniq | head -10
           exit 1
         fi
 
@@ -125,28 +128,10 @@ EOF
         
         cat > AnyKernel3/anykernel.sh << 'EOF'
         #!/system/bin/sh
-        # AnyKernel3 Ramdisk Mod Script
-        
-        ## AnyKernel setup
-        properties() { '
-        kernel.string=Performance Optimized Kernel
+        kernel.string=Performance Kernel
         do.devicecheck=1
-        do.modules=0
-        do.systemless=1
-        do.cleanup=1
-        do.cleanuponabort=0
         device.name1=alioth
-        device.name2=aliothin
-        '; }
-        
-        ## AnyKernel methods
         . tools/ak3-core.sh;
-        
-        ## AnyKernel file attributes
-        set_perm_recursive 0 0 755 644 $ramdisk/*;
-        set_perm_recursive 0 0 750 750 $ramdisk/init* $ramdisk/sbin;
-        
-        ## AnyKernel install
         dump_boot;
         write_boot;
         EOF
@@ -154,15 +139,12 @@ EOF
     - name: Create flashable zip
       run: |
         cd AnyKernel3
-        zip -r9 ../Performance_Kernel_$(date +%Y%m%d_%H%M%S).zip . -x "*.git*"
+        zip -r9 ../kernel.zip . -x "*.git*"
         cd ..
-        echo "📦 生成的刷机包:"
         ls -lh *.zip
 
     - name: Upload kernel
       uses: actions/upload-artifact@v4
       with:
         name: performance-kernel
-        path: |
-          *.zip
-          out/arch/arm64/boot/Image.gz-dtb
+        path: kernel.zip
