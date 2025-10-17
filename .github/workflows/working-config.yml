@@ -11,18 +11,38 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Setup (Minimal)
+    - name: Setup and Fix Permissions
       run: |
         sudo apt update
         sudo apt install -y build-essential gcc-aarch64-linux-gnu bc flex bison libelf-dev
+        
+        # 修复脚本权限
+        echo "🔧 修复脚本权限..."
+        find scripts -name "*.sh" -exec chmod +x {} \; 2>/dev/null || echo "部分权限修复完成"
+        
+        # 处理KernelSU配置缺失
+        echo "📝 处理KernelSU配置..."
+        if [ ! -d "drivers/kernelsu" ]; then
+          mkdir -p drivers/kernelsu
+          echo 'config KSU' > drivers/kernelsu/Kconfig
+          echo '    bool "KernelSU"' >> drivers/kernelsu/Kconfig
+          echo '    default n' >> drivers/kernelsu/Kconfig
+          echo "✅ 创建KernelSU占位配置"
+        fi
 
     - name: Build (Simple)
       run: |
-        # 绝对最简单的构建命令
-        ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make alioth_defconfig
+        # 设置环境变量
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "⚙️ 开始配置..."
+        # 使用默认配置，不创建out目录
+        make alioth_defconfig
         echo "✅ 配置完成"
         
-        ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make -j2
+        echo "🔨 开始构建..."
+        make -j2
         echo "✅ 构建完成"
         
         # 检查输出
@@ -30,6 +50,6 @@ jobs:
           echo "🎉 构建成功！"
           ls -lh arch/arm64/boot/Image.gz-dtb
         else
-          echo "❌ 无输出文件"
-          find . -name "Image*" -type f | head -10
+          echo "❌ 无输出文件，检查错误..."
+          find . -name "*log" -type f | head -5
         fi
