@@ -1,0 +1,15 @@
+# 跳过Windows无法处理的特定文件路径
+drivers/gpu/drm/nouveau/nvkm/subdev/i2c/aux.*
+drivers/gpu/drm/nouveau/nvkm/subdev/i2c/anx9805.c
+include/soc/arc/aux.h
+
+# 只跳过具体的大小写冲突文件，而不是所有包含大写字母的文件
+include/uapi/linux/netfilter/xt_*[A-Z]*
+include/uapi/linux/netfilter_ipv4/ipt_*[A-Z]*
+include/uapi/linux/netfilter_ipv6/ip6t_*[A-Z]*
+net/netfilter/xt_*[A-Z]*
+tools/memory-model/litmus-tests/Z6.0+pooncelock+poonce*
+
+# 跳过其他已知问题文件
+*.orig
+*.rej
