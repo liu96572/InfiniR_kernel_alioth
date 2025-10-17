@@ -22,7 +22,7 @@ jobs:
       run: |
         mkdir -p toolchains
         wget -q https://github.com/kdrag0n/proton-clang/releases/download/20231010/proton-clang-20231010.tar.gz
-        tar -xzf proton-clangan-20231010.tar.gz
+        tar -xzf proton-clang-20231010.tar.gz
         mv proton-clang-20231010 toolchains/proton
 
     - name: Configure kernel
