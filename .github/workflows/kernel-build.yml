@@ -1,0 +1,111 @@
+name: Build Enhanced Kernel
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libncurses-dev libssl-dev bc flex bison libelf-dev dwarves python3 git zip curl
+
+    - name: Download toolchain
+      run: |
+        mkdir -p toolchains
+        wget -q https://github.com/kdrag0n/proton-clang/releases/download/20231010/proton-clang-20231010.tar.gz
+        tar -xzf proton-clang-20231010.tar.gz
+        mv proton-clang-20231010 toolchains/proton
+
+    - name: Configure kernel
+      run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export PATH=$(pwd)/toolchains/proton/bin:$PATH
+        
+        mkdir -p out
+        
+        make O=out ARCH=arm64 alioth_defconfig
+        
+        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
+        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
+        echo "CONFIG_KERNEL_ZSTD=y" >> out/.config
+        echo "CONFIG_ZRAM=y" >> out/.config
+        echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y" >> out/.config
+        echo "CONFIG_SWAP=y" >> out/.config
+        echo "CONFIG_CGROUP_FREEZER=y" >> out/.config
+        
+        make O=out ARCH=arm64 olddefconfig
+
+    - name: Build kernel
+      run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export PATH=$(pwd)/toolchains/proton/bin:$PATH
+        
+        make O=out ARCH=arm64 -j$(nproc)
+        
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "✅ 内核编译成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+        else
+          echo "❌ 内核编译失败！"
+          exit 1
+        fi
+
+    - name: Prepare AnyKernel3
+      run: |
+        git clone https://github.com/osm0sis/AnyKernel3
+        cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
+        
+        cat > AnyKernel3/anykernel.sh << 'EOF'
+        #!/system/bin/sh
+        # AnyKernel3 Ramdisk Mod Script
+        # osm0sis @ xda-developers
+        
+        ## AnyKernel setup
+        properties() { '
+        kernel.string=Enhanced Kernel by GitHub Actions
+        do.devicecheck=1
+        do.modules=0
+        do.systemless=1
+        do.cleanup=1
+        do.cleanuponabort=0
+        device.name1=alioth
+        device.name2=aliothin
+        '; }
+        
+        ## AnyKernel methods
+        . tools/ak3-core.sh;
+        
+        ## AnyKernel file attributes
+        set_perm_recursive 0 0 755 644 $ramdisk/*;
+        set_perm_recursive 0 0 750 750 $ramdisk/init* $ramdisk/sbin;
+        
+        ## AnyKernel install
+        dump_boot;
+        write_boot;
+        EOF
+
+    - name: Create flashable zip
+      run: |
+        cd AnyKernel3
+        zip -r9 ../Enhanced_Kernel_$(date +%Y%m%d_%H%M%S).zip . -x "*.git*"
+        cd ..
+        ls -lh *.zip
+
+    - name: Upload kernel
+      uses: actions/upload-artifact@v4
+      with:
+        name: enhanced-kernel
+        path: |
+          *.zip
+          out/arch/arm64/boot/Image.gz-dtb
