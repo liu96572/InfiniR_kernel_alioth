@@ -1,0 +1,63 @@
+name: Simple Kernel Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential bc flex bison libelf-dev
+        sudo apt-get install -y gcc-aarch64-linux-gnu
+        
+        chmod +x scripts/*.sh 2>/dev/null || true
+
+    - name: Build simple kernel
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        # 最简编译，不使用out目录
+        make alioth_defconfig
+        echo "配置完成"
+        
+        make -j2
+        echo "编译完成"
+        
+        if [ -f "arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "✅ 内核构建成功！"
+          ls -lh arch/arm64/boot/Image.gz-dtb
+        else
+          echo "❌ 构建失败"
+          exit 1
+        fi
+
+    - name: Create zip
+      run: |
+        git clone https://github.com/osm0sis/AnyKernel3
+        cp arch/arm64/boot/Image.gz-dtb AnyKernel3/
+        
+        cat > AnyKernel3/anykernel.sh << 'EOF'
+        #!/system/bin/sh
+        . tools/ak3-core.sh;
+        dump_boot;
+        write_boot;
+        EOF
+        
+        cd AnyKernel3
+        zip -r9 ../kernel.zip .
+        cd ..
+        ls -lh *.zip
+
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: simple-kernel
+        path: kernel.zip
