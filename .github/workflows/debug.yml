@@ -1,0 +1,45 @@
+name: Debug Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Basic setup
+      run: |
+        echo "=== 基础环境检查 ==="
+        uname -a
+        lsb_release -a 2>/dev/null || echo "No lsb_release"
+        df -h
+        echo ""
+
+    - name: Check kernel source
+      run: |
+        echo "=== 内核源码检查 ==="
+        ls -la
+        echo "arch/arm64/configs/:"
+        ls arch/arm64/configs/ | head -10
+        echo ""
+
+    - name: Test toolchain
+      run: |
+        echo "=== 工具链测试 ==="
+        which aarch64-linux-gnu-gcc
+        aarch64-linux-gnu-gcc --version || echo "GCC not found"
+        echo ""
+
+    - name: Simple config test
+      run: |
+        echo "=== 简单配置测试 ==="
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        # 只做最简单的配置检查
+        make alioth_defconfig --dry-run
+        echo "Dry run completed"
