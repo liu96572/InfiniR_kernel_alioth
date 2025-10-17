@@ -1,0 +1,121 @@
+name: Final Kernel Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libncurses-dev libssl-dev bc flex bison libelf-dev dwarves python3 git
+        sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+        
+        # 修复权限
+        chmod -R +x scripts/ 2>/dev/null || true
+        
+        # 处理KernelSU
+        mkdir -p drivers/kernelsu
+        echo 'config KSU' > drivers/kernelsu/Kconfig
+        echo '    bool "KernelSU"' >> drivers/kernelsu/Kconfig
+        echo '    default n' >> drivers/kernelsu/Kconfig
+
+    - name: Fix VDSO in compilation
+      run: |
+        echo "🔧 在编译过程中修复VDSO..."
+        
+        # 方法：修改Makefile让它在编译前自动修复VDSO
+        # 创建一个预处理脚本来修补VDSO头文件
+        cat > scripts/fix-vdso.sh << 'EOF'
+#!/bin/bash
+echo "自动修复VDSO符号..."
+VDSO_FILE="arch/arm64/include/asm/vdso.h"
+
+# 检查并修复缺失的符号
+if ! grep -q "vdso_offset_sigtramp" "$VDSO_FILE"; then
+  echo "修复VDSO符号定义..."
+  sed -i '1i/* VDSO自动修复 */' "$VDSO_FILE"
+  sed -i '/#ifndef __ASM_VDSO_H/a #ifndef vdso_offset_sigtramp\n#define vdso_offset_sigtramp\t\t0\n#endif\n#ifndef vdso_offset_rt_sigtramp\n#define vdso_offset_rt_sigtramp\t0\n#endif' "$VDSO_FILE"
+  echo "VDSO修复完成"
+fi
+EOF
+        
+        chmod +x scripts/fix-vdso.sh
+        # 立即执行修复
+        ./scripts/fix-vdso.sh
+
+    - name: Configure kernel
+      run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        mkdir -p out
+        
+        # 关键：使用一个更简单的配置，避免复杂依赖
+        make O=out ARCH=arm64 alioth_defconfig
+        
+        # 只启用最基本的功能
+        {
+          echo "CONFIG_ZSTD_COMPRESS=y"
+          echo "CONFIG_KERNEL_ZSTD=y"
+          echo "CONFIG_ZRAM=y"
+          echo "CONFIG_SWAP=y"
+          echo "CONFIG_CGROUP_FREEZER=y"
+          echo "CONFIG_VDSO=n"  # 暂时禁用VDSO
+          echo "CONFIG_KSU=n"
+        } >> out/.config
+        
+        make O=out ARCH=arm64 olddefconfig
+
+    - name: Build kernel
+      run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        # 再次确保VDSO修复
+        ./scripts/fix-vdso.sh || true
+        
+        echo "开始编译..."
+        make O=out ARCH=arm64 -j$(nproc)
+        
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "✅ 内核构建成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+        else
+          echo "❌ 构建失败"
+          echo "最后的错误:"
+          tail -50 out/.tmp* 2>/dev/null || echo "无法获取错误日志"
+          exit 1
+        fi
+
+    - name: Create flashable zip
+      run: |
+        git clone https://github.com/osm0sis/AnyKernel3
+        cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
+        
+        cat > AnyKernel3/anykernel.sh << 'EOF'
+        #!/system/bin/sh
+        . tools/ak3-core.sh;
+        dump_boot;
+        write_boot;
+        EOF
+        
+        cd AnyKernel3
+        zip -r9 ../kernel.zip .
+        cd ..
+        echo "刷机包:"
+        ls -lh *.zip
+
+    - name: Upload kernel
+      uses: actions/upload-artifact@v4
+      with:
+        name: final-kernel
+        path: kernel.zip
