@@ -1,0 +1,100 @@
+name: Final Fix Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout and fix
+      run: |
+        echo "🔧 开始修复..."
+        
+        # 手动克隆
+        git clone https://github.com/liu96572/InfiniR_kernel_alioth.git src
+        cd src
+        
+        echo "✅ 克隆完成"
+        
+        # 修复权限
+        echo "修复权限..."
+        chmod +x scripts/*.sh 2>/dev/null || true
+        
+        # 强制创建KernelSU目录和文件
+        echo "强制创建KernelSU..."
+        ls -la drivers/ || echo "无法列出drivers目录"
+        
+        # 确保drivers目录存在
+        mkdir -p drivers/ 2>/dev/null || echo "drivers目录创建失败"
+        
+        # 强制创建kernelsu目录
+        mkdir drivers/kernelsu 2>/dev/null || echo "kernelsu目录创建失败"
+        
+        # 检查是否创建成功
+        if [ -d "drivers/kernelsu" ]; then
+          echo "创建Kconfig文件..."
+          echo 'config KSU' > drivers/kernelsu/Kconfig
+          echo '    bool "KernelSU"' >> drivers/kernelsu/Kconfig
+          echo '    default n' >> drivers/kernelsu/Kconfig
+          echo "✅ KernelSU修复完成"
+        else
+          echo "❌ 无法创建kernelsu目录，尝试替代方案..."
+          # 替代方案：直接修改drivers/Kconfig，移除对kernelsu的引用
+          sed -i '/kernelsu/d' drivers/Kconfig 2>/dev/null || echo "无法修改drivers/Kconfig"
+          echo "✅ 使用替代方案完成"
+        fi
+        
+        cd ..
+
+    - name: Setup environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential bc flex bison libelf-dev
+        sudo apt-get install -y gcc-aarch64-linux-gnu
+
+    - name: Build kernel
+      run: |
+        cd src
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        # 直接编译
+        make alioth_defconfig
+        echo "✅ 配置完成"
+        
+        make -j2
+        echo "✅ 编译完成"
+        
+        if [ -f "arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "🎉 成功！"
+          ls -lh arch/arm64/boot/Image.gz-dtb
+        else
+          echo "❌ 失败"
+          exit 1
+        fi
+
+    - name: Create zip
+      run: |
+        cd src
+        git clone https://github.com/osm0sis/AnyKernel3
+        cp arch/arm64/boot/Image.gz-dtb AnyKernel3/
+        
+        cat > AnyKernel3/anykernel.sh << 'EOF'
+        #!/system/bin/sh
+        . tools/ak3-core.sh;
+        dump_boot;
+        write_boot;
+        EOF
+        
+        cd AnyKernel3
+        zip -r9 ../../kernel.zip .
+        cd ../..
+        ls -lh kernel.zip
+
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: kernel
+        path: kernel.zip
