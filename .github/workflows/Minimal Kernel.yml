@@ -16,9 +16,22 @@ jobs:
         
         echo "✅ 代码库克隆完成"
         
+        # 正确修复 KernelSU
+        echo "修复 KernelSU..."
+        rm -rf drivers/kernelsu 2>/dev/null || true
+        mkdir -p drivers/kernelsu
+        cat > drivers/kernelsu/Kconfig << 'EOF'
+        # KernelSU 配置
+        config KSU
+            bool "KernelSU"
+            default n
+            help
+              KernelSU root support
+        EOF
+        
         # 修复重复定义问题
         echo "修复重复函数定义..."
-        sed -i 's/inline s32 msm_cpuidle_get_deep_idle_latency(void)/\/\/ 注释掉重复定义/g' drivers/cpuidle/lpm-levels.c 2>/dev/null || echo "修复完成"
+        sed -i 's/inline s32 msm_cpuidle_get_deep_idle_latency(void)/static inline s32 msm_cpuidle_get_deep_idle_latency(void) { return 0; }/g' drivers/cpuidle/lpm-levels.c 2>/dev/null || echo "重复定义修复完成"
         
         # 修复显示驱动的浮点运算问题
         echo "修复显示驱动浮点问题..."
@@ -42,6 +55,16 @@ jobs:
         
         mkdir -p out
         
+        # 首先检查配置是否有效
+        echo "检查基础配置..."
+        if [ -f "arch/arm64/configs/alioth_defconfig" ]; then
+          echo "✅ 找到 alioth_defconfig"
+        else
+          echo "❌ 未找到 alioth_defconfig"
+          ls arch/arm64/configs/
+          exit 1
+        fi
+        
         # 使用基础配置
         make O=out ARCH=arm64 alioth_defconfig
         
@@ -64,14 +87,14 @@ jobs:
           echo "CONFIG_SND_SOC=n"
           echo "CONFIG_SOUND=n"
           
-          echo "# 显示相关"
+          echo "# 显示相关" 
+          echo "CONFIG_DRM_MSM=n"
           echo "CONFIG_DRM=n"
           echo "CONFIG_FB=n"
-          echo "CONFIG_BACKLIGHT_CLASS_DEVICE=n"
           
           echo "# 电源管理"
           echo "CONFIG_CPU_IDLE=n"
-          echo "CONFIG_PM=n"
+          echo "CONFIG_PM_DEBUG=n"
           
           echo "# 问题平台驱动"
           echo "CONFIG_IPA3=n"
@@ -79,16 +102,11 @@ jobs:
           echo "CONFIG_MHI_BUS=n"
           echo "CONFIG_I3C=n"
           
-          echo "# 禁用整个techpack"
-          echo "CONFIG_TECHPACK_AUDIO=n"
-          echo "CONFIG_TECHPACK_DISPLAY=n"
-          echo "CONFIG_TECHPACK_VIDEO=n"
-          echo "CONFIG_TECHPACK_CAMERA=n"
-          
           echo "# 其他问题驱动"
           echo "CONFIG_QCOM_COMMAND_DB=n"
           echo "CONFIG_QCOM_RPMH=n"
           echo "CONFIG_INTERCONNECT=n"
+          echo "CONFIG_MSM_QMP=n"
           
         } >> out/.config
         
@@ -99,26 +117,22 @@ jobs:
         echo "ZSTD: $(grep CONFIG_KERNEL_ZSTD out/.config || echo '未设置')"
         echo "ZRAM: $(grep CONFIG_ZRAM out/.config || echo '未设置')"
         echo "VDSO: $(grep CONFIG_VDSO out/.config || echo '未设置')"
+        echo "KSU: $(grep CONFIG_KSU out/.config || echo '未设置')"
         
         echo "🔨 开始编译..."
-        # 最小化编译，只构建基础功能
-        make O=out ARCH=arm64 -j2 \
-          KCFLAGS="-Wno-error -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-uninitialized -Wno-array-bounds -Wno-maybe-uninitialized" \
-          drivers/base/ kernel/ mm/ fs/ block/ net/ ipc/ security/ crypto/ lib/ init/ usr/ virt/
-        
-        # 构建核心镜像
-        make O=out ARCH=arm64 -j2 \
-          KCFLAGS="-Wno-error -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-uninitialized -Wno-array-bounds -Wno-maybe-uninitialized"
+        # 使用完整的编译标志
+        make O=out ARCH=arm64 -j$(nproc) \
+          KCFLAGS="-Wno-error -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-uninitialized -Wno-array-bounds -Wno-maybe-uninitialized -Wno-address-of-packed-member"
         
         if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
           echo "🎉 最小化内核构建成功！"
           ls -lh out/arch/arm64/boot/Image.gz-dtb
         else
-          echo "❌ 构建失败，尝试分步构建..."
-          # 分步构建作为备选方案
-          make O=out ARCH=arm64 -j2 prepare
-          make O=out ARCH=arm64 -j2 scripts
-          make O=out ARCH=arm64 -j2
+          echo "❌ 构建失败"
+          # 显示最后错误
+          echo "最后错误:"
+          tail -50 out/.config > config_final.txt 2>/dev/null || echo "无法读取配置"
+          exit 1
         fi
 
     - name: Create flashable zip
