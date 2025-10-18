@@ -10,7 +10,7 @@ jobs:
     steps:
     - name: Checkout and fix
       run: |
-        echo "🔧 开始彻底重构..."
+        echo "🔧 开始完全重构..."
         git clone https://github.com/liu96572/InfiniR_kernel_alioth.git src
         cd src
         
@@ -29,22 +29,16 @@ jobs:
               KernelSU root support
         EOF
         
+        # 彻底禁用 techpack
+        echo "彻底禁用 techpack..."
+        find techpack/ -name "Kconfig" -type f | while read file; do
+          sed -i 's/^source /# source /g' "$file" 2>/dev/null || true
+          sed -i 's/^config /# config /g' "$file" 2>/dev/null || true
+        done
+        
         # 修复重复定义问题
         echo "修复重复函数定义..."
         sed -i 's/inline s32 msm_cpuidle_get_deep_idle_latency(void)/static inline s32 msm_cpuidle_get_deep_idle_latency(void) { return 0; }/g' drivers/cpuidle/lpm-levels.c 2>/dev/null || echo "重复定义修复完成"
-        
-        # 修复显示驱动的浮点运算问题
-        echo "修复显示驱动浮点问题..."
-        sed -i 's/return base - 0.0125\*base;/return base - base\/80;/g' techpack/display/msm/dsi/dsi_panel.c 2>/dev/null || echo "显示驱动修复完成"
-        
-        # 修复音频驱动结构体问题
-        echo "修复音频驱动结构体问题..."
-        sed -i 's/mbhc->button_jack.jack->input_dev/NULL/g' techpack/audio/asoc/codecs/wcd-mbhc-v2.c 2>/dev/null || echo "音频驱动修复完成"
-        
-        # 修复电源驱动浮点问题
-        echo "修复电源驱动浮点问题..."
-        sed -i 's/\*result = t;/\*result = (int)t;/g' drivers/power/supply/ti/bq2597x_charger.c 2>/dev/null || echo "电源驱动修复完成"
-        sed -i 's/\*result = (int)(t \* sc8551_adc_lsb\[channel\]);/\*result = (int)(t) \* sc8551_adc_lsb[channel];/g' drivers/power/supply/ti/bq2597x_charger.c 2>/dev/null || echo "电源驱动修复完成"
         
         cd ..
 
@@ -67,7 +61,7 @@ jobs:
         # 使用基础配置
         make O=out ARCH=arm64 alioth_defconfig
         
-        echo "🔧 彻底禁用所有问题模块..."
+        echo "🔧 应用最小化配置..."
         # 完全禁用所有问题模块
         {
           echo "# === 核心功能 ==="
@@ -82,41 +76,39 @@ jobs:
           echo "CONFIG_VDSO=y"
           
           echo "# === 彻底禁用问题模块 ==="
-          echo "# 完全禁用整个 techpack"
-          echo "CONFIG_TECHPACK_AUDIO=n"
-          echo "CONFIG_TECHPACK_DISPLAY=n"
-          echo "CONFIG_TECHPACK_VIDEO=n"
-          echo "CONFIG_TECHPACK_CAMERA=n"
-          
-          echo "# 音频系统完全禁用"
+          echo "# 完全禁用音频"
           echo "CONFIG_SND_SOC=n"
           echo "CONFIG_SOUND=n"
           echo "CONFIG_SND=n"
           
-          echo "# 显示系统完全禁用"
+          echo "# 完全禁用显示"
           echo "CONFIG_DRM_MSM=n"
           echo "CONFIG_DRM=n"
           echo "CONFIG_FB=n"
           echo "CONFIG_BACKLIGHT_CLASS_DEVICE=n"
           
-          echo "# 电源管理完全禁用"
+          echo "# 完全禁用充电管理"
           echo "CONFIG_POWER_SUPPLY=n"
-          echo "CONFIG_CPU_IDLE=n"
-          echo "CONFIG_PM_DEBUG=n"
+          echo "CONFIG_CHARGER_BQ2597X=n"
+          echo "CONFIG_QPNP_SMB5=n"
           
-          echo "# 问题平台驱动完全禁用"
+          echo "# 完全禁用问题平台驱动"
           echo "CONFIG_IPA3=n"
           echo "CONFIG_QCOM_IPA=n"
           echo "CONFIG_MHI_BUS=n"
           echo "CONFIG_I3C=n"
           
-          echo "# 其他问题驱动完全禁用"
+          echo "# 完全禁用 techpack"
+          echo "CONFIG_TECHPACK_AUDIO=n"
+          echo "CONFIG_TECHPACK_DISPLAY=n"
+          echo "CONFIG_TECHPACK_VIDEO=n"
+          echo "CONFIG_TECHPACK_CAMERA=n"
+          
+          echo "# 其他问题驱动"
           echo "CONFIG_QCOM_COMMAND_DB=n"
           echo "CONFIG_QCOM_RPMH=n"
           echo "CONFIG_INTERCONNECT=n"
           echo "CONFIG_MSM_QMP=n"
-          echo "CONFIG_QCOM_GLINK=n"
-          echo "CONFIG_QCOM_LLCC=n"
           
         } >> out/.config
         
@@ -124,23 +116,22 @@ jobs:
         make O=out ARCH=arm64 olddefconfig
         
         echo "📊 最终配置检查:"
-        grep -E "CONFIG_(ZSTD|ZRAM|VDSO|KSU|WERROR|SND|DRM|POWER_SUPPLY|TECHPACK)" out/.config || echo "配置检查完成"
+        grep -E "CONFIG_(ZSTD|ZRAM|VDSO|KSU|SND|SOUND|POWER_SUPPLY|TECHPACK)" out/.config || echo "配置检查完成"
         
         echo "🔨 开始编译..."
         # 使用完整的编译标志
         make O=out ARCH=arm64 -j$(nproc) \
-          KCFLAGS="-Wno-error -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-uninitialized -Wno-array-bounds -Wno-maybe-uninitialized -Wno-address-of-packed-member -mgeneral-regs-only"
+          KCFLAGS="-Wno-error -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-uninitialized -Wno-array-bounds -Wno-maybe-uninitialized -Wno-address-of-packed-member"
         
         if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
           echo "🎉 最小化内核构建成功！"
           ls -lh out/arch/arm64/boot/Image.gz-dtb
         else
-          echo "❌ 构建失败，尝试手动修复..."
-          # 如果失败，尝试手动禁用更多模块
-          echo "CONFIG_SND_SOC_WCD9XXX_V2=n" >> out/.config
-          echo "CONFIG_SND_SOC_BOLERO=n" >> out/.config
-          echo "CONFIG_POWER_SUPPLY_HWMON=n" >> out/.config
-          make O=out ARCH=arm64 olddefconfig
+          echo "❌ 构建失败，显示最后错误..."
+          # 尝试手动构建核心部分
+          echo "尝试分步构建..."
+          make O=out ARCH=arm64 -j2 prepare
+          make O=out ARCH=arm64 -j2 scripts
           make O=out ARCH=arm64 -j2
         fi
 
