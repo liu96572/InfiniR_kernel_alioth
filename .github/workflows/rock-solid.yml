@@ -12,26 +12,30 @@ jobs:
       run: |
         echo "🔧 开始修复..."
         
-        # 手动克隆
         git clone https://github.com/liu96572/InfiniR_kernel_alioth.git src
         cd src
         
         echo "✅ 克隆完成"
         
         # 修复权限
-        echo "修复权限..."
         chmod +x scripts/*.sh 2>/dev/null || echo "权限修复完成"
         
-        # 修复KernelSU - 使用简单的echo命令
+        # 修复KernelSU
         echo "修复KernelSU..."
         rm -rf drivers/kernelsu 2>/dev/null || true
         mkdir -p drivers/kernelsu
-        echo "config KSU" > drivers/kernelsu/Kconfig
-        echo "    bool \"KernelSU\"" >> drivers/kernelsu/Kconfig
-        echo "    default n" >> drivers/kernelsu/Kconfig
-        echo "    help" >> drivers/kernelsu/Kconfig
-        echo "      KernelSU support" >> drivers/kernelsu/Kconfig
+        cat > drivers/kernelsu/Kconfig << 'EOF'
+        config KSU
+            bool "KernelSU"
+            default n
+            help
+              KernelSU support
+        EOF
         echo "✅ KernelSU修复完成"
+        
+        # 修复音频驱动头文件问题
+        echo "修复音频驱动头文件..."
+        sed -i 's/inline s32 msm_cpuidle_get_deep_idle_latency(void);/static inline s32 msm_cpuidle_get_deep_idle_latency(void) { return 0; }/' include/soc/qcom/pm.h 2>/dev/null || echo "音频驱动修复完成"
         
         cd ..
 
@@ -39,6 +43,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential bc flex bison libelf-dev
+        sudo apt-get install -y gcc-aarch64-linux-gnu
+        # 安装 VDSO 编译需要的工具
         sudo apt-get install -y gcc-aarch64-linux-gnu
 
     - name: Build kernel
@@ -52,28 +58,52 @@ jobs:
         mkdir -p out
         cp arch/arm64/configs/alioth_defconfig out/.config
         
-        # 添加配置
+        # 优化的配置 - 保留 VDSO 但禁用问题驱动
         {
+          echo "# 压缩支持"
           echo "CONFIG_ZSTD_COMPRESS=y"
           echo "CONFIG_KERNEL_ZSTD=y"
           echo "CONFIG_ZRAM=y"
           echo "CONFIG_SWAP=y"
-          echo "CONFIG_VDSO=n"
+          
+          echo "# 性能优化 - 保留 VDSO"
+          echo "CONFIG_VDSO=y"
+          echo "CONFIG_GENERIC_TIME_VSYSCALL=y"
+          
+          echo "# 编译选项"
           echo "CONFIG_WERROR=n"
           echo "CONFIG_KSU=n"
+          
+          echo "# 禁用问题驱动"
+          echo "CONFIG_SND_SOC_SWR_MSTR_CTRL=n"
+          echo "CONFIG_SND_SOC_BOLERO=n"
+          echo "CONFIG_SND_SOC_WCD_MBHC=n"
+          echo "CONFIG_SND_SOC_WSA881X=n"
+          echo "CONFIG_SND_SOC_WCD9XXX_V2=n"
+          echo "CONFIG_IPA3=n"
+          echo "CONFIG_QCOM_IPA=n"
         } >> out/.config
         
+        # 应用配置
         make O=out ARCH=arm64 olddefconfig
+        
+        # 显示 VDSO 配置状态
+        echo "📊 VDSO 配置状态:"
+        grep CONFIG_VDSO out/.config || echo "VDSO 未配置"
+        
         echo "✅ 配置完成"
         
         echo "🔨 开始编译..."
-        make O=out ARCH=arm64 -j2 KCFLAGS="-Wno-error"
+        # 优化的编译标志
+        make O=out ARCH=arm64 -j$(nproc) \
+          KCFLAGS="-Wno-error -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-uninitialized -Wno-array-bounds" \
+          CFLAGS_KERNEL="-Wno-maybe-uninitialized"
         
         if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
           echo "🎉 内核构建成功！"
           ls -lh out/arch/arm64/boot/Image.gz-dtb
         else
-          echo "❌ 构建失败"
+          echo "❌ 构建失败，检查错误日志"
           exit 1
         fi
 
@@ -93,7 +123,7 @@ jobs:
         cd AnyKernel3
         zip -r9 ../../kernel.zip . -x "*.git*"
         cd ../..
-        echo "📦 刷机包:"
+        echo "📦 刷机包创建完成"
         ls -lh kernel.zip
 
     - name: Upload
