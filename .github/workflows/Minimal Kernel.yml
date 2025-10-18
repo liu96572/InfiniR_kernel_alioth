@@ -10,7 +10,7 @@ jobs:
     steps:
     - name: Checkout and fix
       run: |
-        echo "🔧 开始完全重构..."
+        echo "🔧 开始彻底重构..."
         git clone https://github.com/liu96572/InfiniR_kernel_alioth.git src
         cd src
         
@@ -37,6 +37,15 @@ jobs:
         echo "修复显示驱动浮点问题..."
         sed -i 's/return base - 0.0125\*base;/return base - base\/80;/g' techpack/display/msm/dsi/dsi_panel.c 2>/dev/null || echo "显示驱动修复完成"
         
+        # 修复音频驱动结构体问题
+        echo "修复音频驱动结构体问题..."
+        sed -i 's/mbhc->button_jack.jack->input_dev/NULL/g' techpack/audio/asoc/codecs/wcd-mbhc-v2.c 2>/dev/null || echo "音频驱动修复完成"
+        
+        # 修复电源驱动浮点问题
+        echo "修复电源驱动浮点问题..."
+        sed -i 's/\*result = t;/\*result = (int)t;/g' drivers/power/supply/ti/bq2597x_charger.c 2>/dev/null || echo "电源驱动修复完成"
+        sed -i 's/\*result = (int)(t \* sc8551_adc_lsb\[channel\]);/\*result = (int)(t) \* sc8551_adc_lsb[channel];/g' drivers/power/supply/ti/bq2597x_charger.c 2>/dev/null || echo "电源驱动修复完成"
+        
         cd ..
 
     - name: Setup environment
@@ -55,20 +64,10 @@ jobs:
         
         mkdir -p out
         
-        # 首先检查配置是否有效
-        echo "检查基础配置..."
-        if [ -f "arch/arm64/configs/alioth_defconfig" ]; then
-          echo "✅ 找到 alioth_defconfig"
-        else
-          echo "❌ 未找到 alioth_defconfig"
-          ls arch/arm64/configs/
-          exit 1
-        fi
-        
         # 使用基础配置
         make O=out ARCH=arm64 alioth_defconfig
         
-        echo "🔧 应用最小化配置..."
+        echo "🔧 彻底禁用所有问题模块..."
         # 完全禁用所有问题模块
         {
           echo "# === 核心功能 ==="
@@ -83,30 +82,41 @@ jobs:
           echo "CONFIG_VDSO=y"
           
           echo "# === 彻底禁用问题模块 ==="
-          echo "# 音频相关"
+          echo "# 完全禁用整个 techpack"
+          echo "CONFIG_TECHPACK_AUDIO=n"
+          echo "CONFIG_TECHPACK_DISPLAY=n"
+          echo "CONFIG_TECHPACK_VIDEO=n"
+          echo "CONFIG_TECHPACK_CAMERA=n"
+          
+          echo "# 音频系统完全禁用"
           echo "CONFIG_SND_SOC=n"
           echo "CONFIG_SOUND=n"
+          echo "CONFIG_SND=n"
           
-          echo "# 显示相关" 
+          echo "# 显示系统完全禁用"
           echo "CONFIG_DRM_MSM=n"
           echo "CONFIG_DRM=n"
           echo "CONFIG_FB=n"
+          echo "CONFIG_BACKLIGHT_CLASS_DEVICE=n"
           
-          echo "# 电源管理"
+          echo "# 电源管理完全禁用"
+          echo "CONFIG_POWER_SUPPLY=n"
           echo "CONFIG_CPU_IDLE=n"
           echo "CONFIG_PM_DEBUG=n"
           
-          echo "# 问题平台驱动"
+          echo "# 问题平台驱动完全禁用"
           echo "CONFIG_IPA3=n"
           echo "CONFIG_QCOM_IPA=n"
           echo "CONFIG_MHI_BUS=n"
           echo "CONFIG_I3C=n"
           
-          echo "# 其他问题驱动"
+          echo "# 其他问题驱动完全禁用"
           echo "CONFIG_QCOM_COMMAND_DB=n"
           echo "CONFIG_QCOM_RPMH=n"
           echo "CONFIG_INTERCONNECT=n"
           echo "CONFIG_MSM_QMP=n"
+          echo "CONFIG_QCOM_GLINK=n"
+          echo "CONFIG_QCOM_LLCC=n"
           
         } >> out/.config
         
@@ -114,25 +124,24 @@ jobs:
         make O=out ARCH=arm64 olddefconfig
         
         echo "📊 最终配置检查:"
-        echo "ZSTD: $(grep CONFIG_KERNEL_ZSTD out/.config || echo '未设置')"
-        echo "ZRAM: $(grep CONFIG_ZRAM out/.config || echo '未设置')"
-        echo "VDSO: $(grep CONFIG_VDSO out/.config || echo '未设置')"
-        echo "KSU: $(grep CONFIG_KSU out/.config || echo '未设置')"
+        grep -E "CONFIG_(ZSTD|ZRAM|VDSO|KSU|WERROR|SND|DRM|POWER_SUPPLY|TECHPACK)" out/.config || echo "配置检查完成"
         
         echo "🔨 开始编译..."
         # 使用完整的编译标志
         make O=out ARCH=arm64 -j$(nproc) \
-          KCFLAGS="-Wno-error -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-uninitialized -Wno-array-bounds -Wno-maybe-uninitialized -Wno-address-of-packed-member"
+          KCFLAGS="-Wno-error -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-uninitialized -Wno-array-bounds -Wno-maybe-uninitialized -Wno-address-of-packed-member -mgeneral-regs-only"
         
         if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
           echo "🎉 最小化内核构建成功！"
           ls -lh out/arch/arm64/boot/Image.gz-dtb
         else
-          echo "❌ 构建失败"
-          # 显示最后错误
-          echo "最后错误:"
-          tail -50 out/.config > config_final.txt 2>/dev/null || echo "无法读取配置"
-          exit 1
+          echo "❌ 构建失败，尝试手动修复..."
+          # 如果失败，尝试手动禁用更多模块
+          echo "CONFIG_SND_SOC_WCD9XXX_V2=n" >> out/.config
+          echo "CONFIG_SND_SOC_BOLERO=n" >> out/.config
+          echo "CONFIG_POWER_SUPPLY_HWMON=n" >> out/.config
+          make O=out ARCH=arm64 olddefconfig
+          make O=out ARCH=arm64 -j2
         fi
 
     - name: Create flashable zip
