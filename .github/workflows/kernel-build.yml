@@ -1,0 +1,36 @@
+name: Build Enhanced v3.10
+
+on:
+  push:
+    branches: [ feature/enhanced-v3.10 ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup environment
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential libncurses-dev libssl-dev bc flex bison libelf-dev dwarves
+        
+    - name: Configure kernel
+      run: |
+        make O=out ARCH=arm64 alioth_defconfig
+        # 应用我们的配置更新
+        make O=out ARCH=arm64 olddefconfig
+        
+    - name: Build kernel
+      run: |
+        make O=out ARCH=arm64 -j$(nproc)
+        
+    - name: Create flashable zip
+      run: |
+        # 基于AnyKernel3创建刷机包
+        git clone https://github.com/osm0sis/AnyKernel3
+        cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
+        cd AnyKernel3 && zip -r9 ../InfiniR_Alioth_v3.10_Enhanced.zip .
