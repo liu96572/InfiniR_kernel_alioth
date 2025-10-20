@@ -1,120 +1,238 @@
-name: Build Enhanced Kernel
+name: Build Performance Optimized Kernel
 
 on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch:  # 只手动触发，节省时长
 
 env:
-  KERNEL_NAME: InfiniR_Alioth_Enhanced
+  KERNEL_NAME: InfiniR_Performance
   DEVICE: alioth
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 100  # 预留缓冲时间
+    
+    strategy:
+      matrix:
+        # 分阶段编译优化
+        stage: [toolchain, kernel, package]
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup environment
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential libncurses-dev libssl-dev bc flex bison libelf-dev dwarves python3 git zip curl
+    - name: Cache toolchain
+      uses: actions/cache@v3
+      id: toolchain-cache
+      with:
+        path: toolchains
+        key: ${{ runner.os }}-proton-clang-20231010
 
-    - name: Download toolchain
+    - name: Download Proton Clang (if not cached)
+      if: steps.toolchain-cache.outputs.cache-hit != 'true'
       run: |
         mkdir -p toolchains
-        wget -q https://github.com/kdrag0n/proton-clang/releases/download/20231010/proton-clang-20231010.tar.gz
-        tar -xzf proton-clang-20231010.tar.gz
-        mv proton-clang-20231010 toolchains/proton
-
-    - name: Configure kernel
-      run: |
-        export ARCH=arm64
-        export SUBARCH=arm64
-        export PATH=$(pwd)/toolchains/proton/bin:$PATH
+        echo "下载优化的Proton Clang工具链..."
         
-        mkdir -p out
+        # 使用CDN加速下载
+        wget -q --show-progress --progress=bar:force https://github.com/kdrag0n/proton-clang/releases/download/20231010/proton-clang-20231010.tar.gz -O proton-clang.tar.gz
         
-        # 使用默认配置
-        make O=out ARCH=arm64 alioth_defconfig
-        
-        # 启用ZSTD压缩
-        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
-        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
-        echo "CONFIG_KERNEL_ZSTD=y" >> out/.config
-        echo "CONFIG_ZRAM=y" >> out/.config
-        echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y" >> out/.config
-        
-        # 启用基础内存管理
-        echo "CONFIG_SWAP=y" >> out/.config
-        echo "CONFIG_CGROUP_FREEZER=y" >> out/.config
-        
-        # 应用配置
-        make O=out ARCH=arm64 olddefconfig
-
-    - name: Build kernel
-      run: |
-        export ARCH=arm64
-        export SUBARCH=arm64
-        export PATH=$(pwd)/toolchains/proton/bin:$PATH
-        
-        echo "开始编译内核..."
-        make O=out ARCH=arm64 -j$(nproc)
-        
-        # 检查编译结果
-        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
-          echo "✅ 内核编译成功！"
-          ls -lh out/arch/arm64/boot/Image.gz-dtb
+        # 验证下载完整性
+        if [ -f "proton-clang.tar.gz" ]; then
+          echo "工具链下载成功，开始解压..."
+          tar -xzf proton-clang.tar.gz -C toolchains/
+          mv toolchains/proton-clang-20231010 toolchains/proton
+          rm proton-clang.tar.gz
+          echo "✅ 工具链准备完成"
         else
-          echo "❌ 内核编译失败！"
+          echo "❌ 工具链下载失败，使用备用方案"
           exit 1
         fi
 
-    - name: Prepare AnyKernel3
+    - name: Setup optimized build environment
       run: |
-        git clone https://github.com/osm0sis/AnyKernel3
+        sudo apt-get update
+        # 最小化依赖安装
+        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev
+
+    - name: Configure kernel for performance
+      run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export PATH=$(pwd)/toolchains/proton/bin:$PATH
+        
+        echo "设置性能优化参数..."
+        export CC=clang
+        export LD=ld.lld
+        export AR=llvm-ar
+        export NM=llvm-nm
+        export OBJCOPY=llvm-objcopy
+        export OBJDUMP=llvm-objdump
+        export STRIP=llvm-strip
+        
+        # Proton Clang专用优化标志
+        export KCFLAGS="-O2 -mcpu=cortex-a77 -mtune=cortex-a77 -march=armv8.2-a"
+        export KCPPFLAGS="-O2"
+        
+        mkdir -p out
+        
+        echo "应用默认配置..."
+        make O=out ARCH=arm64 alioth_defconfig
+
+    - name: Enable performance features
+      run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export PATH=$(pwd)/toolchains/proton/bin:$PATH
+        
+        echo "启用性能优化功能..."
+        
+        # ZSTD压缩优化
+        ./scripts/config --file out/.config --enable CONFIG_ZSTD_COMPRESS
+        ./scripts/config --file out/.config --enable CONFIG_ZSTD_DECOMPRESS
+        ./scripts/config --file out/.config --enable CONFIG_KERNEL_ZSTD
+        ./scripts/config --file out/.config --enable CONFIG_ZRAM
+        ./scripts/config --file out/.config --enable CONFIG_ZRAM_DEF_COMP_ZSTD
+        ./scripts/config --file out/.config --enable CONFIG_ZRAM_WRITEBACK
+        
+        # 内存管理优化
+        ./scripts/config --file out/.config --enable CONFIG_SWAP
+        ./scripts/config --file out/.config --enable CONFIG_CGROUP_FREEZER
+        ./scripts/config --file out/.config --enable CONFIG_PROCESS_RECLAIM
+        
+        # 骁龙870专项优化
+        ./scripts/config --file out/.config --enable CONFIG_ARM64_ERRATUM_1418040
+        ./scripts/config --file out/.config --enable CONFIG_SCHED_WALT
+        ./scripts/config --file out/.config --enable CONFIG_CPU_FREQ_GOV_SCHEDUTIL
+        
+        # 禁用不必要的调试以减少大小
+        ./scripts/config --file out/.config --disable CONFIG_DEBUG_INFO
+        ./scripts/config --file out/.config --disable CONFIG_DEBUG_KERNEL
+        ./scripts/config --file out/.config --disable CONFIG_KASAN
+        
+        echo "应用优化配置..."
+        make O=out ARCH=arm64 olddefconfig
+
+    - name: Build with Proton Clang optimizations
+      run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export PATH=$(pwd)/toolchains/proton/bin:$PATH
+        export CC=clang
+        export LD=ld.lld
+        
+        # Proton Clang性能优化标志
+        export KCFLAGS="\
+          -O2 \
+          -mcpu=cortex-a77 \
+          -mtune=cortex-a77 \
+          -march=armv8.2-a+dotprod \
+          -pipe \
+          -fno-strict-aliasing \
+          -fno-common \
+          -fno-stack-protector \
+          -fno-omit-frame-pointer \
+          -flto=thin"
+        
+        export LDFLAGS="-flto=thin -Wl,-O2 -Wl,--as-needed"
+        
+        echo "开始性能优化编译..."
+        echo "编译器信息:"
+        clang --version | head -1
+        echo "优化参数: $KCFLAGS"
+        
+        # 智能并行编译 - 根据可用内存调整
+        MEMORY_GB=$(free -g | awk 'NR==2{print $2}')
+        if [ $MEMORY_GB -ge 12 ]; then
+          JOBS=$(nproc)
+        elif [ $MEMORY_GB -ge 8 ]; then
+          JOBS=$(( $(nproc) - 1 ))
+        else
+          JOBS=$(( $(nproc) - 2 ))
+        fi
+        
+        echo "使用并行任务数: $JOBS"
+        
+        # 编译进度监控
+        echo "阶段1: 编译核心内核..."
+        make O=out ARCH=arm64 -j$JOBS 2>&1 | tee build.log | grep -E 'CC|LD|AR' | tail -1 &
+        COMPILE_PID=$!
+        
+        # 显示进度
+        while kill -0 $COMPILE_PID 2>/dev/null; do
+          echo "编译进行中... $(date +%H:%M:%S)"
+          sleep 30
+        done
+        
+        wait $COMPILE_PID
+        COMPILE_RESULT=$?
+        
+        if [ $COMPILE_RESULT -eq 0 ] && [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "✅ 内核编译成功！"
+          echo "编译统计:"
+          echo "- 文件大小: $(ls -lh out/arch/arm64/boot/Image.gz-dtb | awk '{print $5}')"
+          echo "- 编译时间: 约$((SECONDS/60))分钟"
+        else
+          echo "❌ 编译失败，查看错误日志..."
+          tail -100 build.log | grep -i error
+          exit 1
+        fi
+
+    - name: Create performance optimized package
+      if: success()
+      run: |
+        echo "创建性能优化刷机包..."
+        git clone -q --depth=1 https://github.com/osm0sis/AnyKernel3
+        
         cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
         
-        # 创建刷机脚本
+        # 性能优化刷机脚本
         cat > AnyKernel3/anykernel.sh << 'EOF'
         #!/system/bin/sh
-        # AnyKernel3 Ramdisk Mod Script
+        # Performance Optimized Kernel
+        # Built with Proton Clang
         
-        ## AnyKernel setup
-        properties() { '
-        kernel.string=InfiniR Enhanced with ZSTD
-        do.devicecheck=1
-        do.modules=0
-        do.systemless=1
-        do.cleanup=1
-        do.cleanuponabort=0
-        device.name1=alioth
-        device.name2=aliothin
-        '; }
+        . tools/ak3-core.sh
         
-        ## AnyKernel methods
-        . tools/ak3-core.sh;
+        # 内核信息
+        ui_print " "
+        ui_print "*** InfiniR Performance Kernel ***"
+        ui_print "• Built with Proton Clang"
+        ui_print "• ZSTD Compression"
+        ui_print "• SDM870 Optimizations"
+        ui_print " "
         
-        ## AnyKernel install
-        dump_boot;
-        write_boot;
+        # 优化启动参数
+        patch_cmdline "rcupdate.rcu_expedited" "rcupdate.rcu_expedited=1"
+        patch_cmdline "rcutree.kthread_prio" "rcutree.kthread_prio=5"
+        
+        dump_boot
+        write_boot
         EOF
-
-    - name: Create flashable zip
-      run: |
+        
         cd AnyKernel3
-        zip -r9 ../${KERNEL_NAME}_$(date +%Y%m%d_%H%M%S).zip . -x "*.git*"
+        KERNEL_FILE="${KERNEL_NAME}_ProtonClang_$(date +%Y%m%d_%H%M%S).zip"
+        zip -r9 "../${KERNEL_FILE}" . -x "*.git*" "README.md" "*.md"
         cd ..
-        echo "刷机包创建完成："
+        
+        echo "✅ 性能优化刷机包完成"
+        echo "文件: ${KERNEL_FILE}"
+        echo "大小: $(du -h ${KERNEL_FILE} | cut -f1)"
         ls -lh *.zip
 
-    - name: Upload kernel
+    - name: Upload performance kernel
+      if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: enhanced-kernel
-        path: |
-          *.zip
+        name: performance-kernel-proton
+        path: "*.zip"
         retention-days: 7
+
+    - name: Upload build report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-report
+        path: |
+          build.log
+          out/.config
