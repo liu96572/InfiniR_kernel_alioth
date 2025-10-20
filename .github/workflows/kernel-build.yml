@@ -1,238 +1,190 @@
-name: Build Performance Optimized Kernel
+name: Build Kernel - Simple & Reliable
 
 on:
-  workflow_dispatch:  # 只手动触发，节省时长
+  push:
+    branches: [ 16.0-alioth ]
+  workflow_dispatch:
 
 env:
-  KERNEL_NAME: InfiniR_Performance
+  KERNEL_NAME: InfiniR_Simple
   DEVICE: alioth
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 100  # 预留缓冲时间
-    
-    strategy:
-      matrix:
-        # 分阶段编译优化
-        stage: [toolchain, kernel, package]
+    timeout-minutes: 100
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Cache toolchain
-      uses: actions/cache@v3
-      id: toolchain-cache
-      with:
-        path: toolchains
-        key: ${{ runner.os }}-proton-clang-20231010
-
-    - name: Download Proton Clang (if not cached)
-      if: steps.toolchain-cache.outputs.cache-hit != 'true'
-      run: |
-        mkdir -p toolchains
-        echo "下载优化的Proton Clang工具链..."
-        
-        # 使用CDN加速下载
-        wget -q --show-progress --progress=bar:force https://github.com/kdrag0n/proton-clang/releases/download/20231010/proton-clang-20231010.tar.gz -O proton-clang.tar.gz
-        
-        # 验证下载完整性
-        if [ -f "proton-clang.tar.gz" ]; then
-          echo "工具链下载成功，开始解压..."
-          tar -xzf proton-clang.tar.gz -C toolchains/
-          mv toolchains/proton-clang-20231010 toolchains/proton
-          rm proton-clang.tar.gz
-          echo "✅ 工具链准备完成"
-        else
-          echo "❌ 工具链下载失败，使用备用方案"
-          exit 1
-        fi
-
-    - name: Setup optimized build environment
+    - name: Install dependencies
       run: |
         sudo apt-get update
-        # 最小化依赖安装
-        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev
+        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev git wget
 
-    - name: Configure kernel for performance
+    - name: Setup AOSP Clang (更稳定的选择)
+      run: |
+        mkdir -p toolchains
+        echo "下载AOSP Clang工具链..."
+        
+        # 使用Google官方AOSP Clang，更稳定
+        wget -q --timeout=60 https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r487747c.tar.gz -O clang.tar.gz
+        
+        if [ $? -eq 0 ] && [ -f "clang.tar.gz" ]; then
+          echo "解压工具链..."
+          tar -xzf clang.tar.gz -C toolchains/
+          rm clang.tar.gz
+          echo "✅ AOSP Clang工具链准备完成"
+        else
+          echo "❌ AOSP Clang下载失败，尝试备用方案..."
+          # 备用方案：使用系统Clang
+          sudo apt-get install -y clang lld
+          echo "使用系统Clang继续编译"
+        fi
+
+    - name: Configure kernel
       run: |
         export ARCH=arm64
         export SUBARCH=arm64
-        export PATH=$(pwd)/toolchains/proton/bin:$PATH
         
-        echo "设置性能优化参数..."
-        export CC=clang
-        export LD=ld.lld
-        export AR=llvm-ar
-        export NM=llvm-nm
-        export OBJCOPY=llvm-objcopy
-        export OBJDUMP=llvm-objdump
-        export STRIP=llvm-strip
+        # 设置工具链路径
+        if [ -d "toolchains/bin" ]; then
+          export PATH=$(pwd)/toolchains/bin:$PATH
+          export CROSS_COMPILE=aarch64-linux-android-
+          echo "使用AOSP Clang工具链"
+        else
+          export CC=clang
+          export LD=ld.lld
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          echo "使用系统Clang工具链"
+        fi
         
-        # Proton Clang专用优化标志
-        export KCFLAGS="-O2 -mcpu=cortex-a77 -mtune=cortex-a77 -march=armv8.2-a"
-        export KCPPFLAGS="-O2"
-        
+        echo "创建输出目录..."
         mkdir -p out
         
         echo "应用默认配置..."
         make O=out ARCH=arm64 alioth_defconfig
 
-    - name: Enable performance features
+    - name: Enable essential features
       run: |
         export ARCH=arm64
         export SUBARCH=arm64
-        export PATH=$(pwd)/toolchains/proton/bin:$PATH
         
-        echo "启用性能优化功能..."
-        
-        # ZSTD压缩优化
-        ./scripts/config --file out/.config --enable CONFIG_ZSTD_COMPRESS
-        ./scripts/config --file out/.config --enable CONFIG_ZSTD_DECOMPRESS
-        ./scripts/config --file out/.config --enable CONFIG_KERNEL_ZSTD
-        ./scripts/config --file out/.config --enable CONFIG_ZRAM
-        ./scripts/config --file out/.config --enable CONFIG_ZRAM_DEF_COMP_ZSTD
-        ./scripts/config --file out/.config --enable CONFIG_ZRAM_WRITEBACK
-        
-        # 内存管理优化
-        ./scripts/config --file out/.config --enable CONFIG_SWAP
-        ./scripts/config --file out/.config --enable CONFIG_CGROUP_FREEZER
-        ./scripts/config --file out/.config --enable CONFIG_PROCESS_RECLAIM
-        
-        # 骁龙870专项优化
-        ./scripts/config --file out/.config --enable CONFIG_ARM64_ERRATUM_1418040
-        ./scripts/config --file out/.config --enable CONFIG_SCHED_WALT
-        ./scripts/config --file out/.config --enable CONFIG_CPU_FREQ_GOV_SCHEDUTIL
-        
-        # 禁用不必要的调试以减少大小
-        ./scripts/config --file out/.config --disable CONFIG_DEBUG_INFO
-        ./scripts/config --file out/.config --disable CONFIG_DEBUG_KERNEL
-        ./scripts/config --file out/.config --disable CONFIG_KASAN
-        
-        echo "应用优化配置..."
-        make O=out ARCH=arm64 olddefconfig
-
-    - name: Build with Proton Clang optimizations
-      run: |
-        export ARCH=arm64
-        export SUBARCH=arm64
-        export PATH=$(pwd)/toolchains/proton/bin:$PATH
-        export CC=clang
-        export LD=ld.lld
-        
-        # Proton Clang性能优化标志
-        export KCFLAGS="\
-          -O2 \
-          -mcpu=cortex-a77 \
-          -mtune=cortex-a77 \
-          -march=armv8.2-a+dotprod \
-          -pipe \
-          -fno-strict-aliasing \
-          -fno-common \
-          -fno-stack-protector \
-          -fno-omit-frame-pointer \
-          -flto=thin"
-        
-        export LDFLAGS="-flto=thin -Wl,-O2 -Wl,--as-needed"
-        
-        echo "开始性能优化编译..."
-        echo "编译器信息:"
-        clang --version | head -1
-        echo "优化参数: $KCFLAGS"
-        
-        # 智能并行编译 - 根据可用内存调整
-        MEMORY_GB=$(free -g | awk 'NR==2{print $2}')
-        if [ $MEMORY_GB -ge 12 ]; then
-          JOBS=$(nproc)
-        elif [ $MEMORY_GB -ge 8 ]; then
-          JOBS=$(( $(nproc) - 1 ))
+        if [ -d "toolchains/bin" ]; then
+          export PATH=$(pwd)/toolchains/bin:$PATH
         else
-          JOBS=$(( $(nproc) - 2 ))
+          export CC=clang
+          export LD=ld.lld
         fi
         
-        echo "使用并行任务数: $JOBS"
+        echo "启用核心功能..."
         
-        # 编译进度监控
-        echo "阶段1: 编译核心内核..."
-        make O=out ARCH=arm64 -j$JOBS 2>&1 | tee build.log | grep -E 'CC|LD|AR' | tail -1 &
-        COMPILE_PID=$!
+        # 直接修改.config文件
+        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
+        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config  
+        echo "CONFIG_KERNEL_ZSTD=y" >> out/.config
+        echo "CONFIG_ZRAM=y" >> out/.config
+        echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y" >> out/.config
         
-        # 显示进度
-        while kill -0 $COMPILE_PID 2>/dev/null; do
-          echo "编译进行中... $(date +%H:%M:%S)"
-          sleep 30
-        done
+        echo "CONFIG_SWAP=y" >> out/.config
+        echo "CONFIG_CGROUP_FREEZER=y" >> out/.config
         
-        wait $COMPILE_PID
-        COMPILE_RESULT=$?
+        echo "应用配置..."
+        make O=out ARCH=arm64 olddefconfig
+        echo "✅ 内核配置完成"
+
+    - name: Build kernel
+      run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
         
-        if [ $COMPILE_RESULT -eq 0 ] && [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
-          echo "✅ 内核编译成功！"
-          echo "编译统计:"
-          echo "- 文件大小: $(ls -lh out/arch/arm64/boot/Image.gz-dtb | awk '{print $5}')"
-          echo "- 编译时间: 约$((SECONDS/60))分钟"
+        if [ -d "toolchains/bin" ]; then
+          export PATH=$(pwd)/toolchains/bin:$PATH
+          export CROSS_COMPILE=aarch64-linux-android-
         else
-          echo "❌ 编译失败，查看错误日志..."
-          tail -100 build.log | grep -i error
+          export CC=clang
+          export LD=ld.lld
+          export CROSS_COMPILE=aarch64-linux-gnu-
+        fi
+        
+        echo "开始编译内核..."
+        echo "使用编译器:"
+        ${CROSS_COMPILE}gcc --version | head -1 || clang --version | head -1
+        
+        # 简单编译，不使用复杂参数
+        make O=out ARCH=arm64 -j$(nproc)
+        
+        # 检查编译结果
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "✅ 内核编译成功！"
+          echo "文件信息:"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+          echo "编译完成时间: $(date)"
+        else
+          echo "❌ 内核编译失败"
+          echo "输出目录内容:"
+          find out/ -type f -name "*.o" | head -10 || echo "无目标文件"
           exit 1
         fi
 
-    - name: Create performance optimized package
+    - name: Create flashable zip
       if: success()
       run: |
-        echo "创建性能优化刷机包..."
-        git clone -q --depth=1 https://github.com/osm0sis/AnyKernel3
+        echo "创建刷机包..."
         
-        cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
+        # 手动创建最小化AnyKernel3结构
+        mkdir -p ak3_package/META-INF/com/google/android
+        mkdir -p ak3_package/tools
         
-        # 性能优化刷机脚本
-        cat > AnyKernel3/anykernel.sh << 'EOF'
-        #!/system/bin/sh
-        # Performance Optimized Kernel
-        # Built with Proton Clang
+        cp out/arch/arm64/boot/Image.gz-dtb ak3_package/
         
-        . tools/ak3-core.sh
+        # 创建简单的刷机脚本
+        cat > ak3_package/META-INF/com/google/android/update-binary << 'EOF'
+        #!/sbin/sh
+        echo "InfiniR Kernel Flasher"
+        echo "Mounting partitions..."
+        mount /system 2>/dev/null
+        mount /vendor 2>/dev/null
         
-        # 内核信息
-        ui_print " "
-        ui_print "*** InfiniR Performance Kernel ***"
-        ui_print "• Built with Proton Clang"
-        ui_print "• ZSTD Compression"
-        ui_print "• SDM870 Optimizations"
-        ui_print " "
+        echo "Extracting kernel..."
+        cd /tmp
+        unzip -o "$3" Image.gz-dtb
         
-        # 优化启动参数
-        patch_cmdline "rcupdate.rcu_expedited" "rcupdate.rcu_expedited=1"
-        patch_cmdline "rcutree.kthread_prio" "rcutree.kthread_prio=5"
+        echo "Flashing kernel..."
+        dd if=/tmp/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot
         
-        dump_boot
-        write_boot
+        echo "Cleaning up..."
+        umount /system 2>/dev/null
+        umount /vendor 2>/dev/null
+        echo "Flash complete!"
         EOF
         
-        cd AnyKernel3
-        KERNEL_FILE="${KERNEL_NAME}_ProtonClang_$(date +%Y%m%d_%H%M%S).zip"
-        zip -r9 "../${KERNEL_FILE}" . -x "*.git*" "README.md" "*.md"
+        cat > ak3_package/META-INF/com/google/android/updater-script << 'EOF'
+        ui_print("InfiniR Simple Kernel");
+        ui_print("Device: alioth");
+        ui_print("Flashing kernel...");
+        show_progress(0.500000, 0);
+        package_extract_file("Image.gz-dtb", "/tmp/Image.gz-dtb");
+        run_program("/sbin/dd", "if=/tmp/Image.gz-dtb", "of=/dev/block/bootdevice/by-name/boot");
+        show_progress(0.100000, 0);
+        ui_print("Flash complete!");
+        EOF
+        
+        chmod +x ak3_package/META-INF/com/google/android/update-binary
+        
+        # 创建ZIP包
+        cd ak3_package
+        zip -r9 "../${KERNEL_NAME}_simple.zip" .
         cd ..
         
-        echo "✅ 性能优化刷机包完成"
-        echo "文件: ${KERNEL_FILE}"
-        echo "大小: $(du -h ${KERNEL_FILE} | cut -f1)"
+        echo "✅ 刷机包创建完成"
         ls -lh *.zip
 
-    - name: Upload performance kernel
+    - name: Upload kernel
       if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: performance-kernel-proton
+        name: simple-kernel
         path: "*.zip"
         retention-days: 7
-
-    - name: Upload build report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-report
-        path: |
-          build.log
-          out/.config
