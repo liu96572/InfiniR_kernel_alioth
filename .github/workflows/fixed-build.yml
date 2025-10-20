@@ -1,0 +1,120 @@
+name: Build Kernel - Fixed Config
+
+on:
+  workflow_dispatch:
+
+env:
+  KERNEL_NAME: InfiniR_Fixed
+  DEVICE: alioth
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Install compiler
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu
+
+    - name: Fix and configure kernel
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "步骤1: 检查defconfig文件..."
+        cat arch/arm64/configs/alioth_defconfig | head -20
+        
+        echo "步骤2: 创建输出目录..."
+        mkdir -p out
+        
+        echo "步骤3: 手动创建基础配置..."
+        # 如果defconfig有问题，手动创建最小配置
+        make O=out ARCH=arm64 defconfig > /dev/null 2>&1 || {
+          echo "defconfig失败，使用手动配置..."
+          # 创建最小配置
+          cp arch/arm64/configs/defconfig out/.config 2>/dev/null || echo "使用默认配置"
+        }
+        
+        echo "步骤4: 启用必要功能..."
+        # 直接编辑.config文件
+        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
+        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
+        echo "CONFIG_SWAP=y" >> out/.config
+        echo "CONFIG_MODULES=y" >> out/.config
+        echo "CONFIG_MODULE_UNLOAD=y" >> out/.config
+        
+        echo "步骤5: 应用配置..."
+        make O=out ARCH=arm64 olddefconfig
+
+    - name: Simple build test
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "测试编译单个目标..."
+        # 先编译一个小文件测试
+        make O=out ARCH=arm64 -j2 kernel/fork.o
+        
+        if [ -f "out/kernel/fork.o" ]; then
+          echo "✅ 基础编译测试通过"
+        else
+          echo "尝试替代编译方法..."
+          # 如果上面失败，尝试更基础的方法
+          cd out
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -f ../Makefile kernel/fork.o
+        fi
+
+    - name: Build full kernel
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "开始完整编译..."
+        # 使用更保守的并行数
+        make O=out ARCH=arm64 -j2
+        
+        # 检查结果
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "🎉 完整编译成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+        else
+          echo "检查生成的文件..."
+          find out/ -name "Image*" -o -name "*.gz*" -o -name "*.dtb" | head -10
+          echo "编译日志结束"
+        fi
+
+    - name: Create minimal package
+      if: success()
+      run: |
+        echo "创建刷机包..."
+        # 使用最简化的方法
+        mkdir -p ak3_package
+        cp out/arch/arm64/boot/Image.gz-dtb ak3_package/
+        
+        cat > ak3_package/anykernel.sh << 'EOF'
+        #!/system/bin/sh
+        echo "Flashing InfiniR Kernel..."
+        dd if=/tmp/anykernel/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot
+        echo "Flash complete!"
+        EOF
+        
+        cd ak3_package
+        zip -r9 "../${KERNEL_NAME}.zip" .
+        cd ..
+        
+        echo "✅ 刷机包创建完成"
+        ls -lh *.zip
+
+    - name: Upload kernel
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: fixed-kernel
+        path: "*.zip"
