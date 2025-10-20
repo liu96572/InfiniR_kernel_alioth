@@ -1,0 +1,105 @@
+name: Pure Environment Debug
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: System Check
+      run: |
+        echo "=== 基础系统检查 ==="
+        echo "Ubuntu版本: $(lsb_release -d | cut -f2)"
+        echo "内核版本: $(uname -r)"
+        echo "架构: $(uname -m)"
+        echo "CPU核心: $(nproc)"
+        echo "内存: $(free -h | awk 'NR==2{print $2}')"
+        echo "磁盘: $(df -h / | awk 'NR==2{print $4}') 可用"
+        echo " "
+
+    - name: Pre-installed Tools
+      run: |
+        echo "=== 系统预装工具 ==="
+        echo "GCC: $(gcc --version | head -1 || echo '未安装')"
+        echo "Clang: $(clang --version | head -1 2>/dev/null || echo '未安装')"
+        echo "Make: $(make --version | head -1)"
+        echo "Python3: $(python3 --version 2>/dev/null || echo '未安装')"
+        echo " "
+
+    - name: ARM Cross Compiler Check
+      run: |
+        echo "=== ARM交叉编译器检查 ==="
+        # 检查系统自带的ARM编译器
+        sudo apt-get update > /dev/null 2>&1
+        echo "安装gcc-aarch64-linux-gnu..."
+        sudo apt-get install -y gcc-aarch64-linux-gnu > /dev/null 2>&1
+        
+        echo "ARM GCC: $(aarch64-linux-gnu-gcc --version 2>/dev/null | head -1 || echo '安装失败')"
+        echo "ARM G++: $(aarch64-linux-gnu-g++ --version 2>/dev/null | head -1 || echo '安装失败')"
+        echo " "
+
+    - name: Build Dependencies Check
+      run: |
+        echo "=== 内核编译依赖检查 ==="
+        sudo apt-get install -y bc flex bison libelf-dev libssl-dev > /dev/null 2>&1
+        
+        echo "bc: $(bc --version 2>/dev/null | head -1 || echo '未安装')"
+        echo "flex: $(flex --version 2>/dev/null | head -1 || echo '未安装')" 
+        echo "bison: $(bison --version 2>/dev/null | head -1 || echo '未安装')"
+        echo "libelf: $(pkg-config --modversion libelf 2>/dev/null || echo '未安装')"
+        echo "openssl: $(openssl version 2>/dev/null || echo '未安装')"
+        echo " "
+
+    - name: Kernel Source Validation
+      run: |
+        echo "=== 内核源码验证 ==="
+        echo "当前目录: $(pwd)"
+        echo " "
+        echo "文件结构:"
+        ls -la
+        echo " "
+        echo "关键文件检查:"
+        [ -f "Makefile" ] && echo "✅ Makefile存在" || echo "❌ Makefile缺失"
+        [ -d "arch/arm64" ] && echo "✅ arch/arm64目录存在" || echo "❌ arch/arm64目录缺失"
+        [ -f "arch/arm64/configs/alioth_defconfig" ] && echo "✅ alioth_defconfig存在" || echo "❌ alioth_defconfig缺失"
+        [ -d "kernel" ] && echo "✅ kernel目录存在" || echo "❌ kernel目录缺失"
+        [ -d "include" ] && echo "✅ include目录存在" || echo "❌ include目录缺失"
+        echo " "
+
+    - name: Simple Compile Test
+      run: |
+        echo "=== 简单编译测试 ==="
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "1. 测试配置..."
+        make help | head -5
+        echo " "
+        
+        echo "2. 创建输出目录..."
+        mkdir -p out
+        echo " "
+        
+        echo "3. 测试默认配置..."
+        make O=out ARCH=arm64 alioth_defconfig > /dev/null 2>&1 && echo "✅ 配置成功" || echo "❌ 配置失败"
+        echo " "
+        
+        echo "4. 测试简单编译..."
+        echo "尝试编译单个文件..."
+        make O=out ARCH=arm64 -j1 kernel/pid.o > /dev/null 2>&1 && echo "✅ 编译测试通过" || echo "❌ 编译测试失败"
+        echo " "
+
+    - name: Network Connectivity
+      run: |
+        echo "=== 网络连接测试 ==="
+        echo "GitHub: $(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 5 https://github.com || echo '超时')"
+        echo "Google: $(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 5 https://google.com || echo '超时')"
+        echo "内核.org: $(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 5 https://kernel.org || echo '超时')"
+        echo " "
