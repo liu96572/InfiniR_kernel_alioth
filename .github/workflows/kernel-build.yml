@@ -1,36 +1,120 @@
-name: Build Enhanced v3.10
+name: Build Enhanced Kernel
 
 on:
   push:
-    branches: [ feature/enhanced-v3.10 ]
+    branches: [ main ]
   workflow_dispatch:
+
+env:
+  KERNEL_NAME: InfiniR_Alioth_Enhanced
+  DEVICE: alioth
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Setup environment
       run: |
-        sudo apt update
-        sudo apt install -y build-essential libncurses-dev libssl-dev bc flex bison libelf-dev dwarves
-        
+        sudo apt-get update
+        sudo apt-get install -y build-essential libncurses-dev libssl-dev bc flex bison libelf-dev dwarves python3 git zip curl
+
+    - name: Download toolchain
+      run: |
+        mkdir -p toolchains
+        wget -q https://github.com/kdrag0n/proton-clang/releases/download/20231010/proton-clang-20231010.tar.gz
+        tar -xzf proton-clang-20231010.tar.gz
+        mv proton-clang-20231010 toolchains/proton
+
     - name: Configure kernel
       run: |
-        make O=out ARCH=arm64 alioth_defconfig
-        # 应用我们的配置更新
-        make O=out ARCH=arm64 olddefconfig
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export PATH=$(pwd)/toolchains/proton/bin:$PATH
         
+        mkdir -p out
+        
+        # 使用默认配置
+        make O=out ARCH=arm64 alioth_defconfig
+        
+        # 启用ZSTD压缩
+        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
+        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
+        echo "CONFIG_KERNEL_ZSTD=y" >> out/.config
+        echo "CONFIG_ZRAM=y" >> out/.config
+        echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y" >> out/.config
+        
+        # 启用基础内存管理
+        echo "CONFIG_SWAP=y" >> out/.config
+        echo "CONFIG_CGROUP_FREEZER=y" >> out/.config
+        
+        # 应用配置
+        make O=out ARCH=arm64 olddefconfig
+
     - name: Build kernel
       run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export PATH=$(pwd)/toolchains/proton/bin:$PATH
+        
+        echo "开始编译内核..."
         make O=out ARCH=arm64 -j$(nproc)
         
-    - name: Create flashable zip
+        # 检查编译结果
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "✅ 内核编译成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+        else
+          echo "❌ 内核编译失败！"
+          exit 1
+        fi
+
+    - name: Prepare AnyKernel3
       run: |
-        # 基于AnyKernel3创建刷机包
         git clone https://github.com/osm0sis/AnyKernel3
         cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
-        cd AnyKernel3 && zip -r9 ../InfiniR_Alioth_v3.10_Enhanced.zip .
+        
+        # 创建刷机脚本
+        cat > AnyKernel3/anykernel.sh << 'EOF'
+        #!/system/bin/sh
+        # AnyKernel3 Ramdisk Mod Script
+        
+        ## AnyKernel setup
+        properties() { '
+        kernel.string=InfiniR Enhanced with ZSTD
+        do.devicecheck=1
+        do.modules=0
+        do.systemless=1
+        do.cleanup=1
+        do.cleanuponabort=0
+        device.name1=alioth
+        device.name2=aliothin
+        '; }
+        
+        ## AnyKernel methods
+        . tools/ak3-core.sh;
+        
+        ## AnyKernel install
+        dump_boot;
+        write_boot;
+        EOF
+
+    - name: Create flashable zip
+      run: |
+        cd AnyKernel3
+        zip -r9 ../${KERNEL_NAME}_$(date +%Y%m%d_%H%M%S).zip . -x "*.git*"
+        cd ..
+        echo "刷机包创建完成："
+        ls -lh *.zip
+
+    - name: Upload kernel
+      uses: actions/upload-artifact@v4
+      with:
+        name: enhanced-kernel
+        path: |
+          *.zip
+        retention-days: 7
