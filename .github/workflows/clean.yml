@@ -1,4 +1,4 @@
-name: Build Kernel - Force Disable
+name: Build Kernel - Exact Fix
 
 on:
   workflow_dispatch:
@@ -14,29 +14,24 @@ jobs:
       with:
         ref: 16.0-alioth
 
-    - name: Fix KernelSU
+    - name: Fix KernelSU dependency
       run: |
-        sed -i '/kernelsu/d' drivers/Kconfig
-        [ -d "drivers/kernelsu" ] && echo "# Disabled" > drivers/kernelsu/Kconfig
+        echo "修复KernelSU依赖..."
+        # 注释掉KernelSU引用（精确修复）
+        sed -i '238s/^source/# source/' drivers/Kconfig
+        echo "✅ KernelSU依赖已修复"
+
+    - name: Disable problematic power drivers
+      run: |
+        echo "禁用问题电源驱动..."
+        # 注释掉TI电源驱动
+        sed -i '54s/^source/# source/' drivers/power/supply/Kconfig
+        echo "✅ 电源驱动已禁用"
 
     - name: Setup
       run: |
         sudo apt update
         sudo apt install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu
-
-    - name: Force disable problematic drivers
-      run: |
-        echo "强制禁用问题驱动..."
-        
-        # 直接删除问题驱动文件
-        rm -f drivers/power/supply/ti/bq2597x_charger.c
-        rm -f drivers/power/supply/ti/bq2597x_charger.o 2>/dev/null || true
-        
-        # 创建空的替代文件
-        echo "// Driver disabled for compilation" > drivers/power/supply/ti/bq2597x_charger.c
-        echo "obj-y +=" > drivers/power/supply/ti/Makefile
-        
-        echo "✅ 问题驱动已强制禁用"
 
     - name: Configure kernel
       run: |
@@ -44,26 +39,24 @@ jobs:
         export CROSS_COMPILE=aarch64-linux-gnu-
         mkdir -p out
         
-        echo "应用配置..."
+        echo "应用设备配置..."
         make O=out ARCH=arm64 alioth_defconfig
         
-        # 确保禁用问题驱动
-        echo "CONFIG_BQ2597X_CHARGER=n" >> out/.config
-        echo "CONFIG_SND_SOC_SWR_MSTR_CTRL=n" >> out/.config
-        echo "CONFIG_DRM_MSM_DSI_PANEL=n" >> out/.config
-        
-        # 启用新功能
+        echo "启用新功能..."
         echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
         echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
         echo "CONFIG_ZRAM=y" >> out/.config
         echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y" >> out/.config
         echo "CONFIG_SWAP=y" >> out/.config
         
+        # 确保问题驱动被禁用
+        echo "CONFIG_BQ2597X_CHARGER=n" >> out/.config
+        echo "CONFIG_SND_SOC_SWR_MSTR_CTRL=n" >> out/.config
+        
         make O=out ARCH=arm64 olddefconfig
         
-        # 验证配置
         echo "配置验证:"
-        grep -E "CONFIG_(BQ2597X|ZSTD|ZRAM)=" out/.config
+        grep -E "CONFIG_(BQ2597X|KSU|ZSTD)=" out/.config || true
 
     - name: Build kernel
       run: |
@@ -74,12 +67,10 @@ jobs:
         make O=out ARCH=arm64 -j2
         
         if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
-          echo "🎉 编译成功！"
+          echo "🎉 内核编译成功！"
           ls -lh out/arch/arm64/boot/Image.gz-dtb
         else
           echo "❌ 编译失败"
-          echo "检查问题驱动状态:"
-          find drivers/power/supply/ti/ -name "*.c" | head -5
           exit 1
         fi
 
