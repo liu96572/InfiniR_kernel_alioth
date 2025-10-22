@@ -1,0 +1,75 @@
+name: Build Kernel - Final Fix
+
+on:
+  workflow_dispatch:
+
+env:
+  KERNEL_NAME: InfiniR_Final
+  DEVICE: alioth
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Fix KernelSU
+      run: sed -i '/kernelsu/d' drivers/Kconfig
+
+    - name: Install tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu
+
+    - name: Fix compilation
+      run: |
+        export KCFLAGS="-Wno-error"
+        if [ -f "techpack/audio/soc/swr-mstr-ctrl.c" ]; then
+          sed -i '3710s/pm_qos_update_request/\/\/ disabled/' techpack/audio/soc/swr-mstr-ctrl.c
+        fi
+
+    - name: Configure kernel
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        export KCFLAGS="-Wno-error"
+        mkdir -p out
+        make O=out ARCH=arm64 alioth_defconfig
+        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
+        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
+        echo "CONFIG_ZRAM=y" >> out/.config
+        echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y" >> out/.config
+        echo "CONFIG_SWAP=y" >> out/.config
+        echo "CONFIG_SND_SOC_SWR_MSTR_CTRL=n" >> out/.config
+        make O=out ARCH=arm64 olddefconfig
+
+    - name: Build kernel
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        export KCFLAGS="-Wno-error"
+        make O=out ARCH=arm64 -j2
+        ls -lh out/arch/arm64/boot/Image.gz-dtb
+
+    - name: Create zip
+      if: success()
+      run: |
+        mkdir -p ak3
+        cp out/arch/arm64/boot/Image.gz-dtb ak3/
+        echo 'dd if=/tmp/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot' > ak3/flash.sh
+        cd ak3
+        zip -r9 ../${KERNEL_NAME}.zip .
+        cd ..
+        ls -lh *.zip
+
+    - name: Upload
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: final-kernel
+        path: "*.zip"
