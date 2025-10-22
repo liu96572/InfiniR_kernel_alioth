@@ -1,0 +1,119 @@
+name: Build Kernel - Fixed KSU
+
+on:
+  workflow_dispatch:
+
+env:
+  KERNEL_NAME: InfiniR_Fixed
+  DEVICE: alioth
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Fix KernelSU dependency
+      run: |
+        echo "修复KernelSU依赖..."
+        
+        # 移除KernelSU引用
+        sed -i '/kernelsu/d' drivers/Kconfig
+        echo "✅ 已移除所有kernelsu引用"
+        
+        # 如果kernelsu目录存在，创建空的Kconfig
+        if [ -d "drivers/kernelsu" ]; then
+          echo "# Empty Kconfig for KernelSU - Dependency Fixed" > drivers/kernelsu/Kconfig
+          echo "✅ 已创建空的KernelSU Kconfig文件"
+        fi
+
+    - name: Install compiler
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu
+
+    - name: Configure kernel
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "创建输出目录..."
+        mkdir -p out
+        
+        echo "应用设备配置..."
+        make O=out ARCH=arm64 alioth_defconfig
+        
+        echo "启用必要功能..."
+        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
+        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
+        echo "CONFIG_KERNEL_ZSTD=y" >> out/.config
+        echo "CONFIG_ZRAM=y" >> out/.config
+        echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y" >> out/.config
+        echo "CONFIG_SWAP=y" >> out/.config
+        echo "CONFIG_CGROUP_FREEZER=y" >> out/.config
+        
+        echo "应用最终配置..."
+        make O=out ARCH=arm64 olddefconfig
+        echo "✅ 内核配置完成"
+
+    - name: Build kernel
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "开始编译内核..."
+        make O=out ARCH=arm64 -j2
+        
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "🎉 内核编译成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+          echo "文件大小: $(ls -lh out/arch/arm64/boot/Image.gz-dtb | awk '{print $5}')"
+        else
+          echo "❌ 编译失败"
+          echo "调试信息:"
+          find out/ -name "*.o" | head -5
+          exit 1
+        fi
+
+    - name: Create flashable package
+      if: success()
+      run: |
+        echo "创建刷机包..."
+        git clone -q --depth=1 https://github.com/osm0sis/AnyKernel3
+        cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
+        
+        # 创建刷机脚本
+        cat > AnyKernel3/anykernel.sh << 'EOF'
+        #!/system/bin/sh
+        # InfiniR Fixed Kernel with ZSTD
+        . tools/ak3-core.sh
+        
+        ui_print " "
+        ui_print "*** InfiniR Fixed Kernel ***"
+        ui_print "• ZSTD Compression Enabled"
+        ui_print "• KernelSU Dependency Fixed"
+        ui_print " "
+        
+        dump_boot
+        write_boot
+        EOF
+        
+        cd AnyKernel3
+        zip -r9 "../${KERNEL_NAME}.zip" . -x "*.git*" "README.md"
+        cd ..
+        
+        echo "✅ 刷机包创建完成: ${KERNEL_NAME}.zip"
+        ls -lh *.zip
+
+    - name: Upload kernel
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: fixed-kernel
+        path: "*.zip"
+        retention-days: 7
