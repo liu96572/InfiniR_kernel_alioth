@@ -1,0 +1,72 @@
+name: Build Kernel - Simple
+
+on:
+  workflow_dispatch:
+
+env:
+  KERNEL_NAME: InfiniR_Simple
+  DEVICE: alioth
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Fix KernelSU dependency
+      run: |
+        echo "修复KernelSU依赖..."
+        sed -i '/kernelsu/d' drivers/Kconfig
+        echo "# Empty Kconfig" > drivers/kernelsu/Kconfig
+
+    - name: Install compiler
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu
+
+    - name: Configure kernel
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        mkdir -p out
+        make O=out ARCH=arm64 alioth_defconfig
+        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
+        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
+        echo "CONFIG_ZRAM=y" >> out/.config
+        echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y" >> out/.config
+        echo "CONFIG_SWAP=y" >> out/.config
+        make O=out ARCH=arm64 olddefconfig
+
+    - name: Build kernel
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        make O=out ARCH=arm64 -j2
+        ls -lh out/arch/arm64/boot/Image.gz-dtb
+
+    - name: Download AnyKernel3
+      if: success()
+      run: |
+        wget -q https://github.com/osm0sis/AnyKernel3/archive/refs/heads/master.zip -O ak3.zip
+        unzip -q ak3.zip
+
+    - name: Create package
+      if: success()
+      run: |
+        cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3-master/
+        cd AnyKernel3-master
+        zip -r9 "../${KERNEL_NAME}.zip" .
+        cd ..
+        ls -lh *.zip
+
+    - name: Upload kernel
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: simple-kernel
+        path: "*.zip"
