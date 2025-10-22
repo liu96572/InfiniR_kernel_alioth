@@ -1,0 +1,144 @@
+name: Build Kernel - Fixed KSU
+
+on:
+  workflow_dispatch:
+
+env:
+  KERNEL_NAME: InfiniR_Fixed_KSU
+  DEVICE: alioth
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Install environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu
+
+    - name: Fix KernelSU reference
+      run: |
+        echo "修复KernelSU引用问题..."
+        if [ ! -d "drivers/kernelsu" ]; then
+          echo "KernelSU目录不存在，修复引用..."
+          sed -i 's/^source "drivers\/kernelsu\/Kconfig"/# source "drivers\/kernelsu\/Kconfig"/' drivers/Kconfig
+          echo "✅ 已注释KernelSU引用"
+        else
+          echo "✅ KernelSU目录存在"
+        fi
+
+    - name: Create minimal configuration
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "步骤1: 创建输出目录..."
+        mkdir -p out
+        
+        echo "步骤2: 使用allyesconfig生成基础配置..."
+        make O=out ARCH=arm64 allyesconfig > /dev/null 2>&1 || {
+          echo "allyesconfig失败，尝试手动配置..."
+          cat > out/.config << 'EOF'
+CONFIG_SYSVIPC=y
+CONFIG_POSIX_MQUEUE=y
+CONFIG_NO_HZ_IDLE=y
+CONFIG_HIGH_RES_TIMERS=y
+CONFIG_PREEMPT=y
+CONFIG_IKCONFIG=y
+CONFIG_IKCONFIG_PROC=y
+CONFIG_LOG_BUF_SHIFT=19
+CONFIG_BLK_DEV_INITRD=y
+CONFIG_EMBEDDED=y
+CONFIG_MODULES=y
+CONFIG_MODULE_UNLOAD=y
+CONFIG_PARTITION_ADVANCED=y
+CONFIG_ARCH_QCOM=y
+CONFIG_ARM64=y
+CONFIG_CPU_FREQ=y
+CONFIG_CPU_FREQ_GOV_ONDEMAND=y
+CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
+CONFIG_CPU_FREQ_GOV_CONSERVATIVE=y
+CONFIG_NET=y
+CONFIG_PACKET=y
+CONFIG_UNIX=y
+CONFIG_INET=y
+CONFIG_IPV6=y
+CONFIG_NETFILTER=y
+CONFIG_BLOCK=y
+CONFIG_BLK_DEV=y
+CONFIG_SCSI=y
+CONFIG_NETDEVICES=y
+CONFIG_INPUT=y
+CONFIG_INPUT_EVDEV=y
+CONFIG_DEVTMPFS=y
+CONFIG_DEVTMPFS_MOUNT=y
+EOF
+        }
+        
+        echo "步骤3: 添加我们的功能..."
+        echo "CONFIG_KERNEL_GZIP=y" >> out/.config
+        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
+        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
+        echo "CONFIG_KERNEL_ZSTD=y" >> out/.config
+        echo "CONFIG_SWAP=y" >> out/.config
+        echo "CONFIG_ZRAM=y" >> out/.config
+        echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y" >> out/.config
+        echo "CONFIG_CGROUP_FREEZER=y" >> out/.config
+        echo "CONFIG_EXT4_FS=y" >> out/.config
+        
+        echo "步骤4: 应用配置..."
+        yes "" | make O=out ARCH=arm64 oldconfig > /dev/null 2>&1 || {
+          echo "自动处理配置问题..."
+          make O=out ARCH=arm64 olddefconfig
+        }
+
+    - name: Build kernel
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "开始编译..."
+        make O=out ARCH=arm64 -j2
+        
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "🎉 内核编译成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+        else
+          echo "编译状态检查..."
+          find out/ -name "*.o" 2>/dev/null | head -3 || echo "无编译输出"
+        fi
+
+    - name: Create package
+      if: success()
+      run: |
+        echo "创建刷机包..."
+        mkdir -p ak3_package
+        cp out/arch/arm64/boot/Image.gz-dtb ak3_package/
+        
+        cat > ak3_package/anykernel.sh << 'EOF'
+        #!/system/bin/sh
+        echo "Flashing Fixed Kernel..."
+        dd if=/tmp/anykernel/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot
+        echo "Done!"
+        EOF
+        
+        cd ak3_package
+        zip -r9 "../${KERNEL_NAME}.zip" .
+        cd ..
+        
+        echo "✅ 刷机包完成"
+        ls -lh *.zip
+
+    - name: Upload kernel
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: fixed-ksu-kernel
+        path: "*.zip"
