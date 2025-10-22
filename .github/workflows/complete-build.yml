@@ -1,0 +1,171 @@
+name: Build Complete Kernel
+
+on:
+  workflow_dispatch:
+
+env:
+  KERNEL_NAME: InfiniR_Complete
+  DEVICE: alioth
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Install environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu
+
+    - name: Create complete configuration
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "步骤1: 创建输出目录..."
+        mkdir -p out
+        
+        echo "步骤2: 使用arm64基础配置..."
+        # 因为alioth_defconfig不完整，使用基础配置
+        make O=out ARCH=arm64 defconfig
+        
+        echo "步骤3: 添加必要配置..."
+        
+        # 基础系统配置
+        echo "CONFIG_SYSVIPC=y" >> out/.config
+        echo "CONFIG_POSIX_MQUEUE=y" >> out/.config
+        echo "CONFIG_AUDIT=y" >> out/.config
+        echo "CONFIG_NO_HZ_IDLE=y" >> out/.config
+        echo "CONFIG_HIGH_RES_TIMERS=y" >> out/.config
+        echo "CONFIG_PREEMPT=y" >> out/.config
+        echo "CONFIG_IKCONFIG=y" >> out/.config
+        echo "CONFIG_IKCONFIG_PROC=y" >> out/.config
+        echo "CONFIG_LOG_BUF_SHIFT=19" >> out/.config
+        echo "CONFIG_BLK_DEV_INITRD=y" >> out/.config
+        echo "CONFIG_EMBEDDED=y" >> out/.config
+        
+        # 内核压缩
+        echo "CONFIG_KERNEL_GZIP=y" >> out/.config
+        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
+        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
+        echo "CONFIG_KERNEL_ZSTD=y" >> out/.config
+        
+        # 内存管理
+        echo "CONFIG_SWAP=y" >> out/.config
+        echo "CONFIG_ZRAM=y" >> out/.config
+        echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y" >> out/.config
+        echo "CONFIG_ZSMALLOC=y" >> out/.config
+        echo "CONFIG_CGROUP_FREEZER=y" >> out/.config
+        
+        # 文件系统
+        echo "CONFIG_EXT4_FS=y" >> out/.config
+        echo "CONFIG_VFAT_FS=y" >> out/.config
+        echo "CONFIG_NTFS_FS=y" >> out/.config
+        
+        # 网络支持
+        echo "CONFIG_INET=y" >> out/.config
+        echo "CONFIG_IPV6=y" >> out/.config
+        echo "CONFIG_NETFILTER=y" >> out/.config
+        
+        # 设备驱动
+        echo "CONFIG_BLOCK=y" >> out/.config
+        echo "CONFIG_BLK_DEV=y" >> out/.config
+        echo "CONFIG_SCSI=y" >> out/.config
+        echo "CONFIG_NETDEVICES=y" >> out/.config
+        echo "CONFIG_INPUT=y" >> out/.config
+        echo "CONFIG_INPUT_EVDEV=y" >> out/.config
+        
+        # 骁龙870相关
+        echo "CONFIG_ARCH_QCOM=y" >> out/.config
+        echo "CONFIG_ARM64=y" >> out/.config
+        echo "CONFIG_CPU_FREQ=y" >> out/.config
+        echo "CONFIG_CPU_FREQ_GOV_ONDEMAND=y" >> out/.config
+        echo "CONFIG_CPU_FREQ_GOV_PERFORMANCE=y" >> out/.config
+        echo "CONFIG_CPU_FREQ_GOV_CONSERVATIVE=y" >> out/.config
+        
+        # 模块支持
+        echo "CONFIG_MODULES=y" >> out/.config
+        echo "CONFIG_MODULE_UNLOAD=y" >> out/.config
+        
+        echo "步骤4: 应用完整配置..."
+        make O=out ARCH=arm64 olddefconfig
+
+    - name: Build kernel
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "开始完整编译..."
+        make O=out ARCH=arm64 -j2
+        
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "🎉 内核编译成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+          echo "编译完成时间: $(date)"
+        else
+          echo "检查编译输出..."
+          find out/ -name "Image*" -o -name "*.gz*" -o -name "*.dtb" 2>/dev/null | head -10
+          echo "如果找不到Image文件，可能是配置问题"
+        fi
+
+    - name: Create flashable package
+      if: success()
+      run: |
+        echo "创建刷机包..."
+        mkdir -p ak3_package/META-INF/com/google/android
+        
+        cp out/arch/arm64/boot/Image.gz-dtb ak3_package/
+        
+        # 刷机脚本
+        cat > ak3_package/META-INF/com/google/android/update-binary << 'EOF'
+        #!/sbin/sh
+        echo "Flashing InfiniR Complete Kernel..."
+        echo "Mounting partitions..."
+        mount /system 2>/dev/null
+        mount /vendor 2>/dev/null
+        
+        echo "Extracting kernel..."
+        cd /tmp
+        unzip -o "$3" Image.gz-dtb
+        
+        echo "Flashing to boot partition..."
+        dd if=/tmp/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot
+        
+        echo "Cleaning up..."
+        umount /system 2>/dev/null
+        umount /vendor 2>/dev/null
+        echo "Flash complete! Reboot to apply."
+        EOF
+        
+        cat > ak3_package/META-INF/com/google/android/updater-script << 'EOF'
+        ui_print("InfiniR Complete Kernel");
+        ui_print("Device: Redmi K40 (alioth)");
+        ui_print("Built with complete configuration");
+        show_progress(0.500000, 0);
+        package_extract_file("Image.gz-dtb", "/tmp/Image.gz-dtb");
+        run_program("/sbin/dd", "if=/tmp/Image.gz-dtb", "of=/dev/block/bootdevice/by-name/boot");
+        show_progress(0.100000, 0);
+        ui_print("Flash complete!");
+        EOF
+        
+        chmod +x ak3_package/META-INF/com/google/android/update-binary
+        
+        cd ak3_package
+        zip -r9 "../${KERNEL_NAME}.zip" .
+        cd ..
+        
+        echo "✅ 刷机包创建完成"
+        ls -lh *.zip
+
+    - name: Upload kernel
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: complete-kernel
+        path: "*.zip"
