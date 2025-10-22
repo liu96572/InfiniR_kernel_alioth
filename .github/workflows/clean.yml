@@ -17,15 +17,15 @@ jobs:
     - name: Fix KernelSU dependency
       run: |
         echo "修复KernelSU依赖..."
-        # 注释掉KernelSU引用（精确修复）
-        sed -i '238s/^source/# source/' drivers/Kconfig
+        # 精确注释第238行
+        sed -i '238s/^\(.*kernelsu.*\)$/# \1/' drivers/Kconfig
         echo "✅ KernelSU依赖已修复"
 
     - name: Disable problematic power drivers
       run: |
         echo "禁用问题电源驱动..."
-        # 注释掉TI电源驱动
-        sed -i '54s/^source/# source/' drivers/power/supply/Kconfig
+        # 精确注释第54行
+        sed -i '54s/^\(.*power/supply/ti.*\)$/# \1/' drivers/power/supply/Kconfig
         echo "✅ 电源驱动已禁用"
 
     - name: Setup
@@ -49,14 +49,11 @@ jobs:
         echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y" >> out/.config
         echo "CONFIG_SWAP=y" >> out/.config
         
-        # 确保问题驱动被禁用
-        echo "CONFIG_BQ2597X_CHARGER=n" >> out/.config
-        echo "CONFIG_SND_SOC_SWR_MSTR_CTRL=n" >> out/.config
-        
         make O=out ARCH=arm64 olddefconfig
         
         echo "配置验证:"
-        grep -E "CONFIG_(BQ2597X|KSU|ZSTD)=" out/.config || true
+        echo "KernelSU状态: $(grep CONFIG_KSU out/.config || echo '未启用')"
+        echo "电源驱动状态: $(grep CONFIG_BQ2597X out/.config || echo '未启用')"
 
     - name: Build kernel
       run: |
@@ -69,8 +66,11 @@ jobs:
         if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
           echo "🎉 内核编译成功！"
           ls -lh out/arch/arm64/boot/Image.gz-dtb
+          echo "编译完成时间: $(date)"
         else
           echo "❌ 编译失败"
+          echo "调试信息:"
+          find out/ -name "*.o" | head -5
           exit 1
         fi
 
