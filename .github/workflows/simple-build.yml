@@ -22,7 +22,7 @@ jobs:
       run: |
         echo "修复KernelSU依赖..."
         sed -i '/kernelsu/d' drivers/Kconfig
-        echo "# Empty Kconfig" > drivers/kernelsu/Kconfig
+        echo "✅ KernelSU引用已移除"
 
     - name: Install compiler
       run: |
@@ -47,7 +47,14 @@ jobs:
         export ARCH=arm64
         export CROSS_COMPILE=aarch64-linux-gnu-
         make O=out ARCH=arm64 -j2
-        ls -lh out/arch/arm64/boot/Image.gz-dtb
+        
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "🎉 内核编译成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+        else
+          echo "❌ 编译失败"
+          exit 1
+        fi
 
     - name: Download AnyKernel3
       if: success()
@@ -62,6 +69,7 @@ jobs:
         cd AnyKernel3-master
         zip -r9 "../${KERNEL_NAME}.zip" .
         cd ..
+        echo "✅ 刷机包创建完成"
         ls -lh *.zip
 
     - name: Upload kernel
