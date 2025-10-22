@@ -1,4 +1,4 @@
-name: Build Kernel - Complete Fix
+name: Build Kernel - Fixed Kconfig
 
 on:
   workflow_dispatch:
@@ -22,9 +22,21 @@ jobs:
     - name: Fix KernelSU
       run: sed -i '/kernelsu/d' drivers/Kconfig
 
-    - name: Remove all problematic drivers
+    - name: Fix Kconfig references
       run: |
-        # 删除所有有问题的驱动目录
+        # 修复触摸屏Kconfig引用
+        sed -i '/focaltech_spi/d' drivers/input/touchscreen/Kconfig
+        
+        # 修复其他可能的Kconfig引用
+        sed -i '/techpack\/audio/d' drivers/Kconfig
+        sed -i '/techpack\/display/d' drivers/Kconfig
+        sed -i '/bq2597x/d' drivers/power/supply/Kconfig
+        
+        echo "✅ Kconfig引用已修复"
+
+    - name: Remove problematic drivers
+      run: |
+        # 删除有问题的驱动目录
         rm -rf techpack/audio techpack/display
         rm -rf drivers/input/touchscreen/focaltech_spi
         rm -rf drivers/power/supply/ti
@@ -42,14 +54,14 @@ jobs:
         
         echo "# Disabled" > techpack/audio/Kconfig
         echo "# Disabled" > techpack/display/Kconfig
+        echo "# Disabled" > drivers/input/touchscreen/focaltech_spi/Kconfig
+        echo "# Disabled" > drivers/power/supply/ti/Kconfig
 
     - name: Configure kernel
       run: |
         export ARCH=arm64
         export CROSS_COMPILE=aarch64-linux-gnu-
         
-        # 清理并重新开始
-        make mrproper
         mkdir -p out
         
         # 使用设备配置
@@ -73,7 +85,7 @@ jobs:
         make O=out ARCH=arm64 olddefconfig
         
         echo "配置完成，检查禁用状态..."
-        grep -E "CONFIG_(SND_SOC|TECHPACK|TOUCHSCREEN|POWER_SUPPLY)=n" out/.config
+        grep -E "CONFIG_(SND_SOC|TECHPACK|TOUCHSCREEN|POWER_SUPPLY)=[yn]" out/.config
 
     - name: Build kernel
       run: |
@@ -108,5 +120,5 @@ jobs:
       if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: complete-kernel
+        name: fixed-kernel
         path: "*.zip"
