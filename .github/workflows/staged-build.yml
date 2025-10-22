@@ -1,0 +1,126 @@
+name: Build Kernel - Stage by Stage
+
+on:
+  workflow_dispatch:
+
+env:
+  KERNEL_NAME: InfiniR_Staged
+  DEVICE: alioth
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150  # 进一步增加时间
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Install environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu
+
+    - name: Fix KernelSU reference
+      run: |
+        if [ ! -d "drivers/kernelsu" ]; then
+          sed -i 's/^source "drivers\/kernelsu\/Kconfig"/# source "drivers\/kernelsu\/Kconfig"/' drivers/Kconfig
+          echo "✅ KernelSU引用已修复"
+        fi
+
+    - name: Stage 1 - Configuration
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "🎯 阶段1: 配置内核"
+        mkdir -p out
+        
+        # 极简配置
+        echo "生成极简配置..."
+        make O=out ARCH=arm64 defconfig
+        
+        # 只添加绝对必要的功能
+        echo "CONFIG_MODULES=y" >> out/.config
+        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
+        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
+        echo "CONFIG_SWAP=y" >> out/.config
+        echo "CONFIG_ZRAM=y" >> out/.config
+        
+        # 禁用所有不必要的功能
+        echo "CONFIG_DEBUG_INFO=n" >> out/.config
+        echo "CONFIG_DEBUG_KERNEL=n" >> out/.config
+        echo "CONFIG_KASAN=n" >> out/.config
+        echo "CONFIG_KCOV=n" >> out/.config
+        
+        make O=out ARCH=arm64 olddefconfig
+        echo "✅ 阶段1完成: 配置成功"
+
+    - name: Stage 2 - Build Core
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "🎯 阶段2: 编译核心内核"
+        echo "这一步可能需要60-90分钟..."
+        
+        # 只编译核心内核，不编译模块
+        make O=out ARCH=arm64 -j2 vmlinux
+        
+        if [ -f "out/vmlinux" ]; then
+          echo "✅ 阶段2完成: 核心内核编译成功"
+          ls -lh out/vmlinux
+        else
+          echo "❌ 阶段2失败: 核心内核编译失败"
+          exit 1
+        fi
+
+    - name: Stage 3 - Build Image
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "🎯 阶段3: 生成可启动镜像"
+        
+        # 生成最终的启动镜像
+        make O=out ARCH=arm64 -j2
+        
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "🎉 所有阶段完成！内核编译成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+          echo "总编译时间: 约$((SECONDS/60))分钟"
+        else
+          echo "检查生成的文件..."
+          find out/arch/arm64/boot/ -type f 2>/dev/null | head -10
+          echo "如果Image.gz-dtb不存在，但vmlinux存在，可能是设备树问题"
+        fi
+
+    - name: Create package
+      if: success()
+      run: |
+        echo "创建刷机包..."
+        mkdir -p ak3_package
+        cp out/arch/arm64/boot/Image.gz-dtb ak3_package/
+        
+        cat > ak3_package/anykernel.sh << 'EOF'
+        #!/system/bin/sh
+        echo "Flashing Staged Kernel..."
+        dd if=/tmp/anykernel/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot
+        echo "Flash complete!"
+        EOF
+        
+        cd ak3_package
+        zip -r9 "../${KERNEL_NAME}.zip" .
+        cd ..
+        
+        echo "✅ 刷机包完成"
+        ls -lh *.zip
+
+    - name: Upload kernel
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: staged-kernel
+        path: "*.zip"
