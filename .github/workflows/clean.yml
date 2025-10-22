@@ -1,4 +1,4 @@
-name: Build Kernel - Complete Fix
+name: Build Kernel - Force Disable
 
 on:
   workflow_dispatch:
@@ -14,26 +14,29 @@ jobs:
       with:
         ref: 16.0-alioth
 
-    - name: Fix KernelSU dependencies
+    - name: Fix KernelSU
       run: |
-        echo "修复KernelSU依赖..."
-        # 移除所有KernelSU引用
         sed -i '/kernelsu/d' drivers/Kconfig
-        
-        # 如果kernelsu目录存在，创建必要的文件
-        if [ -d "drivers/kernelsu" ]; then
-          echo "# KernelSU disabled for compilation" > drivers/kernelsu/Kconfig
-          echo "# KernelSU disabled" > drivers/kernelsu/Makefile
-        fi
-        
-        # 检查修复结果
-        echo "修复后检查:"
-        grep -n "kernelsu" drivers/Kconfig || echo "✅ 无KernelSU引用"
+        [ -d "drivers/kernelsu" ] && echo "# Disabled" > drivers/kernelsu/Kconfig
 
     - name: Setup
       run: |
         sudo apt update
         sudo apt install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu
+
+    - name: Force disable problematic drivers
+      run: |
+        echo "强制禁用问题驱动..."
+        
+        # 直接删除问题驱动文件
+        rm -f drivers/power/supply/ti/bq2597x_charger.c
+        rm -f drivers/power/supply/ti/bq2597x_charger.o 2>/dev/null || true
+        
+        # 创建空的替代文件
+        echo "// Driver disabled for compilation" > drivers/power/supply/ti/bq2597x_charger.c
+        echo "obj-y +=" > drivers/power/supply/ti/Makefile
+        
+        echo "✅ 问题驱动已强制禁用"
 
     - name: Configure kernel
       run: |
@@ -41,69 +44,57 @@ jobs:
         export CROSS_COMPILE=aarch64-linux-gnu-
         mkdir -p out
         
-        echo "步骤1: 应用原始配置..."
+        echo "应用配置..."
         make O=out ARCH=arm64 alioth_defconfig
         
-        echo "步骤2: 禁用问题驱动..."
-        # 精确禁用问题驱动
-        echo "CONFIG_SND_SOC_SWR_MSTR_CTRL=n" >> out/.config
+        # 确保禁用问题驱动
         echo "CONFIG_BQ2597X_CHARGER=n" >> out/.config
+        echo "CONFIG_SND_SOC_SWR_MSTR_CTRL=n" >> out/.config
         echo "CONFIG_DRM_MSM_DSI_PANEL=n" >> out/.config
         
-        echo "步骤3: 启用新功能..."
+        # 启用新功能
         echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
         echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
         echo "CONFIG_ZRAM=y" >> out/.config
         echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y" >> out/.config
         echo "CONFIG_SWAP=y" >> out/.config
         
-        echo "步骤4: 应用最终配置..."
         make O=out ARCH=arm64 olddefconfig
         
-        echo "✅ 配置完成"
-        echo "关键配置状态:"
-        grep -E "CONFIG_(SND_SOC_SWR_MSTR_CTRL|BQ2597X_CHARGER|DRM_MSM_DSI_PANEL|ZSTD|ZRAM)=" out/.config
+        # 验证配置
+        echo "配置验证:"
+        grep -E "CONFIG_(BQ2597X|ZSTD|ZRAM)=" out/.config
 
     - name: Build kernel
       run: |
         export ARCH=arm64
         export CROSS_COMPILE=aarch64-linux-gnu-
         
-        echo "开始编译内核..."
+        echo "开始编译..."
         make O=out ARCH=arm64 -j2
         
         if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
-          echo "🎉 内核编译成功！"
+          echo "🎉 编译成功！"
           ls -lh out/arch/arm64/boot/Image.gz-dtb
-          echo "编译完成时间: $(date)"
         else
           echo "❌ 编译失败"
-          echo "调试信息:"
-          find out/ -name "*.o" | head -5
+          echo "检查问题驱动状态:"
+          find drivers/power/supply/ti/ -name "*.c" | head -5
           exit 1
         fi
 
     - name: Create package
       if: success()
       run: |
-        echo "创建刷机包..."
-        mkdir -p ak3
-        cp out/arch/arm64/boot/Image.gz-dtb ak3/
-        
-        # 最小化刷机脚本
-        echo 'dd if=/tmp/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot' > ak3/flash.sh
-        chmod +x ak3/flash.sh
-        
-        cd ak3
-        zip -r9 ../InfiniR_Kernel.zip .
-        cd ..
-        
-        echo "✅ 刷机包创建完成"
-        ls -lh *.zip
+        mkdir -p pkg
+        cp out/arch/arm64/boot/Image.gz-dtb pkg/
+        cd pkg
+        zip ../kernel.zip Image.gz-dtb
+        ls -lh ../*.zip
 
     - name: Upload
       if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: kernel-package
+        name: kernel
         path: "*.zip"
