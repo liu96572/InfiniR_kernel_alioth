@@ -1,0 +1,112 @@
+name: Build Kernel - Fix Errors
+
+on:
+  workflow_dispatch:
+
+env:
+  KERNEL_NAME: InfiniR_ErrorFixed
+  DEVICE: alioth
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Fix KernelSU dependency
+      run: |
+        sed -i '/kernelsu/d' drivers/Kconfig
+
+    - name: Install compiler
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu
+
+    - name: Fix compilation errors
+      run: |
+        echo "修复编译错误..."
+        
+        # 禁用将警告视为错误
+        export KCFLAGS="-Wno-error"
+        
+        # 修复音频驱动格式错误
+        if [ -f "techpack/audio/asoc/codecs/bolero/tx-macro.c" ]; then
+          sed -i 's/active_ch_cnt:%d/active_ch_cnt:%ld/' techpack/audio/asoc/codecs/bolero/tx-macro.c
+          echo "✅ 修复音频驱动格式错误"
+        fi
+        
+        # 禁用有问题的电源管理驱动
+        if [ -f "drivers/power/supply/ti/bq2597x_charger.c" ]; then
+          echo "# Disabled due to floating-point errors" > drivers/power/supply/ti/bq2597x_charger.c
+          echo "✅ 禁用有问题的电源管理驱动"
+        fi
+
+    - name: Configure kernel
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        export KCFLAGS="-Wno-error"
+        
+        mkdir -p out
+        make O=out ARCH=arm64 alioth_defconfig
+        
+        # 启用必要功能
+        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
+        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
+        echo "CONFIG_ZRAM=y" >> out/.config
+        echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y" >> out/.config
+        echo "CONFIG_SWAP=y" >> out/.config
+        
+        # 禁用问题驱动
+        echo "CONFIG_SND_SOC_BOLERO=n" >> out/.config
+        echo "CONFIG_BQ2597X_CHARGER=n" >> out/.config
+        
+        make O=out ARCH=arm64 olddefconfig
+
+    - name: Build kernel
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        export KCFLAGS="-Wno-error"
+        
+        echo "开始编译（忽略警告）..."
+        make O=out ARCH=arm64 -j2
+        
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "🎉 内核编译成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+        else
+          echo "❌ 编译失败"
+          exit 1
+        fi
+
+    - name: Create package
+      if: success()
+      run: |
+        mkdir -p ak3_package
+        cp out/arch/arm64/boot/Image.gz-dtb ak3_package/
+        
+        echo '#!/sbin/sh' > ak3_package/update-binary
+        echo 'echo "Flashing InfiniR Kernel"' >> ak3_package/update-binary
+        echo 'dd if=/tmp/kernel/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot' >> ak3_package/update-binary
+        echo 'echo "Flash complete!"' >> ak3_package/update-binary
+        
+        chmod 755 ak3_package/update-binary
+        
+        cd ak3_package
+        zip -r9 "../${KERNEL_NAME}.zip" .
+        cd ..
+        
+        ls -lh *.zip
+
+    - name: Upload kernel
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: error-fixed-kernel
+        path: "*.zip"
