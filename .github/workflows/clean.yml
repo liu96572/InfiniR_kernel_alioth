@@ -1,4 +1,4 @@
-name: Build Kernel - Force Fix
+name: Build Kernel - Fix Kconfig
 
 on:
   workflow_dispatch:
@@ -22,45 +22,38 @@ jobs:
     - name: Fix KernelSU
       run: sed -i '/kernelsu/d' drivers/Kconfig
 
-    - name: Disable problematic drivers
+    - name: Fix Kconfig dependencies
       run: |
-        # 直接删除有问题的驱动文件
-        rm -rf techpack/audio techpack/display
-        rm -rf drivers/power/supply/ti
+        # 修复电源管理Kconfig引用
+        if [ -f "drivers/power/supply/Kconfig" ]; then
+          sed -i '/ti\/Kconfig/d' drivers/power/supply/Kconfig
+          echo "✅ 修复电源管理Kconfig"
+        fi
         
-        # 创建空目录避免编译错误
-        mkdir -p techpack/audio techpack/display
+        # 创建空的Kconfig文件避免错误
         mkdir -p drivers/power/supply/ti
-        echo "// Disabled" > drivers/power/supply/ti/Makefile
-        echo "// Disabled" > techpack/audio/Makefile
-        echo "// Disabled" > techpack/display/Makefile
+        mkdir -p techpack/audio
+        mkdir -p techpack/display
+        
+        echo "# Empty Kconfig - Disabled" > drivers/power/supply/ti/Kconfig
+        echo "# Empty Kconfig - Disabled" > techpack/audio/Kconfig
+        echo "# Empty Kconfig - Disabled" > techpack/display/Kconfig
 
-    - name: Configure
+    - name: Build with alioth config
       run: |
         export ARCH=arm64
         export CROSS_COMPILE=aarch64-linux-gnu-
         mkdir -p out
         
-        # 使用最小配置
-        make O=out ARCH=arm64 defconfig
+        # 使用设备专用配置，而不是defconfig
+        make O=out ARCH=arm64 alioth_defconfig
         
-        # 启用必要功能
-        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
-        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
-        echo "CONFIG_ZRAM=y" >> out/.config
-        echo "CONFIG_SWAP=y" >> out/.config
-        
-        # 强制禁用问题驱动
+        # 在现有配置基础上禁用问题驱动
         echo "CONFIG_SND_SOC=n" >> out/.config
         echo "CONFIG_POWER_SUPPLY=n" >> out/.config
         echo "CONFIG_DRM_MSM=n" >> out/.config
         
         make O=out ARCH=arm64 olddefconfig
-
-    - name: Build
-      run: |
-        export ARCH=arm64
-        export CROSS_COMPILE=aarch64-linux-gnu-
         make O=out ARCH=arm64 -j2
         
         if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
