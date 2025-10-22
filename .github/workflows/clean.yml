@@ -1,4 +1,4 @@
-name: Build Kernel - Fix Kconfig
+name: Build Kernel - Final Attempt
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     
     steps:
     - name: Checkout
@@ -14,7 +14,7 @@ jobs:
       with:
         ref: 16.0-alioth
 
-    - name: Setup
+    - name: Setup environment
       run: |
         sudo apt update
         sudo apt install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu
@@ -22,60 +22,63 @@ jobs:
     - name: Fix KernelSU
       run: sed -i '/kernelsu/d' drivers/Kconfig
 
-    - name: Fix Kconfig dependencies
-      run: |
-        # 修复电源管理Kconfig引用
-        if [ -f "drivers/power/supply/Kconfig" ]; then
-          sed -i '/ti\/Kconfig/d' drivers/power/supply/Kconfig
-          echo "✅ 修复电源管理Kconfig"
-        fi
-        
-        # 创建空的Kconfig文件避免错误
-        mkdir -p drivers/power/supply/ti
-        mkdir -p techpack/audio
-        mkdir -p techpack/display
-        
-        echo "# Empty Kconfig - Disabled" > drivers/power/supply/ti/Kconfig
-        echo "# Empty Kconfig - Disabled" > techpack/audio/Kconfig
-        echo "# Empty Kconfig - Disabled" > techpack/display/Kconfig
-
-    - name: Build with alioth config
+    - name: Build with optimizations
       run: |
         export ARCH=arm64
         export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        # 清理并重新开始
+        make mrproper
         mkdir -p out
         
-        # 使用设备专用配置，而不是defconfig
+        # 使用设备配置
         make O=out ARCH=arm64 alioth_defconfig
         
-        # 在现有配置基础上禁用问题驱动
-        echo "CONFIG_SND_SOC=n" >> out/.config
-        echo "CONFIG_POWER_SUPPLY=n" >> out/.config
-        echo "CONFIG_DRM_MSM=n" >> out/.config
+        # 启用核心功能
+        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
+        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
+        echo "CONFIG_ZRAM=y" >> out/.config
+        echo "CONFIG_SWAP=y" >> out/.config
         
+        # 应用配置
         make O=out ARCH=arm64 olddefconfig
+        
+        echo "开始最终编译..."
+        
+        # 分阶段编译，避免内存问题
+        echo "阶段1: 编译vmlinux..."
+        make O=out ARCH=arm64 vmlinux -j2
+        
+        echo "阶段2: 编译模块..."
+        make O=out ARCH=arm64 modules -j2
+        
+        echo "阶段3: 生成最终镜像..."
         make O=out ARCH=arm64 -j2
         
+        # 检查结果
         if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
           echo "🎉 编译成功！"
           ls -lh out/arch/arm64/boot/Image.gz-dtb
+          echo "文件大小: $(ls -lh out/arch/arm64/boot/Image.gz-dtb | awk '{print $5}')"
         else
-          echo "❌ 编译失败"
+          echo "检查生成的文件..."
+          find out/ -name "vmlinux" -o -name "Image*" | head -10
           exit 1
         fi
 
-    - name: Package
+    - name: Create package
       if: success()
       run: |
         mkdir -p pkg
         cp out/arch/arm64/boot/Image.gz-dtb pkg/
         cd pkg
         zip ../kernel.zip Image.gz-dtb
+        echo "✅ 刷机包创建完成"
         ls -lh ../*.zip
 
     - name: Upload
       if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: kernel
+        name: final-kernel
         path: "*.zip"
