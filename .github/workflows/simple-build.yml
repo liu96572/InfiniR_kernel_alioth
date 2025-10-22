@@ -1,10 +1,10 @@
-name: Build Kernel - Simple
+name: Build Kernel - Fixed Package
 
 on:
   workflow_dispatch:
 
 env:
-  KERNEL_NAME: InfiniR_Simple
+  KERNEL_NAME: InfiniR_Fixed
   DEVICE: alioth
 
 jobs:
@@ -56,19 +56,59 @@ jobs:
           exit 1
         fi
 
-    - name: Download AnyKernel3
+    - name: Create manual package
       if: success()
       run: |
-        wget -q https://github.com/osm0sis/AnyKernel3/archive/refs/heads/master.zip -O ak3.zip
-        unzip -q ak3.zip
+        echo "创建手动刷机包..."
+        
+        # 手动创建AnyKernel3结构
+        mkdir -p ak3_package/META-INF/com/google/android
+        mkdir -p ak3_package/tools
+        
+        # 复制内核文件
+        cp out/arch/arm64/boot/Image.gz-dtb ak3_package/
+        
+        # 创建update-binary
+        cat > ak3_package/META-INF/com/google/android/update-binary << 'EOF'
+#!/sbin/sh
+echo "InfiniR Kernel Flash"
+echo "Mounting partitions..."
+mount /system 2>/dev/null
+mount /vendor 2>/dev/null
 
-    - name: Create package
-      if: success()
-      run: |
-        cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3-master/
-        cd AnyKernel3-master
+echo "Extracting kernel..."
+cd /tmp
+unzip -o "$3" Image.gz-dtb
+
+echo "Flashing kernel to boot partition..."
+dd if=/tmp/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot
+
+echo "Cleaning up..."
+umount /system 2>/dev/null
+umount /vendor 2>/dev/null
+echo "Flash complete! Reboot your device."
+EOF
+
+        # 创建updater-script
+        cat > ak3_package/META-INF/com/google/android/updater-script << 'EOF'
+ui_print("InfiniR Fixed Kernel");
+ui_print("With ZSTD Compression");
+ui_print("Flashing kernel...");
+show_progress(0.500000, 0);
+package_extract_file("Image.gz-dtb", "/tmp/Image.gz-dtb");
+run_program("/sbin/dd", "if=/tmp/Image.gz-dtb", "of=/dev/block/bootdevice/by-name/boot");
+show_progress(0.100000, 0);
+ui_print("Flash complete!");
+EOF
+
+        # 设置权限
+        chmod 755 ak3_package/META-INF/com/google/android/update-binary
+        
+        # 创建ZIP包
+        cd ak3_package
         zip -r9 "../${KERNEL_NAME}.zip" .
         cd ..
+        
         echo "✅ 刷机包创建完成"
         ls -lh *.zip
 
@@ -76,5 +116,6 @@ jobs:
       if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: simple-kernel
+        name: fixed-kernel
         path: "*.zip"
+        retention-days: 7
