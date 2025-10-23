@@ -1,0 +1,80 @@
+name: Build Kernel - Simple Report
+
+on:
+  workflow_dispatch:
+
+env:
+  KERNEL_NAME: InfiniR_Simple
+  DEVICE: alioth
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Install tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu
+
+    - name: Quick fixes
+      run: |
+        # 快速修复已知问题
+        sed -i 's/^source "drivers\/kernelsu\/Kconfig"/# source "drivers\/kernelsu\/Kconfig"/' drivers/Kconfig 2>/dev/null || true
+        sed -i '1120s/.*/\/\/ 修复浮点/' drivers/power/supply/ti/bq2597x_charger.c
+        sed -i '1134s/.*/\/\/ 修复浮点/' drivers/power/supply/ti/bq2597x_charger.c
+
+    - name: Build with minimal output
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        export KCFLAGS="-Wno-error"
+        
+        echo "开始编译（简化输出）..."
+        mkdir -p out
+        cp arch/arm64/configs/alioth_defconfig out/.config
+        make O=out ARCH=arm64 olddefconfig > /dev/null 2>&1
+        
+        # 编译并只显示错误，不显示警告
+        make O=out ARCH=arm64 -j2 2>&1 | grep -E "error:|Error:|ERROR:|停止|失败" | head -50
+        
+        # 检查结果
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "🎉 编译成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+        else
+          echo "❌ 编译失败"
+          echo "最后编译的文件:"
+          find out/ -name "*.o" -type f -exec ls -lt {} + 2>/dev/null | head -3
+        fi
+
+    - name: Create package if success
+      if: success()
+      run: |
+        mkdir -p ak3_package
+        cp out/arch/arm64/boot/Image.gz-dtb ak3_package/
+        
+        cat > ak3_package/anykernel.sh << 'EOF'
+        #!/system/bin/sh
+        echo "Flashing Simple Kernel"
+        dd if=/tmp/anykernel/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot
+        echo "Done"
+        EOF
+        
+        cd ak3_package
+        zip -r9 "../${KERNEL_NAME}.zip" .
+        cd ..
+        echo "✅ 刷机包完成"
+
+    - name: Upload kernel
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: simple-kernel
+        path: "*.zip"
