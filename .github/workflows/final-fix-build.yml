@@ -34,16 +34,9 @@ jobs:
         sed -i '1120s/.*/\/\/ 修复浮点/' drivers/power/supply/ti/bq2597x_charger.c
         sed -i '1134s/.*/\/\/ 修复浮点/' drivers/power/supply/ti/bq2597x_charger.c
         
-        # 3. 修复内联函数问题 - 提供空实现
-        echo "提供缺失的函数实现..."
-        cat >> include/soc/qcom/pm.h << 'EOF'
-
-/* 修复缺失的函数实现 */
-static inline s32 msm_cpuidle_get_deep_idle_latency(void)
-{
-    return -1; /* 临时实现 */
-}
-EOF
+        # 3. 修复内联函数问题 - 使用单行方式
+        echo '/* 修复缺失的函数实现 */' >> include/soc/qcom/pm.h
+        echo 'static inline s32 msm_cpuidle_get_deep_idle_latency(void) { return -1; }' >> include/soc/qcom/pm.h
 
     - name: Build final kernel
       run: |
@@ -78,16 +71,12 @@ EOF
         mkdir -p ak3_package
         cp out/arch/arm64/boot/Image.gz-dtb ak3_package/
         
-        cat > ak3_package/anykernel.sh << 'EOF'
-        #!/system/bin/sh
-        echo "Flashing InfiniR Final Kernel"
-        echo "All fixes applied:"
-        echo "- KernelSU reference fixed"
-        echo "- Floating point issues fixed" 
-        echo "- Inline function issues fixed"
-        dd if=/tmp/anykernel/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot
-        echo "Flash complete! Reboot to apply."
-        EOF
+        # 使用单行方式创建脚本
+        echo '#!/system/bin/sh' > ak3_package/anykernel.sh
+        echo 'echo "Flashing InfiniR Final Kernel"' >> ak3_package/anykernel.sh
+        echo 'echo "All fixes applied"' >> ak3_package/anykernel.sh
+        echo 'dd if=/tmp/anykernel/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot' >> ak3_package/anykernel.sh
+        echo 'echo "Flash complete!"' >> ak3_package/anykernel.sh
         
         cd ak3_package
         zip -r9 "../${KERNEL_NAME}.zip" .
