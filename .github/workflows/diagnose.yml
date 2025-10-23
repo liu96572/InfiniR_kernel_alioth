@@ -1,0 +1,61 @@
+name: Diagnose Kernel Structure
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Analyze problematic function
+      run: |
+        echo "=== 分析问题函数 ==="
+        echo "检查 pm.h 文件:"
+        head -30 include/soc/qcom/pm.h 2>/dev/null || echo "pm.h 文件不存在"
+        
+        echo "=== 搜索函数实现 ==="
+        echo "搜索 msm_cpuidle_get_deep_idle_latency 实现:"
+        grep -r "msm_cpuidle_get_deep_idle_latency" --include="*.c" --include="*.h" . 2>/dev/null | head -20 || echo "未找到实现"
+        
+        echo "=== 检查文件结构 ==="
+        echo "soc/qcom 目录内容:"
+        find include/soc/qcom/ -name "*.h" -o -name "*.c" 2>/dev/null | head -20 || echo "soc/qcom 目录不存在"
+        find drivers/soc/qcom/ -name "*.h" -o -name "*.c" 2>/dev/null | head -20 || echo "drivers/soc/qcom 目录不存在"
+
+    - name: Check KernelSU status
+      run: |
+        echo "=== 检查KernelSU状态 ==="
+        if [ -d "drivers/kernelsu" ]; then
+          echo "✅ KernelSU目录存在"
+          ls drivers/kernelsu/ 2>/dev/null | head -10
+        else
+          echo "❌ KernelSU目录不存在"
+        fi
+        
+        echo "检查Kconfig引用:"
+        grep -n "kernelsu" drivers/Kconfig 2>/dev/null || echo "无KernelSU引用"
+
+    - name: Check critical drivers
+      run: |
+        echo "=== 检查关键驱动 ==="
+        echo "电源管理驱动:"
+        find drivers/power/supply/ti/ -name "*.c" -o -name "*.h" 2>/dev/null | head -10 || echo "无TI电源驱动"
+        
+        echo "音频驱动:"
+        find techpack/audio/ -name "tx-macro.c" 2>/dev/null | head -5 || echo "无音频驱动"
+
+    - name: Check config dependencies
+      run: |
+        echo "=== 检查配置依赖 ==="
+        echo "搜索CPU空闲配置:"
+        grep -i "cpuidle" arch/arm64/configs/alioth_defconfig 2>/dev/null | head -10 || echo "无CPU空闲配置"
+        
+        echo "搜索电源管理配置:"
+        grep -i "pm" arch/arm64/configs/alioth_defconfig 2>/dev/null | grep -v "SPMI" | head -10 || echo "无相关PM配置"
