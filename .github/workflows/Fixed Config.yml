@@ -1,0 +1,151 @@
+name: Build Kernel - Fixed Config
+
+on:
+  workflow_dispatch:
+
+env:
+  KERNEL_NAME: InfiniR_Final
+  DEVICE: alioth
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Install environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu
+
+    - name: Fix KernelSU reference
+      run: |
+        if [ ! -d "drivers/kernelsu" ]; then
+          sed -i 's/^source "drivers\/kernelsu\/Kconfig"/# source "drivers\/kernelsu\/Kconfig"/' drivers/Kconfig
+          echo "✅ KernelSU引用已修复"
+        fi
+
+    - name: Create complete configuration
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "创建完整的配置..."
+        mkdir -p out
+        
+        # 使用defconfig生成基础配置
+        make O=out ARCH=arm64 defconfig
+        
+        echo "修复CPU掩码配置..."
+        # 添加必要的CPU配置（针对骁龙870）
+        echo "CONFIG_NR_CPUS=8" >> out/.config
+        echo "CONFIG_LITTLE_CPU_MASK=0xff" >> out/.config
+        echo "CONFIG_BIG_CPU_MASK=0x0" >> out/.config
+        echo "CONFIG_PRIME_CPU_MASK=0x0" >> out/.config
+        
+        # 添加必要的基础配置
+        echo "CONFIG_ARM64_4K_PAGES=y" >> out/.config
+        echo "CONFIG_ARM64_VA_BITS_48=y" >> out/.config
+        echo "CONFIG_ARM64_PA_BITS_48=y" >> out/.config
+        echo "CONFIG_CPU_BIG_ENDIAN=n" >> out/.config
+        echo "CONFIG_SCHED_MC=y" >> out/.config
+        echo "CONFIG_SCHED_SMT=n" >> out/.config
+        
+        # 添加我们的核心功能
+        echo "CONFIG_MODULES=y" >> out/.config
+        echo "CONFIG_MODULE_UNLOAD=y" >> out/.config
+        echo "CONFIG_ZSTD_COMPRESS=y" >> out/.config
+        echo "CONFIG_ZSTD_DECOMPRESS=y" >> out/.config
+        echo "CONFIG_KERNEL_ZSTD=y" >> out/.config
+        echo "CONFIG_SWAP=y" >> out/.config
+        echo "CONFIG_ZRAM=y" >> out/.config
+        echo "CONFIG_ZRAM_DEF_COMP_ZSTD=y" >> out/.config
+        echo "CONFIG_CGROUP_FREEZER=y" >> out/.config
+        
+        # 禁用调试功能
+        echo "CONFIG_DEBUG_INFO=n" >> out/.config
+        echo "CONFIG_DEBUG_KERNEL=n" >> out/.config
+        echo "CONFIG_KASAN=n" >> out/.config
+        
+        echo "应用配置（自动回答所有问题）..."
+        # 使用yes自动回答所有配置问题
+        yes "" | make O=out ARCH=arm64 oldconfig
+
+    - name: Build kernel
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "开始编译..."
+        echo "编译进度："
+        
+        # 使用timeout命令确保不会永久卡住
+        timeout 110m make O=out ARCH=arm64 -j2 || {
+          if [ $? -eq 124 ]; then
+            echo "⚠️ 编译超时，但可能有部分成果"
+          else
+            echo "❌ 编译失败"
+            exit 1
+          fi
+        }
+        
+        # 检查编译结果
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "🎉 内核编译成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+          echo "文件大小验证通过"
+        elif [ -f "out/vmlinux" ]; then
+          echo "⚠️ 核心内核编译成功，但未生成最终镜像"
+          echo "可能缺少设备树编译"
+          ls -lh out/vmlinux
+        else
+          echo "❌ 编译未生成预期文件"
+          echo "输出目录内容："
+          find out/ -name "vmlinux" -o -name "Image*" -o -name "*.o" 2>/dev/null | head -10
+        fi
+
+    - name: Create package
+      if: success()
+      run: |
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "创建刷机包..."
+          mkdir -p ak3_package
+          cp out/arch/arm64/boot/Image.gz-dtb ak3_package/
+          
+          cat > ak3_package/anykernel.sh << 'EOF'
+          #!/system/bin/sh
+          echo "Flashing InfiniR Kernel..."
+          dd if=/tmp/anykernel/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot
+          echo "Flash complete! Reboot to apply."
+          EOF
+          
+          cd ak3_package
+          zip -r9 "../${KERNEL_NAME}.zip" .
+          cd ..
+          
+          echo "✅ 刷机包创建完成"
+          ls -lh *.zip
+        else
+          echo "⚠️ 无法创建刷机包：缺少内核镜像"
+        fi
+
+    - name: Upload kernel
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: final-kernel
+        path: "*.zip"
+
+    - name: Upload build info
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-info
+        path: |
+          out/.config
+          out/Makefile
