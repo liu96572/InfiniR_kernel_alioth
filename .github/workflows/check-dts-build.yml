@@ -1,0 +1,134 @@
+name: Build Kernel - Check DTS
+
+on:
+  workflow_dispatch:
+
+env:
+  KERNEL_NAME: InfiniR_Check_DTS
+  DEVICE: alioth
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Install tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu device-tree-compiler
+
+    - name: Check device tree files
+      run: |
+        echo "检查设备树文件..."
+        echo "=== 设备树目录结构 ==="
+        find arch/arm64/boot/dts/ -name "*.dts" -o -name "*.dtsi" | head -20
+        echo "=== 红米K40相关设备树 ==="
+        find arch/arm64/boot/dts/ -name "*alioth*" -o -name "*sm8250*" | head -10
+        echo "=== 设备树Makefile ==="
+        ls -la arch/arm64/boot/dts/qcom/Makefile
+        cat arch/arm64/boot/dts/qcom/Makefile | grep -i "alioth\|sm8250" || echo "未找到相关配置"
+
+    - name: Fix KernelSU and bq2597x
+      run: |
+        sed -i 's/^source "drivers\/kernelsu\/Kconfig"/# source "drivers\/kernelsu\/Kconfig"/' drivers/Kconfig 2>/dev/null || true
+        sed -i '1120s/.*/\/\/ *result = t; \/\/* 注释浮点运算/' drivers/power/supply/ti/bq2597x_charger.c
+        sed -i '1134s/.*/\/\/ *result = (int)(t * sc8551_adc_lsb[channel]); \/\/* 注释浮点运算/' drivers/power/supply/ti/bq2597x_charger.c
+
+    - name: Build without device tree first
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "先编译不包含设备树的内核..."
+        mkdir -p out
+        
+        # 使用现有配置
+        cp arch/arm64/configs/alioth_defconfig out/.config
+        
+        # 禁用设备树编译测试
+        echo "CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE=n" >> out/.config
+        
+        make O=out ARCH=arm64 olddefconfig > /dev/null 2>&1
+        
+        echo "编译基础内核..."
+        make O=out ARCH=arm64 -j2
+        
+        if [ -f "out/arch/arm64/boot/Image" ]; then
+          echo "✅ 基础内核编译成功"
+          ls -lh out/arch/arm64/boot/Image
+        else
+          echo "❌ 基础内核编译失败"
+          exit 1
+        fi
+
+    - name: Try device tree compilation
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "尝试设备树编译..."
+        
+        # 重新启用设备树
+        echo "CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE=y" >> out/.config
+        make O=out ARCH=arm64 olddefconfig > /dev/null 2>&1
+        
+        echo "编译设备树..."
+        make O=out ARCH=arm64 dtbs 2>&1 | head -50 || {
+          echo "设备树编译失败，查看具体错误..."
+          make O=out ARCH=arm64 dtbs V=1 2>&1 | grep -i error | head -20
+        }
+
+    - name: Create manual package
+      run: |
+        echo "创建手动刷机包..."
+        mkdir -p ak3_package
+        
+        # 使用基础Image
+        if [ -f "out/arch/arm64/boot/Image" ]; then
+          cp out/arch/arm64/boot/Image ak3_package/
+          echo "✅ 使用基础Image"
+          
+          # 如果有设备树文件，尝试手动组合
+          if find out/ -name "*.dtb" -type f | grep -q .; then
+            DTB_FILE=$(find out/ -name "*alioth*.dtb" -o -name "*sm8250*.dtb" | head -1)
+            if [ -f "$DTB_FILE" ]; then
+              echo "找到设备树文件: $DTB_FILE"
+              cat out/arch/arm64/boot/Image "$DTB_FILE" > ak3_package/Image-dtb 2>/dev/null && echo "✅ 手动组合Image-dtb" || echo "❌ 手动组合失败"
+            fi
+          fi
+        else
+          echo "❌ 找不到内核镜像"
+          exit 1
+        fi
+        
+        cat > ak3_package/anykernel.sh << 'EOF'
+        #!/system/bin/sh
+        echo "Flashing InfiniR DTS Check Kernel..."
+        if [ -f /tmp/anykernel/Image-dtb ]; then
+          echo "使用Image-dtb"
+          dd if=/tmp/anykernel/Image-dtb of=/dev/block/bootdevice/by-name/boot
+        elif [ -f /tmp/anykernel/Image ]; then
+          echo "使用基础Image"
+          dd if=/tmp/anykernel/Image of=/dev/block/bootdevice/by-name/boot
+        fi
+        echo "Flash complete!"
+        EOF
+        
+        cd ak3_package
+        zip -r9 "../${KERNEL_NAME}.zip" .
+        cd ..
+        
+        echo "✅ 刷机包创建完成"
+        ls -lh *.zip
+
+    - name: Upload kernel
+      uses: actions/upload-artifact@v4
+      with:
+        name: dts-check-kernel
+        path: "*.zip"
