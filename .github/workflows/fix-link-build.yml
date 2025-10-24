@@ -1,0 +1,93 @@
+name: Build Kernel - Fix Link
+
+on:
+  workflow_dispatch:
+
+env:
+  KERNEL_NAME: InfiniR_LinkFixed
+  DEVICE: alioth
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Install complete toolchain
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          libssl-dev \
+          bc \
+          flex \
+          bison \
+          libelf-dev \
+          dwarves \
+          gcc-aarch64-linux-gnu \
+          binutils-aarch64-linux-gnu \
+          device-tree-compiler \
+          lld \
+          llvm \
+          clang
+
+    - name: Fix KernelSU reference
+      run: |
+        sed -i 's/^source "drivers\/kernelsu\/Kconfig"/# source "drivers\/kernelsu\/Kconfig"/' drivers/Kconfig 2>/dev/null || true
+
+    - name: Build with proper linker
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        export LD=ld.lld  # 使用LLD链接器
+        
+        echo "使用完整工具链编译..."
+        mkdir -p out
+        
+        # 配置
+        cp arch/arm64/configs/alioth_defconfig out/.config
+        make O=out ARCH=arm64 olddefconfig > /dev/null 2>&1
+        
+        echo "开始编译..."
+        # 使用详细输出以便调试
+        make O=out ARCH=arm64 -j2 V=1 2>&1 | tail -50
+        
+        # 检查结果
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "🎉 编译成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+        else
+          echo "编译状态..."
+          [ -f "out/vmlinux" ] && echo "✅ vmlinux存在" || echo "❌ vmlinux缺失"
+          find out/ -name "*.o" 2>/dev/null | head -5
+        fi
+
+    - name: Create package
+      if: success()
+      run: |
+        mkdir -p ak3_package
+        cp out/arch/arm64/boot/Image.gz-dtb ak3_package/
+        
+        cat > ak3_package/anykernel.sh << 'EOF'
+        #!/system/bin/sh
+        echo "Flashing Fixed Kernel"
+        dd if=/tmp/anykernel/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot
+        echo "Done"
+        EOF
+        
+        cd ak3_package
+        zip -r9 "../${KERNEL_NAME}.zip" .
+        cd ..
+        echo "✅ 刷机包完成"
+
+    - name: Upload kernel
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: link-fixed-kernel
+        path: "*.zip"
