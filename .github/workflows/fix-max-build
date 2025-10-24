@@ -1,4 +1,4 @@
-name: Build Kernel - Fix Generation
+name: Build Kernel - Fix-max Generation
 
 on:
   workflow_dispatch:
