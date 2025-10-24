@@ -1,0 +1,105 @@
+name: Build Kernel - Debug Link
+
+on:
+  workflow_dispatch:
+
+env:
+  KERNEL_NAME: InfiniR_Debug
+  DEVICE: alioth
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Install tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev bc flex bison libelf-dev gcc-aarch64-linux-gnu
+
+    - name: Fix KernelSU reference
+      run: |
+        sed -i 's/^source "drivers\/kernelsu\/Kconfig"/# source "drivers\/kernelsu\/Kconfig"/' drivers/Kconfig 2>/dev/null || true
+
+    - name: Debug build process
+      run: |
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        
+        echo "诊断编译过程..."
+        mkdir -p out
+        
+        # 配置
+        cp arch/arm64/configs/alioth_defconfig out/.config
+        make O=out ARCH=arm64 olddefconfig > /dev/null 2>&1
+        
+        echo "步骤1: 只编译vmlinux（测试链接）..."
+        # 尝试只编译核心内核，不编译模块
+        make O=out ARCH=arm64 vmlinux -j2 || {
+          echo "❌ vmlinux编译失败"
+          echo "检查最后编译的文件..."
+          find out/ -name "*.o" -type f | head -10
+        }
+        
+        echo "步骤2: 检查生成的文件..."
+        if [ -f "out/vmlinux" ]; then
+          echo "✅ vmlinux生成成功"
+          ls -lh out/vmlinux
+          echo "步骤3: 生成最终镜像..."
+          make O=out ARCH=arm64 Image.gz-dtb
+        else
+          echo "❌ vmlinux未生成"
+          echo "可能的问题：内存不足或链接器错误"
+        fi
+
+    - name: Check final result
+      run: |
+        echo "=== 最终结果检查 ==="
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          echo "🎉 完整编译成功！"
+          ls -lh out/arch/arm64/boot/Image.gz-dtb
+        elif [ -f "out/vmlinux" ]; then
+          echo "⚠️ vmlinux存在但未生成最终镜像"
+          echo "可能是设备树编译问题"
+          ls -lh out/vmlinux
+        else
+          echo "❌ 编译完全失败"
+          echo "最后的状态："
+          find out/ -maxdepth 2 -type f -name "*.o" | wc -l | xargs echo "编译的目标文件数量："
+          du -sh out/
+        fi
+
+    - name: Create package if available
+      if: success()
+      run: |
+        if [ -f "out/arch/arm64/boot/Image.gz-dtb" ]; then
+          mkdir -p ak3_package
+          cp out/arch/arm64/boot/Image.gz-dtb ak3_package/
+          
+          cat > ak3_package/anykernel.sh << 'EOF'
+          #!/system/bin/sh
+          echo "Flashing Debug Kernel"
+          dd if=/tmp/anykernel/Image.gz-dtb of=/dev/block/bootdevice/by-name/boot
+          echo "Done"
+          EOF
+          
+          cd ak3_package
+          zip -r9 "../${KERNEL_NAME}.zip" .
+          cd ..
+          echo "✅ 刷机包完成"
+        else
+          echo "❌ 无法创建刷机包：缺少内核镜像"
+        fi
+
+    - name: Upload kernel
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: debug-kernel
+        path: "*.zip"
