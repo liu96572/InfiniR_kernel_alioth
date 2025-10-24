@@ -1,0 +1,58 @@
+name: Build Kernel - Full Analysis
+
+on:
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: 16.0-alioth
+
+    - name: Complete Analysis
+      run: |
+        echo "=== 系统化分析开始 ==="
+        
+        # 1. 环境检测
+        echo "1. 环境检测..."
+        uname -a
+        gcc --version
+        make --version
+        
+        # 2. 源码结构分析
+        echo "2. 源码结构..."
+        [ -f "Makefile" ] && echo "✅ Makefile存在" || echo "❌ Makefile缺失"
+        [ -f "arch/arm64/configs/alioth_defconfig" ] && echo "✅ defconfig存在" || echo "❌ defconfig缺失"
+        
+        # 3. 已知问题修复
+        echo "3. 修复已知问题..."
+        sed -i 's/^source "drivers\/kernelsu\/Kconfig"/# source "drivers\/kernelsu\/Kconfig"/' drivers/Kconfig 2>/dev/null || true
+        
+        # 4. 分阶段编译诊断
+        echo "4. 分阶段编译..."
+        export ARCH=arm64
+        export CROSS_COMPILE=aarch64-linux-gnu-
+        mkdir -p out
+        cp arch/arm64/configs/alioth_defconfig out/.config
+        
+        echo "阶段1: 配置..."
+        make O=out ARCH=arm64 olddefconfig > config.log 2>&1 && echo "✅ 配置成功" || {
+          echo "❌ 配置失败"
+          tail -20 config.log
+        }
+        
+        echo "阶段2: 编译vmlinux..."
+        make O=out ARCH=arm64 vmlinux -j1 > build.log 2>&1 && echo "✅ vmlinux成功" || {
+          echo "❌ vmlinux失败"
+          grep -E "error:|Error:|ERROR|停止|失败" build.log | head -30
+        }
+        
+        # 5. 结果分析
+        echo "5. 最终分析..."
+        [ -f "out/vmlinux" ] && echo "🎉 vmlinux生成成功" || echo "❌ vmlinux生成失败"
+        [ -f "out/arch/arm64/boot/Image.gz-dtb" ] && echo "🎉 镜像生成成功" || echo "❌ 镜像生成失败"
+        
+        echo "=== 分析完成 ==="
