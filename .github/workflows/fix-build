@@ -1,4 +1,4 @@
-name: Build Kernel - Fix Image Generation
+name: Build Kernel - Fix Generation
 
 on:
   workflow_dispatch:
