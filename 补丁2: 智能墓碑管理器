@@ -1,0 +1,109 @@
+// kernel/tombstone/tombstone_manager.c
+#include <linux/sched.h>
+#include <linux/slab.h>
+#include <linux/rbtree.h>
+#include <linux/ktime.h>
+
+#define TOMBSTONE_MAX_SAVED 64
+#define PRESERVE_LEVEL_FULL 0
+#define PRESERVE_LEVEL_LIGHT 1
+#define PRESERVE_LEVEL_MINIMAL 2
+
+struct tombstone_task {
+    struct rb_node node;
+    pid_t pid;
+    char package_name[128];
+    char comm[TASK_COMM_LEN];
+    unsigned long state_flags;
+    ktime_t tombstone_time;
+    int preserve_level;
+    atomic_t refcount;
+};
+
+struct smart_tombstone_learner {
+    struct rb_root usage_patterns;
+    struct list_head app_categories;
+    ktime_t last_learning_time;
+    atomic_t learning_enabled;
+};
+
+static struct rb_root tombstone_tree = RB_ROOT;
+static DEFINE_SPINLOCK(tombstone_lock);
+static atomic_t tombstone_count = ATOMIC_INIT(0);
+static struct smart_tombstone_learner learner;
+
+// 应用分类枚举
+enum app_category {
+    APP_SOCIAL_PUSH,      // 社交推送类
+    APP_MEDIA_PLAYBACK,   // 媒体播放类  
+    APP_PAYMENT,          // 支付金融类
+    APP_GAME,             // 游戏类
+    APP_NORMAL            // 普通应用
+};
+
+// 智能学习应用使用模式
+struct app_usage_pattern {
+    char package_name[128];
+    int launch_count;
+    ktime_t last_used_time;
+    int avg_session_duration;
+    int preferred_hours[24];
+    enum app_category category;
+    int battery_impact;
+    struct list_head pattern_node;
+};
+
+int tombstone_task(struct task_struct *tsk)
+{
+    struct tombstone_task *ttask;
+    
+    if (!tsk || atomic_read(&tombstone_count) >= TOMBSTONE_MAX_SAVED)
+        return -EINVAL;
+    
+    ttask = kzalloc(sizeof(*ttask), GFP_KERNEL);
+    if (!ttask)
+        return -ENOMEM;
+    
+    ttask->pid = tsk->pid;
+    strlcpy(ttask->comm, tsk->comm, TASK_COMM_LEN);
+    ttask->tombstone_time = ktime_get();
+    atomic_set(&ttask->refcount, 1);
+    
+    // 智能分类应用并设置保活级别
+    ttask->preserve_level = classify_application(tsk);
+    
+    spin_lock(&tombstone_lock);
+    // 添加到红黑树
+    spin_unlock(&tombstone_lock);
+    
+    atomic_inc(&tombstone_count);
+    pr_info("tombstone: saved task %d (%s), level: %d\n", 
+            tsk->pid, tsk->comm, ttask->preserve_level);
+    
+    return 0;
+}
+EXPORT_SYMBOL(tombstone_task);
+
+// 智能应用分类
+static int classify_application(struct task_struct *tsk)
+{
+    char package_name[128];
+    
+    if (get_package_name(tsk, package_name, sizeof(package_name))) {
+        // 微信、QQ等社交应用
+        if (strstr(package_name, "com.tencent.mm") ||
+            strstr(package_name, "com.tencent.mobileqq"))
+            return PRESERVE_LEVEL_LIGHT;
+        
+        // 音乐播放器
+        if (strstr(package_name, "com.netease.cloudmusic") ||
+            strstr(package_name, "com.tencent.qqmusic"))
+            return PRESERVE_LEVEL_LIGHT;
+            
+        // 支付宝等支付应用
+        if (strstr(package_name, "com.eg.android.AlipayGphone"))
+            return PRESERVE_LEVEL_FULL;
+    }
+    
+    return PRESERVE_LEVEL_MINIMAL;
+}
