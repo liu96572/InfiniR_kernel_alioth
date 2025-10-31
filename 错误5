@@ -1,0 +1,68 @@
+liu@liu-virtual-machine:~/kernel$ # 验证修复
+liu@liu-virtual-machine:~/kernel$ sed -n '1255p' techpack/audio/asoc/codecs/bolero/tx-macro.c
+	dev_err(tx_dev, "%s: id:%d(%s) ch_mask:0x%x active_ch_cnt:%zu active_mask: 0x%lx\n",
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ # 重新编译测试
+liu@liu-virtual-machine:~/kernel$ make -j$(nproc) O=out
+make[1]: 进入目录“/home/liu/kernel/out”
+  GEN     ./Makefile
+  Using .. as source for kernel
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.1.dtb
+  CALL    ../scripts/checksyscalls.sh
+  CHK     include/generated/compile.h
+  CC      techpack/audio/asoc/codecs/bolero/bolero-cdc.o
+  AR      techpack/audio/asoc/codecs/rouleur/built-in.a
+  AR      techpack/audio/asoc/codecs/sdm660_cdc/built-in.a
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c: 在函数‘bolero_set_port_map’中:
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:63:29: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   63 |   if (priv->macro_params[map->id].set_port_map)
+      |                             ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:64:26: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   64 |    priv->macro_params[map->id].set_port_map(component,
+      |                          ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:65:10: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   65 |       map->uc,
+      |          ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:66:7: 错误： ‘SWR_MSTR_PORT_LEN’未声明(在此函数内第一次使用)
+   66 |       SWR_MSTR_PORT_LEN,
+      |       ^~~~~~~~~~~~~~~~~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:66:7: 附注： 每个未声明的标识符在其出现的函数内只报告一次
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:67:10: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   67 |       map->swr_port_params);
+      |          ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:68:7: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   68 |   map += 1;
+      |       ^~
+make[6]: *** [../scripts/Makefile.build:338：techpack/audio/asoc/codecs/bolero/bolero-cdc.o] 错误 1
+make[5]: *** [../scripts/Makefile.build:642：techpack/audio/asoc/codecs/bolero] 错误 2
+make[4]: *** [../scripts/Makefile.build:642：techpack/audio/asoc/codecs] 错误 2
+make[3]: *** [../scripts/Makefile.build:642：techpack/audio/asoc] 错误 2
+make[2]: *** [../scripts/Makefile.build:642：techpack/audio] 错误 2
+make[2]: *** 正在等待未完成的任务....
+  DTC     arch/arm64/boot/dts/vendor/qcom/alioth-sm8250-overlay.dtbo
+  AR      virt/lib/built-in.a
+  AR      virt/built-in.a
+make[1]: *** [/home/liu/kernel/Makefile:1256：techpack] 错误 2
+make[1]: *** 正在等待未完成的任务....
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_flash.o
+  CC      drivers/input/touchscreen/tp_common.o
+In file included from ../drivers/input/touchscreen/focaltech_spi/focaltech_common.h:34,
+                 from ../drivers/input/touchscreen/focaltech_spi/focaltech_core.h:65,
+                 from ../drivers/input/touchscreen/focaltech_spi/focaltech_flash.c:36:
+../drivers/input/touchscreen/focaltech_spi/focaltech_config.h:265:50: 致命错误： include/firmware/fw_ft3658_k11.i：没有那个文件或目录
+  265 | #define FTS_UPGRADE_FW_FILE                      "include/firmware/fw_ft3658_k11.i"
+      |                                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+编译中断。
+make[5]: *** [../scripts/Makefile.build:338：drivers/input/touchscreen/focaltech_spi/focaltech_flash.o] 错误 1
+make[4]: *** [../scripts/Makefile.build:642：drivers/input/touchscreen/focaltech_spi] 错误 2
+make[3]: *** [../scripts/Makefile.build:642：drivers/input/touchscreen] 错误 2
+make[2]: *** [../scripts/Makefile.build:642：drivers/input] 错误 2
+make[2]: *** 正在等待未完成的任务....
+make[1]: *** [/home/liu/kernel/Makefile:1256：drivers] 错误 2
+make[1]: 离开目录“/home/liu/kernel/out”
+make: *** [Makefile:153：sub-make] 错误 2
+[ERROR] 命令失败: make -j$(nproc) O=out (在行号: 1509)
+[WARNING] 尝试继续执行...
+liu@liu-virtual-machine:~/ke
