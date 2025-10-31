@@ -1,0 +1,51 @@
+// 自动学习用户习惯
+static void learn_usage_patterns(void) {
+    struct app_usage_pattern *pattern;
+    struct task_struct *tsk;
+    int current_hour;
+    
+    current_hour = ktime_get_hour();
+    
+    // 遍历所有应用进程
+    rcu_read_lock();
+    for_each_process(tsk) {
+        if (!tsk->mm || tsk->flags & PF_KTHREAD) continue;
+        
+        pattern = get_or_create_pattern(tsk);
+        if (!pattern) continue;
+        
+        // 更新使用统计
+        pattern->launch_count++;
+        pattern->last_used_time = ktime_get();
+        pattern->preferred_hours[current_hour]++;
+        
+        // 自动分类应用行为
+        pattern->behavior = auto_classify_behavior(tsk, pattern);
+        
+        // 更新电池影响评分
+        update_battery_impact_score(pattern, tsk);
+    }
+    rcu_read_unlock();
+    
+    // 应用学习结果
+    apply_learned_policies();
+}
+
+// 自动行为分类
+static enum app_behavior_type auto_classify_behavior(struct task_struct *tsk, 
+                                                    struct app_usage_pattern *pattern) {
+    // 基于使用模式自动分类
+    if (is_music_app(tsk) && pattern->avg_session_duration > 1800) {
+        return BEHAVIOR_MUSIC_STREAMING;
+    }
+    
+    if (is_social_app(tsk) && pattern->launch_count > 20) {
+        return BEHAVIOR_SOCIAL_FREQUENT;
+    }
+    
+    if (is_game_app(tsk) && pattern->battery_impact > 80) {
+        return BEHAVIOR_GAME_HEAVY;
+    }
+    
+    return BEHAVIOR_NORMAL;
+}
