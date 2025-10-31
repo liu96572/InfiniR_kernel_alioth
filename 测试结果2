@@ -1,0 +1,2655 @@
+depends on QCOM_APR
+	select SND_SOC_QDSP6_COMMON
+	select SND_SOC_QDSP6_CORE
+	select SND_SOC_QDSP6_AFE
+	select SND_SOC_QDSP6_AFE_DAI
+	select SND_SOC_QDSP6_ADM
+	select SND_SOC_QDSP6_ROUTING
+	select SND_SOC_QDSP6_ASM
+	select SND_SOC_QDSP6_ASM_DAI
+config SND_SOC_MSM8996
+	depends on QCOM_APR
+	select SND_SOC_QDSP6
+	select SND_SOC_QCOM_COMMON
+config SND_SOC_SDM845
+	depends on QCOM_APR
+	select SND_SOC_QDSP6
+	select SND_SOC_QCOM_COMMON
+config SND_SOC_TXX9ACLC
+	depends on HAS_TXX9_ACLC && TXX9_DMAC
+config HAS_TXX9_ACLC
+config SND_SOC_TXX9ACLC_AC97
+	select AC97_BUS
+	select SND_AC97_CODEC
+	select SND_SOC_AC97_BUS
+config SND_SOC_TXX9ACLC_GENERIC
+	depends on SND_SOC_TXX9ACLC
+	select SND_SOC_TXX9ACLC_AC97
+	select SND_SOC_AC97_CODEC
+menuconfig SND_MXS_SOC
+	depends on ARCH_MXS || COMPILE_TEST
+	depends on COMMON_CLK
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_MXS_SGTL5000
+	depends on I2C
+	select SND_SOC_SGTL5000
+	depends on ARCH_DOVE || ARCH_MVEBU || COMPILE_TEST
+	  the Kirkwood I2S interface. You will also need to select the
+config SND_KIRKWOOD_SOC_ARMADA370_DB
+	depends on SND_KIRKWOOD_SOC && (ARCH_MVEBU || COMPILE_TEST) && I2C
+	select SND_SOC_CS42L51
+	select SND_SOC_SPDIF
+	depends on ARCH_SUNXI || COMPILE_TEST
+config SND_SUN4I_CODEC
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+config SND_SUN8I_CODEC
+	depends on OF
+	depends on MACH_SUN8I || COMPILE_TEST
+	select REGMAP_MMIO
+config SND_SUN8I_CODEC_ANALOG
+	depends on MACH_SUN8I || (ARM64 && ARCH_SUNXI) || COMPILE_TEST
+	select REGMAP
+config SND_SUN4I_I2S
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+	  the Allwinner A10 I2S. You will also need to select the
+config SND_SUN4I_SPDIF
+	depends on OF
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+# SoC audio configuration
+menuconfig SND_SOC
+	select SND_PCM
+	select AC97_BUS if SND_SOC_AC97_BUS
+	select SND_JACK
+	select REGMAP_I2C if I2C
+	select REGMAP_SPI if SPI_MASTER
+config SND_SOC_AC97_BUS
+config SND_SOC_GENERIC_DMAENGINE_PCM
+	select SND_DMAENGINE_PCM
+config SND_SOC_COMPRESS
+	select SND_COMPRESS_OFFLOAD
+config SND_SOC_TOPOLOGY
+config SND_SOC_ACPI
+source "sound/soc/adi/Kconfig"
+source "sound/soc/amd/Kconfig"
+source "sound/soc/atmel/Kconfig"
+source "sound/soc/au1x/Kconfig"
+source "sound/soc/bcm/Kconfig"
+source "sound/soc/cirrus/Kconfig"
+source "sound/soc/davinci/Kconfig"
+source "sound/soc/ux500/Kconfig"
+source "sound/soc/xtensa/Kconfig"
+source "sound/soc/zte/Kconfig"
+source "sound/soc/codecs/Kconfig"
+source "sound/soc/generic/Kconfig"
+# Ux500 SoC audio configuration
+menuconfig SND_SOC_UX500
+	depends on SND_SOC
+	depends on MFD_DB8500_PRCMU
+config SND_SOC_UX500_PLAT_MSP_I2S
+	depends on SND_SOC_UX500
+config SND_SOC_UX500_PLAT_DMA
+	depends on SND_SOC_UX500
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_UX500_MACH_MOP500
+	depends on AB8500_CORE && AB8500_GPADC && SND_SOC_UX500
+	select SND_SOC_AB8500_CODEC
+	select SND_SOC_UX500_PLAT_MSP_I2S
+	select SND_SOC_UX500_PLAT_DMA
+menuconfig SND_SOC_SAMSUNG
+	depends on PLAT_SAMSUNG || ARCH_EXYNOS || COMPILE_TEST
+	depends on COMMON_CLK
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	  select the audio interfaces to support below.
+config SND_S3C24XX_I2S
+config SND_S3C_I2SV2_SOC
+config SND_S3C2412_SOC_I2S
+	select SND_S3C_I2SV2_SOC
+config SND_SAMSUNG_PCM
+config SND_SAMSUNG_SPDIF
+	select SND_SOC_SPDIF
+config SND_SAMSUNG_I2S
+config SND_SOC_SAMSUNG_NEO1973_WM8753
+	depends on MACH_NEO1973_GTA02
+	select SND_S3C24XX_I2S
+	select SND_SOC_WM8753
+	select SND_SOC_BT_SCO
+config SND_SOC_SAMSUNG_JIVE_WM8750
+	depends on MACH_JIVE && I2C
+	select SND_SOC_WM8750
+	select SND_S3C2412_SOC_I2S
+config SND_SOC_SAMSUNG_SMDK_WM8580
+	depends on MACH_SMDK6410 || COMPILE_TEST
+	depends on I2C
+	select SND_SOC_WM8580
+	select SND_SAMSUNG_I2S
+config SND_SOC_SAMSUNG_SMDK_WM8994
+	depends on I2C=y
+	select MFD_WM8994
+	select SND_SOC_WM8994
+	select SND_SAMSUNG_I2S
+config SND_SOC_SAMSUNG_S3C24XX_UDA134X
+	depends on ARCH_S3C24XX
+	select SND_S3C24XX_I2S
+	select SND_SOC_L3
+	select SND_SOC_UDA134X
+config SND_SOC_SAMSUNG_SIMTEC
+config SND_SOC_SAMSUNG_SIMTEC_TLV320AIC23
+	depends on ARCH_S3C24XX && I2C
+	select SND_S3C24XX_I2S
+	select SND_SOC_TLV320AIC23_I2C
+	select SND_SOC_SAMSUNG_SIMTEC
+config SND_SOC_SAMSUNG_SIMTEC_HERMES
+	depends on ARCH_S3C24XX && I2C
+	select SND_S3C24XX_I2S
+	select SND_SOC_TLV320AIC3X
+	select SND_SOC_SAMSUNG_SIMTEC
+config SND_SOC_SAMSUNG_H1940_UDA1380
+	depends on ARCH_H1940 && I2C
+	select SND_S3C24XX_I2S
+	select SND_SOC_UDA1380
+config SND_SOC_SAMSUNG_RX1950_UDA1380
+	depends on MACH_RX1950 && I2C
+	select SND_S3C24XX_I2S
+	select SND_SOC_UDA1380
+config SND_SOC_SMARTQ
+	depends on MACH_SMARTQ || COMPILE_TEST
+	depends on GPIOLIB || COMPILE_TEST
+	depends on I2C
+	select SND_SAMSUNG_I2S
+	select SND_SOC_WM8750
+config SND_SOC_SAMSUNG_SMDK_SPDIF
+	select SND_SAMSUNG_SPDIF
+config SND_SOC_SMDK_WM8994_PCM
+	depends on I2C=y
+	select MFD_WM8994
+	select SND_SOC_WM8994
+	select SND_SAMSUNG_PCM
+config SND_SOC_SPEYSIDE
+	depends on I2C && SPI_MASTER
+	depends on MACH_WLF_CRAGG_6410 || COMPILE_TEST
+	select SND_SAMSUNG_I2S
+	select SND_SOC_WM8996
+	select SND_SOC_WM9081
+	select SND_SOC_WM0010
+	select SND_SOC_WM1250_EV1
+config SND_SOC_TOBERMORY
+	depends on INPUT && I2C
+	depends on MACH_WLF_CRAGG_6410 || COMPILE_TEST
+	select SND_SAMSUNG_I2S
+	select SND_SOC_WM8962
+config SND_SOC_BELLS
+	depends on MFD_ARIZONA && I2C && SPI_MASTER
+	depends on MACH_WLF_CRAGG_6410 || COMPILE_TEST
+	select SND_SAMSUNG_I2S
+	select SND_SOC_WM5102
+	select SND_SOC_WM5110
+	select SND_SOC_WM9081
+	select SND_SOC_WM0010
+	select SND_SOC_WM1250_EV1
+config SND_SOC_LOWLAND
+	depends on I2C
+	depends on MACH_WLF_CRAGG_6410 || COMPILE_TEST
+	select SND_SAMSUNG_I2S
+	select SND_SOC_WM5100
+	select SND_SOC_WM9081
+config SND_SOC_LITTLEMILL
+	depends on I2C
+	depends on MACH_WLF_CRAGG_6410 || COMPILE_TEST
+	select SND_SAMSUNG_I2S
+	select MFD_WM8994
+	select SND_SOC_WM8994
+config SND_SOC_SNOW
+	depends on I2C
+	select SND_SOC_MAX98090
+	select SND_SOC_MAX98095
+	select SND_SAMSUNG_I2S
+config SND_SOC_ODROID
+	depends on SND_SOC_SAMSUNG && I2C
+	select SND_SOC_MAX98090
+	select SND_SAMSUNG_I2S
+config SND_SOC_ARNDALE_RT5631_ALC5631
+        depends on I2C
+        select SND_SAMSUNG_I2S
+        select SND_SOC_RT5631
+config SND_SOC_SAMSUNG_TM2_WM5110
+	depends on SND_SOC_SAMSUNG && MFD_ARIZONA && I2C && SPI_MASTER
+	depends on GPIOLIB || COMPILE_TEST
+	select SND_SOC_MAX98504
+	select SND_SOC_WM5110
+	select SND_SAMSUNG_I2S
+config SND_SOC_ROCKCHIP
+	depends on COMPILE_TEST || ARCH_ROCKCHIP
+	  select the audio interfaces to support below.
+config SND_SOC_ROCKCHIP_I2S
+	depends on CLKDEV_LOOKUP && SND_SOC_ROCKCHIP
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_ROCKCHIP_PDM
+	depends on CLKDEV_LOOKUP && SND_SOC_ROCKCHIP
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_ROCKCHIP_SPDIF
+	depends on CLKDEV_LOOKUP && SND_SOC_ROCKCHIP
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_ROCKCHIP_MAX98090
+	depends on SND_SOC_ROCKCHIP && I2C && GPIOLIB && CLKDEV_LOOKUP
+	select SND_SOC_ROCKCHIP_I2S
+	select SND_SOC_MAX98090
+	select SND_SOC_TS3A227E
+config SND_SOC_ROCKCHIP_RT5645
+	depends on SND_SOC_ROCKCHIP && I2C && GPIOLIB && CLKDEV_LOOKUP
+	select SND_SOC_ROCKCHIP_I2S
+	select SND_SOC_RT5645
+config SND_SOC_RK3288_HDMI_ANALOG
+	depends on SND_SOC_ROCKCHIP && I2C && GPIOLIB && CLKDEV_LOOKUP
+	select SND_SOC_ROCKCHIP_I2S
+	select SND_SOC_HDMI_CODEC
+	select SND_SOC_ES8328_I2C
+	select SND_SOC_ES8328_SPI if SPI_MASTER
+	select DRM_DW_HDMI_I2S_AUDIO if DRM_DW_HDMI
+config SND_SOC_RK3399_GRU_SOUND
+	depends on SND_SOC_ROCKCHIP && I2C && GPIOLIB && CLKDEV_LOOKUP && SPI
+	select SND_SOC_ROCKCHIP_I2S
+	select SND_SOC_MAX98357A
+	select SND_SOC_RT5514
+	select SND_SOC_DA7219
+	select SND_SOC_RT5514_SPI
+	select SND_SOC_HDMI_CODEC
+	select SND_SOC_DMIC
+config SND_MESON_AXG_SPDIFOUT
+	select SND_PCM_IEC958
+config SND_DAVINCI_SOC
+	depends on ARCH_DAVINCI
+	select SND_EDMA_SOC
+config SND_EDMA_SOC
+	depends on TI_EDMA
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_DAVINCI_SOC_I2S
+config SND_DAVINCI_SOC_VCIF
+config SND_DAVINCI_SOC_GENERIC_EVM
+	select SND_SOC_TLV320AIC3X
+	select SND_DAVINCI_SOC_MCASP
+config SND_AM33XX_SOC_EVM
+	depends on SND_EDMA_SOC && SOC_AM33XX && I2C
+	select SND_DAVINCI_SOC_GENERIC_EVM
+config SND_DM365_AIC3X_CODEC
+config SND_DM365_VOICE_CODEC
+	select MFD_DAVINCI_VOICECODEC
+	select SND_DAVINCI_SOC_VCIF
+	select SND_SOC_CQ0093VC
+config  SND_DM6467_SOC_EVM
+	depends on SND_EDMA_SOC && MACH_DAVINCI_DM6467_EVM && I2C
+	select SND_DAVINCI_SOC_GENERIC_EVM
+	select SND_SOC_SPDIF
+config  SND_DA830_SOC_EVM
+	depends on SND_EDMA_SOC && MACH_DAVINCI_DA830_EVM && I2C
+	select SND_DAVINCI_SOC_GENERIC_EVM
+config SND_DESIGNWARE_I2S
+	depends on CLKDEV_LOOKUP
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_DESIGNWARE_PCM
+	depends on SND_DESIGNWARE_I2S
+config SND_SOC_AMD_ACP
+config SND_SOC_AMD_CZ_DA7219MX98357_MACH
+	select SND_SOC_DA7219
+	select SND_SOC_MAX98357A
+	select SND_SOC_ADAU7002
+	select REGULATOR
+	depends on SND_SOC_AMD_ACP && I2C
+config SND_SOC_AMD_CZ_RT5645_MACH
+	select SND_SOC_RT5645
+	depends on SND_SOC_AMD_ACP && I2C
+config SND_JZ4740_SOC
+	depends on MACH_JZ4740 || COMPILE_TEST
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	  the JZ4740 I2S interface. You will also need to select the audio
+config SND_JZ4740_SOC_I2S
+	depends on HAS_IOMEM
+config SND_JZ4740_SOC_QI_LB60
+	depends on HAS_IOMEM
+	depends on JZ4740_QI_LB60 || COMPILE_TEST
+	select SND_JZ4740_SOC_I2S
+    select SND_SOC_JZ4740_CODEC
+config SND_SOC_IMG
+config SND_SOC_IMG_I2S_IN
+	depends on SND_SOC_IMG
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_IMG_I2S_OUT
+	depends on SND_SOC_IMG
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_IMG_PARALLEL_OUT
+	depends on SND_SOC_IMG
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_IMG_SPDIF_IN
+	depends on SND_SOC_IMG
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_IMG_SPDIF_OUT
+	depends on SND_SOC_IMG
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_IMG_PISTACHIO_INTERNAL_DAC
+	depends on SND_SOC_IMG
+config SND_SOC_ADI
+	depends on MICROBLAZE || ARCH_ZYNQ || COMPILE_TEST
+config SND_SOC_ADI_AXI_I2S
+	depends on SND_SOC_ADI
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+config SND_SOC_ADI_AXI_SPDIF
+	depends on SND_SOC_ADI
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+config EXTCON_ADC_JACK
+	depends on IIO
+config EXTCON_ARIZONA
+	depends on MFD_ARIZONA && INPUT && SND_SOC
+config EXTCON_AXP288
+	depends on MFD_AXP20X && USB_SUPPORT && X86
+	select USB_ROLE_SWITCH
+config REGULATOR_AB8500
+	depends on AB8500_CORE
+config REGULATOR_ARIZONA_LDO1
+	depends on MFD_ARIZONA
+	depends on SND_SOC
+config REGULATOR_ARIZONA_MICSUPP
+	depends on MFD_ARIZONA
+	depends on SND_SOC
+config REGULATOR_AS3711
+	depends on MFD_AS3711
+	depends on INPUT_AD714X && SPI
+config INPUT_ARIZONA_HAPTICS
+	depends on MFD_ARIZONA && SND_SOC
+	select INPUT_FF_MEMLESS
+config INPUT_ATMEL_CAPTOUCH
+	depends on OF || COMPILE_TEST
+config REGMAP_SOUNDWIRE
+	depends on SOUNDWIRE
+config REGMAP_SCCB
+	depends on I2C
+config REGMAP_WCD_IRQ
+	depends on SND_SOC
+	select REGMAP_IRQ
+	  This config is intended for enabling REGMAP_IRQ for
+config REGMAP_ALLOW_WRITE_DEBUGFS
+config DRM_VC4
+	depends on ARCH_BCM || ARCH_BCM2835 || COMPILE_TEST
+	depends on DRM
+	depends on SND && SND_SOC
+	depends on COMMON_CLK
+	select DRM_KMS_HELPER
+	select DRM_KMS_CMA_HELPER
+	select DRM_GEM_CMA_HELPER
+	select DRM_PANEL_BRIDGE
+	select SND_PCM
+	select SND_PCM_ELD
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select DRM_MIPI_DSI
+	  the config.txt for the firmware, to keep it from smashing
+config DRM_VC4_HDMI_CEC
+	select VIDEOMODE_HELPERS
+config DRM_MEDIATEK_HDMI
+	depends on DRM_MEDIATEK
+	select SND_SOC_HDMI_CODEC if SND_SOC
+	select GENERIC_PHY
+config DRM_ZTE
+	depends on DRM && ARCH_ZX
+	select DRM_KMS_CMA_HELPER
+	select DRM_KMS_HELPER
+	select SND_SOC_HDMI_CODEC if SND_SOC
+	select VIDEOMODE_HELPERS
+config DRM_STI
+	depends on OF && DRM && (ARCH_STI || ARCH_MULTIPLATFORM)
+	select RESET_CONTROLLER
+	select DRM_KMS_HELPER
+	select DRM_GEM_CMA_HELPER
+	select DRM_KMS_CMA_HELPER
+	select DRM_PANEL
+	select FW_LOADER
+	select SND_SOC_HDMI_CODEC if SND_SOC
+config DRM_EXYNOS
+	depends on OF && DRM && (ARCH_S3C64XX || ARCH_S5PV210 || ARCH_EXYNOS || ARCH_MULTIPLATFORM)
+	select DRM_KMS_HELPER
+	select VIDEOMODE_HELPERS
+	select SND_SOC_HDMI_CODEC if SND_SOC
+	  If M is selected the module will be called exynosdrm.
+config DRM_EXYNOS_IOMMU
+	depends on EXYNOS_IOMMU
+	select SND_PCM
+	select SND_PCM_ELD
+	select SND_PCM_IEC958
+config DRM_DW_HDMI_I2S_AUDIO
+	depends on SND_SOC
+	depends on DRM_DW_HDMI
+	select SND_SOC_HDMI_CODEC
+config DRM_DW_HDMI_CEC
+	depends on DRM_DW_HDMI
+	select CEC_CORE
+	select CEC_NOTIFIER
+config DRM_I2C_ADV7511
+	depends on OF
+	select DRM_KMS_HELPER
+	select REGMAP_I2C
+config DRM_I2C_ADV7511_AUDIO
+	depends on DRM_I2C_ADV7511 && SND_SOC
+	select SND_SOC_HDMI_CODEC
+config DRM_I2C_ADV7533
+	depends on DRM_I2C_ADV7511
+	select DRM_MIPI_DSI
+	depends on MMU
+	select QCOM_MDT_LOADER if ARCH_QCOM
+	select REGULATOR
+	select DRM_KMS_HELPER
+	select DRM_PANEL
+	select SHMEM
+	select TMPFS
+	select QCOM_SCM
+	select QCOM_COMMAND_DB if ARCH_QCOM
+	select WANT_DEV_COREDUMP
+	select SND_SOC_HDMI_CODEC if SND_SOC
+	select SYNC_FILE
+	select PM_OPP
+config DRM_MSM_REGISTER_LOGGING
+	depends on DRM_MSM
+config DRM_I2C_NXP_TDA998X
+	select CEC_CORE if CEC_NOTIFIER
+	select SND_SOC_HDMI_CODEC if SND_SOC
+config DRM_I2C_NXP_TDA9950
+	select CEC_NOTIFIER
+	select CEC_CORE
+config DRM_ROCKCHIP
+	depends on DRM && ROCKCHIP_IOMMU
+	select DRM_GEM_CMA_HELPER
+	select DRM_KMS_HELPER
+	select DRM_PANEL
+	select VIDEOMODE_HELPERS
+	select DRM_ANALOGIX_DP if ROCKCHIP_ANALOGIX_DP
+	select DRM_DW_HDMI if ROCKCHIP_DW_HDMI
+	select DRM_MIPI_DSI if ROCKCHIP_DW_MIPI_DSI
+	select SND_SOC_HDMI_CODEC if ROCKCHIP_CDN_DP && SND_SOC
+config ROCKCHIP_ANALOGIX_DP
+config SOUNDWIRE_CADENCE
+config SOUNDWIRE_INTEL
+	select SOUNDWIRE_CADENCE
+	depends on X86 && ACPI && SND_SOC
+	  enable this config option to get the SoundWire support for that
+config RADIO_SI4713
+	depends on VIDEO_V4L2
+source "drivers/media/radio/si4713/Kconfig"
+config RADIO_SI476X
+	depends on I2C && VIDEO_V4L2
+	depends on MFD_SI476X_CORE
+	depends on SND_SOC
+	select SND_SOC_SI476X
+	depends on I2C
+config VIDEO_TDA1997X
+	depends on VIDEO_V4L2 && I2C && VIDEO_V4L2_SUBDEV_API
+	depends on SND_SOC
+	select HDMI
+	select SND_PCM
+	select V4L2_FWNODE
+config VIDEO_TEA6415C
+# Helper to resolve issues with configs that have SPI enabled but I2C
+config RTC_I2C_AND_SPI
+	select REGMAP_I2C if I2C
+	select REGMAP_SPI if SPI_MASTER
+       select ARM_PATCH_PHYS_VIRT
+       select ARM_HAS_SG_CHAIN
+       select ARCH_HAS_OPP
+       select SOC_BUS
+       select MULTI_IRQ_HANDLER
+       select PM_OPP
+       select SPARSE_IRQ
+       select USE_OF
+       select PINCTRL
+       select MFD_CORE
+       select SND_SOC_COMPRESS
+       select SND_HWDEP
+         apps processor of the MSM/QSD and depends on a shared memory
+config ARCH_RPC
+	select MSM_PM if PM
+	select QMI_ENCDEC
+	select CPU_FREQ
+	select CPU_FREQ_MSM
+	select PM_DEVFREQ
+	select MSM_DEVFREQ_DEVBW
+	select DEVFREQ_SIMPLE_DEV
+	select DEVFREQ_GOV_MSM_BW_HWMON
+	select MSM_BIMC_BWMON
+	select MSM_QDSP6V2_CODECS
+	select MSM_AUDIO_QDSP6V2 if SND_SOC
+	select MSM_RPM_SMD
+	select GENERIC_IRQ_MIGRATION
+	select MSM_JTAGV8 if CORESIGHT_ETMV4
+config ARCH_BENGAL
+	select COMMON_CLK_QCOM
+	depends on CPU_SUBTYPE_SH7722
+	  Select 7722 SolutionEngine if configuring for a Hitachi SH772
+config SH_7724_SOLUTION_ENGINE
+	select SOLUTION_ENGINE
+	depends on CPU_SUBTYPE_SH7724
+	select GPIOLIB
+	select SND_SOC_AK4642 if SND_SIMPLE_CARD
+	select REGULATOR_FIXED_VOLTAGE if REGULATOR
+	  Select 7724 SolutionEngine if configuring for a Hitachi SH7724
+config SH_7751_SOLUTION_ENGINE
+	select SOLUTION_ENGINE
+	select CPU_HAS_IPR_IRQ
+	depends on CPU_SUBTYPE_SH7751
+	depends on CPU_SUBTYPE_SH7724
+	select GPIOLIB
+	select REGULATOR_FIXED_VOLTAGE if REGULATOR
+config SH_ECOVEC
+	depends on CPU_SUBTYPE_SH7724
+	select GPIOLIB
+	select SND_SOC_DA7210 if SND_SIMPLE_CARD
+	select REGULATOR_FIXED_VOLTAGE if REGULATOR
+config SH_SH7763RDP
+	depends on CPU_SUBTYPE_SH7763
+	  Select SH7763RDP if configuring for a Renesas SH7763
+menuconfig SND_SOC_INTEL_MACH
+	depends on SND_SOC_INTEL_SST_TOPLEVEL
+         kernel: saying N will just cause the configurator to skip all
+config SND_SOC_INTEL_HASWELL_MACH
+	depends on X86_INTEL_LPSS && I2C && I2C_DESIGNWARE_PLATFORM
+	select SND_SOC_RT5640
+	  If unsure select "N".
+config SND_SOC_INTEL_BDW_RT5677_MACH
+	depends on X86_INTEL_LPSS && I2C && I2C_DESIGNWARE_PLATFORM && GPIOLIB
+	select SND_SOC_RT5677
+	  If unsure select "N".
+config SND_SOC_INTEL_BROADWELL_MACH
+	depends on X86_INTEL_LPSS && I2C && I2C_DESIGNWARE_PLATFORM
+	select SND_SOC_RT286
+	  If unsure select "N".
+config SND_SOC_INTEL_BYT_MAX98090_MACH
+	depends on X86_INTEL_LPSS && I2C
+	select SND_SOC_MAX98090
+config SND_SOC_INTEL_BYT_RT5640_MACH
+	depends on X86_INTEL_LPSS && I2C
+	select SND_SOC_RT5640
+config SND_SOC_INTEL_BYTCR_RT5640_MACH
+	depends on X86_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_ACPI
+	select SND_SOC_RT5640
+	  If unsure select "N".
+config SND_SOC_INTEL_BYTCR_RT5651_MACH
+	depends on X86_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_ACPI
+	select SND_SOC_RT5651
+	  If unsure select "N".
+config SND_SOC_INTEL_CHT_BSW_RT5672_MACH
+	depends on X86_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_ACPI
+	select SND_SOC_RT5670
+          If unsure select "N".
+config SND_SOC_INTEL_CHT_BSW_RT5645_MACH
+	depends on X86_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_ACPI
+	select SND_SOC_RT5645
+	  If unsure select "N".
+config SND_SOC_INTEL_CHT_BSW_MAX98090_TI_MACH
+	depends on X86_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_MAX98090
+	select SND_SOC_TS3A227E
+	  If unsure select "N".
+config SND_SOC_INTEL_CHT_BSW_NAU8824_MACH
+	depends on X86_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_ACPI
+	select SND_SOC_NAU8824
+	  If unsure select "N".
+config SND_SOC_INTEL_BYT_CHT_DA7213_MACH
+	depends on X86_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_ACPI
+	select SND_SOC_DA7213
+	  If unsure select "N".
+config SND_SOC_INTEL_BYT_CHT_ES8316_MACH
+	depends on X86_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_ACPI
+	select SND_SOC_ES8316
+	  If unsure select "N".
+config SND_SOC_INTEL_BYT_CHT_NOCODEC_MACH
+	depends on X86_INTEL_LPSS && I2C && ACPI
+	  If unsure select "N".
+config SND_SOC_INTEL_SKL_RT286_MACH
+	depends on MFD_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_RT286
+	select SND_SOC_DMIC
+	select SND_SOC_HDAC_HDMI
+	   If unsure select "N".
+config SND_SOC_INTEL_SKL_NAU88L25_SSM4567_MACH
+	depends on MFD_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_NAU8825
+	select SND_SOC_SSM4567
+	select SND_SOC_DMIC
+	select SND_SOC_HDAC_HDMI
+	  If unsure select "N".
+config SND_SOC_INTEL_SKL_NAU88L25_MAX98357A_MACH
+	depends on MFD_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_NAU8825
+	select SND_SOC_MAX98357A
+	select SND_SOC_DMIC
+	select SND_SOC_HDAC_HDMI
+	  If unsure select "N".
+config SND_SOC_INTEL_BXT_DA7219_MAX98357A_MACH
+	depends on MFD_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_DA7219
+	select SND_SOC_MAX98357A
+	select SND_SOC_DMIC
+	select SND_SOC_HDAC_HDMI
+	select SND_HDA_DSP_LOADER
+	   If unsure select "N".
+config SND_SOC_INTEL_BXT_RT298_MACH
+	depends on MFD_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_RT298
+	select SND_SOC_DMIC
+	select SND_SOC_HDAC_HDMI
+	select SND_HDA_DSP_LOADER
+	   If unsure select "N".
+config SND_SOC_INTEL_KBL_RT5663_MAX98927_MACH
+	depends on MFD_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_RT5663
+	select SND_SOC_MAX98927
+	select SND_SOC_DMIC
+	select SND_SOC_HDAC_HDMI
+	select SND_SOC_INTEL_SKYLAKE_SSP_CLK
+	  If unsure select "N".
+config SND_SOC_INTEL_KBL_RT5663_RT5514_MAX98927_MACH
+        depends on MFD_INTEL_LPSS && I2C && ACPI
+        depends on SPI
+        select SND_SOC_RT5663
+        select SND_SOC_RT5514
+        select SND_SOC_RT5514_SPI
+        select SND_SOC_MAX98927
+        select SND_SOC_HDAC_HDMI
+          If unsure select "N".
+config SND_SOC_INTEL_KBL_DA7219_MAX98357A_MACH
+	depends on MFD_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_DA7219
+	select SND_SOC_MAX98357A
+	select SND_SOC_DMIC
+	select SND_SOC_HDAC_HDMI
+	  If unsure select "N".
+config SND_SOC_INTEL_GLK_RT5682_MAX98357A_MACH
+	depends on MFD_INTEL_LPSS && I2C && ACPI
+	select SND_SOC_RT5682
+	select SND_SOC_MAX98357A
+	select SND_SOC_DMIC
+	select SND_SOC_HDAC_HDMI
+	select SND_HDA_DSP_LOADER
+	   If unsure select "N".
+config SND_SOC_INTEL_SST_TOPLEVEL
+	depends on X86 || COMPILE_TEST
+	select SND_SOC_INTEL_MACH
+	  kernel: saying N will just cause the configurator to skip all
+config SND_SST_IPC
+config SND_SST_IPC_PCI
+	select SND_SST_IPC
+config SND_SST_IPC_ACPI
+	select SND_SST_IPC
+config SND_SOC_INTEL_SST_ACPI
+config SND_SOC_INTEL_SST
+config SND_SOC_INTEL_SST_FIRMWARE
+	select DW_DMAC_CORE
+config SND_SOC_INTEL_HASWELL
+	depends on SND_DMA_SGBUF
+	depends on DMADEVICES && ACPI
+	select SND_SOC_INTEL_SST
+	select SND_SOC_INTEL_SST_ACPI
+	select SND_SOC_INTEL_SST_FIRMWARE
+	select SND_SOC_ACPI_INTEL_MATCH
+config SND_SOC_INTEL_BAYTRAIL
+	depends on DMADEVICES && ACPI && SND_SST_ATOM_HIFI2_PLATFORM=n
+	select SND_SOC_INTEL_SST
+	select SND_SOC_INTEL_SST_ACPI
+	select SND_SOC_INTEL_SST_FIRMWARE
+	select SND_SOC_ACPI_INTEL_MATCH
+config SND_SST_ATOM_HIFI2_PLATFORM
+	select SND_SOC_COMPRESS
+config SND_SST_ATOM_HIFI2_PLATFORM_PCI
+	depends on X86 && PCI
+	select SND_SST_IPC_PCI
+	select SND_SST_ATOM_HIFI2_PLATFORM
+config SND_SST_ATOM_HIFI2_PLATFORM_ACPI
+	depends on X86 && ACPI
+	select SND_SST_IPC_ACPI
+	select SND_SST_ATOM_HIFI2_PLATFORM
+	select SND_SOC_ACPI_INTEL_MATCH
+	select IOSF_MBI
+config SND_SOC_INTEL_SKYLAKE_SSP_CLK
+config SND_SOC_INTEL_SKYLAKE
+	depends on PCI && ACPI
+	select SND_HDA_EXT_CORE
+	select SND_HDA_DSP_LOADER
+	select SND_SOC_TOPOLOGY
+	select SND_SOC_INTEL_SST
+	select SND_SOC_ACPI_INTEL_MATCH
+config SND_SOC_ACPI_INTEL_MATCH
+	select SND_SOC_ACPI if ACPI
+	# helpers and is not meant to be selected by the user.
+source "sound/soc/intel/boards/Kconfig"
+config SND_SOC_XTFPGA_I2S
+	select REGMAP_MMIO
+	  I2S interface on XTFPGA daughter board. You will also need to select
+# Helper to resolve issues with configs that have SPI enabled but I2C
+config SND_SOC_I2C_AND_SPI
+config SND_SOC_ALL_CODECS
+	depends on COMPILE_TEST
+	select SND_SOC_88PM860X if MFD_88PM860X
+	select SND_SOC_L3
+	select SND_SOC_AB8500_CODEC if ABX500_CORE
+	select SND_SOC_AC97_CODEC
+	select SND_SOC_AD1836 if SPI_MASTER
+	select SND_SOC_AD193X_SPI if SPI_MASTER
+	select SND_SOC_AD193X_I2C if I2C
+	select SND_SOC_AD1980 if SND_SOC_AC97_BUS
+	select SND_SOC_AD73311
+	select SND_SOC_ADAU1373 if I2C
+	select SND_SOC_ADAU1761_I2C if I2C
+	select SND_SOC_ADAU1761_SPI if SPI
+	select SND_SOC_ADAU1781_I2C if I2C
+	select SND_SOC_ADAU1781_SPI if SPI
+	select SND_SOC_ADAV801 if SPI_MASTER
+	select SND_SOC_ADAV803 if I2C
+	select SND_SOC_ADAU1977_SPI if SPI_MASTER
+	select SND_SOC_ADAU1977_I2C if I2C
+	select SND_SOC_ADAU1701 if I2C
+	select SND_SOC_ADAU7002
+	select SND_SOC_ADS117X
+	select SND_SOC_AK4104 if SPI_MASTER
+	select SND_SOC_AK4458 if I2C
+	select SND_SOC_AK4535 if I2C
+	select SND_SOC_AK4554
+	select SND_SOC_AK4613 if I2C
+	select SND_SOC_AK4641 if I2C
+	select SND_SOC_AK4642 if I2C
+	select SND_SOC_AK4671 if I2C
+	select SND_SOC_AK5386
+	select SND_SOC_AK5558 if I2C
+	select SND_SOC_ALC5623 if I2C
+	select SND_SOC_ALC5632 if I2C
+	select SND_SOC_BT_SCO
+	select SND_SOC_BD28623
+	select SND_SOC_CQ0093VC
+	select SND_SOC_CS35L32 if I2C
+	select SND_SOC_CS35L33 if I2C
+	select SND_SOC_CS35L34 if I2C
+	select SND_SOC_CS35L35 if I2C
+	select SND_SOC_CS42L42 if I2C
+	select SND_SOC_CS42L51_I2C if I2C
+	select SND_SOC_CS42L52 if I2C && INPUT
+	select SND_SOC_CS42L56 if I2C && INPUT
+	select SND_SOC_CS42L73 if I2C
+	select SND_SOC_CS4265 if I2C
+	select SND_SOC_CS4270 if I2C
+	select SND_SOC_CS4271_I2C if I2C
+	select SND_SOC_CS4271_SPI if SPI_MASTER
+	select SND_SOC_CS42XX8_I2C if I2C
+	select SND_SOC_CS43130 if I2C
+	select SND_SOC_CS4349 if I2C
+	select SND_SOC_CS47L24 if MFD_CS47L24
+	select SND_SOC_CS53L30 if I2C
+	select SND_SOC_CX20442 if TTY
+	select SND_SOC_DA7210 if SND_SOC_I2C_AND_SPI
+	select SND_SOC_DA7213 if I2C
+	select SND_SOC_DA7218 if I2C
+	select SND_SOC_DA7219 if I2C
+	select SND_SOC_DA732X if I2C
+	select SND_SOC_DA9055 if I2C
+	select SND_SOC_DMIC if GPIOLIB
+	select SND_SOC_ES8316 if I2C
+	select SND_SOC_ES8328_SPI if SPI_MASTER
+	select SND_SOC_ES8328_I2C if I2C
+	select SND_SOC_ES7134
+	select SND_SOC_ES7241
+	select SND_SOC_GTM601
+	select SND_SOC_HDAC_HDMI
+	select SND_SOC_ICS43432
+	select SND_SOC_INNO_RK3036
+	select SND_SOC_ISABELLE if I2C
+	select SND_SOC_JZ4740_CODEC
+	select SND_SOC_LM4857 if I2C
+	select SND_SOC_LM49453 if I2C
+	select SND_SOC_MAX98088 if I2C
+	select SND_SOC_MAX98090 if I2C
+	select SND_SOC_MAX98095 if I2C
+	select SND_SOC_MAX98357A if GPIOLIB
+	select SND_SOC_MAX98371 if I2C
+	select SND_SOC_MAX98504 if I2C
+	select SND_SOC_MAX9867 if I2C
+	select SND_SOC_MAX98925 if I2C
+	select SND_SOC_MAX98926 if I2C
+	select SND_SOC_MAX98927 if I2C
+	select SND_SOC_MAX98373 if I2C
+	select SND_SOC_MAX9850 if I2C
+	select SND_SOC_MAX9860 if I2C
+	select SND_SOC_MAX9759
+	select SND_SOC_MAX9768 if I2C
+	select SND_SOC_MAX9877 if I2C
+	select SND_SOC_MC13783 if MFD_MC13XXX
+	select SND_SOC_ML26124 if I2C
+	select SND_SOC_MT6351 if MTK_PMIC_WRAP
+	select SND_SOC_NAU8540 if I2C
+	select SND_SOC_NAU8810 if I2C
+	select SND_SOC_NAU8824 if I2C
+	select SND_SOC_NAU8825 if I2C
+	select SND_SOC_HDMI_CODEC
+	select SND_SOC_PCM1681 if I2C
+	select SND_SOC_PCM1789_I2C if I2C
+	select SND_SOC_PCM179X_I2C if I2C
+	select SND_SOC_PCM179X_SPI if SPI_MASTER
+	select SND_SOC_PCM186X_I2C if I2C
+	select SND_SOC_PCM186X_SPI if SPI_MASTER
+	select SND_SOC_PCM3008
+	select SND_SOC_PCM3168A_I2C if I2C
+	select SND_SOC_PCM3168A_SPI if SPI_MASTER
+	select SND_SOC_PCM5102A
+	select SND_SOC_PCM512x_I2C if I2C
+	select SND_SOC_PCM512x_SPI if SPI_MASTER
+	select SND_SOC_RT274 if I2C
+	select SND_SOC_RT286 if I2C
+	select SND_SOC_RT298 if I2C
+	select SND_SOC_RT1305 if I2C
+	select SND_SOC_RT5514 if I2C
+	select SND_SOC_RT5616 if I2C
+	select SND_SOC_RT5631 if I2C
+	select SND_SOC_RT5640 if I2C
+	select SND_SOC_RT5645 if I2C
+	select SND_SOC_RT5651 if I2C
+	select SND_SOC_RT5659 if I2C
+	select SND_SOC_RT5660 if I2C
+	select SND_SOC_RT5663 if I2C
+	select SND_SOC_RT5665 if I2C
+	select SND_SOC_RT5668 if I2C
+	select SND_SOC_RT5670 if I2C
+	select SND_SOC_RT5677 if I2C && SPI_MASTER
+	select SND_SOC_RT5682 if I2C
+	select SND_SOC_SGTL5000 if I2C
+	select SND_SOC_SI476X if MFD_SI476X_CORE
+	select SND_SOC_SIMPLE_AMPLIFIER
+	select SND_SOC_SIRF_AUDIO_CODEC
+	select SND_SOC_SPDIF
+	select SND_SOC_SSM2305
+	select SND_SOC_SSM2518 if I2C
+	select SND_SOC_SSM2602_SPI if SPI_MASTER
+	select SND_SOC_SSM2602_I2C if I2C
+	select SND_SOC_SSM4567 if I2C
+	select SND_SOC_STA32X if I2C
+	select SND_SOC_STA350 if I2C
+	select SND_SOC_STA529 if I2C
+	select SND_SOC_STAC9766 if SND_SOC_AC97_BUS
+	select SND_SOC_STI_SAS
+	select SND_SOC_TAS2552 if I2C
+	select SND_SOC_TAS5086 if I2C
+	select SND_SOC_TAS571X if I2C
+	select SND_SOC_TAS5720 if I2C
+	select SND_SOC_TAS6424 if I2C
+	select SND_SOC_TDA7419 if I2C
+	select SND_SOC_TFA9879 if I2C
+	select SND_SOC_TLV320AIC23_I2C if I2C
+	select SND_SOC_TLV320AIC23_SPI if SPI_MASTER
+	select SND_SOC_TLV320AIC26 if SPI_MASTER
+	select SND_SOC_TLV320AIC31XX if I2C
+	select SND_SOC_TLV320AIC32X4_I2C if I2C
+	select SND_SOC_TLV320AIC32X4_SPI if SPI_MASTER
+	select SND_SOC_TLV320AIC3X if I2C
+	select SND_SOC_TPA6130A2 if I2C
+	select SND_SOC_TLV320DAC33 if I2C
+	select SND_SOC_TSCS42XX if I2C
+	select SND_SOC_TSCS454 if I2C
+	select SND_SOC_TS3A227E if I2C
+	select SND_SOC_TWL4030 if TWL4030_CORE
+	select SND_SOC_TWL6040 if TWL6040_CORE
+	select SND_SOC_UDA134X
+	select SND_SOC_UDA1380 if I2C
+	select SND_SOC_WL1273 if MFD_WL1273_CORE
+	select SND_SOC_WM0010 if SPI_MASTER
+	select SND_SOC_WM1250_EV1 if I2C
+	select SND_SOC_WM2000 if I2C
+	select SND_SOC_WM2200 if I2C
+	select SND_SOC_WM5100 if I2C
+	select SND_SOC_WM5102 if MFD_WM5102
+	select SND_SOC_WM5110 if MFD_WM5110
+	select SND_SOC_WM8350 if MFD_WM8350
+	select SND_SOC_WM8400 if MFD_WM8400
+	select SND_SOC_WM8510 if SND_SOC_I2C_AND_SPI
+	select SND_SOC_WM8523 if I2C
+	select SND_SOC_WM8524 if GPIOLIB
+	select SND_SOC_WM8580 if I2C
+	select SND_SOC_WM8711 if SND_SOC_I2C_AND_SPI
+	select SND_SOC_WM8727
+	select SND_SOC_WM8728 if SND_SOC_I2C_AND_SPI
+	select SND_SOC_WM8731 if SND_SOC_I2C_AND_SPI
+	select SND_SOC_WM8737 if SND_SOC_I2C_AND_SPI
+	select SND_SOC_WM8741 if SND_SOC_I2C_AND_SPI
+	select SND_SOC_WM8750 if SND_SOC_I2C_AND_SPI
+	select SND_SOC_WM8753 if SND_SOC_I2C_AND_SPI
+	select SND_SOC_WM8770 if SPI_MASTER
+	select SND_SOC_WM8776 if SND_SOC_I2C_AND_SPI
+	select SND_SOC_WM8782
+	select SND_SOC_WM8804_I2C if I2C
+	select SND_SOC_WM8804_SPI if SPI_MASTER
+	select SND_SOC_WM8900 if I2C
+	select SND_SOC_WM8903 if I2C
+	select SND_SOC_WM8904 if I2C
+	select SND_SOC_WM8940 if I2C
+	select SND_SOC_WM8955 if I2C
+	select SND_SOC_WM8960 if I2C
+	select SND_SOC_WM8961 if I2C
+	select SND_SOC_WM8962 if I2C && INPUT
+	select SND_SOC_WM8971 if I2C
+	select SND_SOC_WM8974 if I2C
+	select SND_SOC_WM8978 if I2C
+	select SND_SOC_WM8983 if SND_SOC_I2C_AND_SPI
+	select SND_SOC_WM8985 if SND_SOC_I2C_AND_SPI
+	select SND_SOC_WM8988 if SND_SOC_I2C_AND_SPI
+	select SND_SOC_WM8990 if I2C
+	select SND_SOC_WM8991 if I2C
+	select SND_SOC_WM8993 if I2C
+	select SND_SOC_WM8994 if MFD_WM8994
+	select SND_SOC_WM8995 if SND_SOC_I2C_AND_SPI
+	select SND_SOC_WM8996 if I2C
+	select SND_SOC_WM8997 if MFD_WM8997
+	select SND_SOC_WM8998 if MFD_WM8998
+	select SND_SOC_WM9081 if I2C
+	select SND_SOC_WM9090 if I2C
+	select SND_SOC_WM9705 if (SND_SOC_AC97_BUS || SND_SOC_AC97_BUS_NEW)
+	select SND_SOC_WM9712 if (SND_SOC_AC97_BUS || SND_SOC_AC97_BUS_NEW)
+	select SND_SOC_WM9713 if (SND_SOC_AC97_BUS || SND_SOC_AC97_BUS_NEW)
+	  be selected separately.
+          If unsure select "N".
+config SND_SOC_88PM860X
+config SND_SOC_ARIZONA
+config SND_SOC_WM_HUBS
+config SND_SOC_WM_ADSP
+	select SND_SOC_COMPRESS
+config SND_SOC_AB8500_CODEC
+config SND_SOC_AC97_CODEC
+	select SND_AC97_CODEC
+	select SND_SOC_AC97_BUS
+config SND_SOC_AD1836
+config SND_SOC_AD193X
+config SND_SOC_AD193X_SPI
+	select SND_SOC_AD193X
+config SND_SOC_AD193X_I2C
+	select SND_SOC_AD193X
+config SND_SOC_AD1980
+	select REGMAP_AC97
+config SND_SOC_AD73311
+config SND_SOC_ADAU_UTILS
+config SND_SOC_ADAU1373
+	select SND_SOC_ADAU_UTILS
+config SND_SOC_ADAU1701
+	depends on I2C
+	select SND_SOC_SIGMADSP_I2C
+config SND_SOC_ADAU17X1
+	select SND_SOC_SIGMADSP_REGMAP
+	select SND_SOC_ADAU_UTILS
+config SND_SOC_ADAU1761
+	select SND_SOC_ADAU17X1
+config SND_SOC_ADAU1761_I2C
+	depends on I2C
+	select SND_SOC_ADAU1761
+	select REGMAP_I2C
+config SND_SOC_ADAU1761_SPI
+	depends on SPI
+	select SND_SOC_ADAU1761
+	select REGMAP_SPI
+config SND_SOC_ADAU1781
+	select SND_SOC_ADAU17X1
+config SND_SOC_ADAU1781_I2C
+	select SND_SOC_ADAU1781
+	select REGMAP_I2C
+config SND_SOC_ADAU1781_SPI
+	select SND_SOC_ADAU1781
+	select REGMAP_SPI
+config SND_SOC_ADAU1977
+config SND_SOC_ADAU1977_SPI
+	select SND_SOC_ADAU1977
+	select REGMAP_SPI
+config SND_SOC_ADAU1977_I2C
+	select SND_SOC_ADAU1977
+	select REGMAP_I2C
+config SND_SOC_ADAU7002
+config SND_SOC_ADAV80X
+config SND_SOC_ADAV801
+	select SND_SOC_ADAV80X
+config SND_SOC_ADAV803
+	select SND_SOC_ADAV80X
+config SND_SOC_ADS117X
+config SND_SOC_AK4104
+	depends on SPI_MASTER
+config SND_SOC_AK4458
+	depends on I2C
+	select REGMAP_I2C
+config SND_SOC_AK4535
+config SND_SOC_AK4554
+config SND_SOC_AK4613
+	depends on I2C
+config SND_SOC_AK4641
+config SND_SOC_AK4642
+	depends on I2C
+config SND_SOC_AK4671
+config SND_SOC_AK5386
+config SND_SOC_AK5558
+	depends on I2C
+	select REGMAP_I2C
+config SND_SOC_ALC5623
+	depends on I2C
+config SND_SOC_ALC5632
+config SND_SOC_BD28623
+config SND_SOC_BT_SCO
+config SND_SOC_CPCAP
+	depends on MFD_CPCAP
+config SND_SOC_CQ0093VC
+config SND_SOC_CS35L32
+	depends on I2C
+config SND_SOC_CS35L33
+	depends on I2C
+config SND_SOC_CS35L34
+	depends on I2C
+config SND_SOC_CS35L35
+	depends on I2C
+config SND_SOC_CS42L42
+	depends on I2C
+config SND_SOC_CS42L51
+config SND_SOC_CS42L51_I2C
+	depends on I2C
+	select SND_SOC_CS42L51
+config SND_SOC_CS42L52
+	depends on I2C && INPUT
+config SND_SOC_CS42L56
+	depends on I2C && INPUT
+config SND_SOC_CS42L73
+	depends on I2C
+config SND_SOC_CS4265
+	depends on I2C
+	select REGMAP_I2C
+config SND_SOC_CS4270
+	depends on I2C
+# if MCLK divide-by-1.5 is selected and VD is set to 3.3V.  The driver will
+# not select any sample rates that require MCLK to be divided by 1.5.
+config SND_SOC_CS4270_VD33_ERRATA
+	depends on SND_SOC_CS4270
+config SND_SOC_CS4271
+config SND_SOC_CS4271_I2C
+	depends on I2C
+	select SND_SOC_CS4271
+	select REGMAP_I2C
+config SND_SOC_CS4271_SPI
+	depends on SPI_MASTER
+	select SND_SOC_CS4271
+	select REGMAP_SPI
+config SND_SOC_CS42XX8
+config SND_SOC_CS42XX8_I2C
+	depends on I2C
+	select SND_SOC_CS42XX8
+	select REGMAP_I2C
+config SND_SOC_CS43130
+        depends on I2C
+config SND_SOC_CS4349
+	depends on I2C
+config SND_SOC_CS47L24
+config SND_SOC_CS53L30
+	depends on I2C
+config SND_SOC_CX20442
+	depends on TTY
+config SND_SOC_JZ4740_CODEC
+	select REGMAP_MMIO
+config SND_SOC_L3
+config SND_SOC_DA7210
+config SND_SOC_DA7213
+config SND_SOC_DA7218
+config SND_SOC_DA7219
+config SND_SOC_DA732X
+config SND_SOC_DA9055
+config SND_SOC_DMIC
+config SND_SOC_HDMI_CODEC
+	select SND_PCM_ELD
+	select SND_PCM_IEC958
+	select HDMI
+config SND_SOC_ES7134
+config SND_SOC_ES7241
+config SND_SOC_ES8316
+	depends on I2C
+config SND_SOC_ES8328
+config SND_SOC_ES8328_I2C
+	depends on I2C
+	select SND_SOC_ES8328
+config SND_SOC_ES8328_SPI
+	depends on SPI_MASTER
+	select SND_SOC_ES8328
+config SND_SOC_GTM601
+config SND_SOC_HDAC_HDMI
+	select SND_HDA_EXT_CORE
+	select SND_PCM_ELD
+	select HDMI
+config SND_SOC_ICS43432
+config SND_SOC_INNO_RK3036
+	select REGMAP_MMIO
+config SND_SOC_ISABELLE
+config SND_SOC_LM49453
+config SND_SOC_MAX98088
+config SND_SOC_MAX98090
+config SND_SOC_MAX98095
+config SND_SOC_MAX98357A
+config SND_SOC_MAX98371
+config SND_SOC_MAX98504
+	depends on I2C
+config SND_SOC_MAX9867
+	depends on I2C
+config SND_SOC_MAX98925
+config SND_SOC_MAX98926
+config SND_SOC_MAX98927
+	depends on I2C
+config SND_SOC_MAX98373
+	depends on I2C
+config SND_SOC_MAX9850
+config SND_SOC_MAX9860
+	depends on I2C
+	select REGMAP_I2C
+config SND_SOC_MSM8916_WCD_ANALOG
+	depends on SPMI || COMPILE_TEST
+config SND_SOC_MSM8916_WCD_DIGITAL
+config SND_SOC_PCM1681
+	depends on I2C
+config SND_SOC_PCM1789
+config SND_SOC_PCM1789_I2C
+	depends on I2C
+	select SND_SOC_PCM1789
+config SND_SOC_PCM179X
+config SND_SOC_PCM179X_I2C
+	depends on I2C
+	select SND_SOC_PCM179X
+config SND_SOC_PCM179X_SPI
+	depends on SPI_MASTER
+	select SND_SOC_PCM179X
+config SND_SOC_PCM186X
+config SND_SOC_PCM186X_I2C
+	depends on I2C
+	select SND_SOC_PCM186X
+	select REGMAP_I2C
+config SND_SOC_PCM186X_SPI
+	depends on SPI_MASTER
+	select SND_SOC_PCM186X
+	select REGMAP_SPI
+config SND_SOC_PCM3008
+config SND_SOC_PCM3168A
+config SND_SOC_PCM3168A_I2C
+	depends on I2C
+	select SND_SOC_PCM3168A
+	select REGMAP_I2C
+config SND_SOC_PCM3168A_SPI
+	depends on SPI_MASTER
+	select SND_SOC_PCM3168A
+	select REGMAP_SPI
+config SND_SOC_PCM5102A
+config SND_SOC_PCM512x
+config SND_SOC_PCM512x_I2C
+	depends on I2C
+	select SND_SOC_PCM512x
+	select REGMAP_I2C
+config SND_SOC_PCM512x_SPI
+	depends on SPI_MASTER
+	select SND_SOC_PCM512x
+	select REGMAP_SPI
+config SND_SOC_RL6231
+config SND_SOC_RL6347A
+config SND_SOC_RT274
+	depends on I2C
+config SND_SOC_RT286
+	depends on I2C
+config SND_SOC_RT298
+	depends on I2C
+config SND_SOC_RT1305
+config SND_SOC_RT5514
+config SND_SOC_RT5514_SPI
+config SND_SOC_RT5514_SPI_BUILTIN
+config SND_SOC_RT5616
+	depends on I2C
+config SND_SOC_RT5631
+	depends on I2C
+config SND_SOC_RT5640
+config SND_SOC_RT5645
+config SND_SOC_RT5651
+config SND_SOC_RT5659
+config SND_SOC_RT5660
+config SND_SOC_RT5663
+config SND_SOC_RT5665
+config SND_SOC_RT5668
+config SND_SOC_RT5670
+config SND_SOC_RT5677
+	select REGMAP_I2C
+	select REGMAP_IRQ
+config SND_SOC_RT5677_SPI
+config SND_SOC_RT5682
+config SND_SOC_SGTL5000
+	depends on I2C
+config SND_SOC_SI476X
+config SND_SOC_SIGMADSP
+	select CRC32
+config SND_SOC_SIGMADSP_I2C
+	select SND_SOC_SIGMADSP
+config SND_SOC_SIGMADSP_REGMAP
+	select SND_SOC_SIGMADSP
+config SND_SOC_SIMPLE_AMPLIFIER
+	select GPIOLIB
+config SND_SOC_SIRF_AUDIO_CODEC
+	select REGMAP_MMIO
+config SND_SOC_SPDIF
+config SND_SOC_SSM2305
+config SND_SOC_SSM2518
+config SND_SOC_SSM2602
+config SND_SOC_SSM2602_SPI
+	depends on SPI_MASTER
+	select SND_SOC_SSM2602
+	select REGMAP_SPI
+config SND_SOC_SSM2602_I2C
+	depends on I2C
+	select SND_SOC_SSM2602
+	select REGMAP_I2C
+config SND_SOC_SSM4567
+	depends on I2C
+config SND_SOC_STA32X
+	depends on I2C
+	select REGMAP_I2C
+config SND_SOC_STA350
+	depends on I2C
+config SND_SOC_STA529
+config SND_SOC_STAC9766
+config SND_SOC_STI_SAS
+config SND_SOC_TAS2552
+	depends on I2C
+config SND_SOC_TAS5086
+	depends on I2C
+config SND_SOC_TAS571X
+	depends on I2C
+config SND_SOC_TAS5720
+	depends on I2C
+config SND_SOC_TAS6424
+	depends on I2C
+config SND_SOC_TDA7419
+	depends on I2C
+	select REGMAP_I2C
+config SND_SOC_TFA9879
+	depends on I2C
+config SND_SOC_TLV320AIC23
+config SND_SOC_TLV320AIC23_I2C
+	depends on I2C
+	select SND_SOC_TLV320AIC23
+config SND_SOC_TLV320AIC23_SPI
+	depends on SPI_MASTER
+	select SND_SOC_TLV320AIC23
+config SND_SOC_TLV320AIC26
+	depends on SPI
+config SND_SOC_TLV320AIC31XX
+	depends on I2C
+	select REGMAP_I2C
+config SND_SOC_TLV320AIC32X4
+config SND_SOC_TLV320AIC32X4_I2C
+	depends on I2C
+	select SND_SOC_TLV320AIC32X4
+config SND_SOC_TLV320AIC32X4_SPI
+	depends on SPI_MASTER
+	select SND_SOC_TLV320AIC32X4
+config SND_SOC_TLV320AIC3X
+	depends on I2C
+config SND_SOC_TLV320DAC33
+config SND_SOC_TS3A227E
+	depends on I2C
+config SND_SOC_TSCS42XX
+	depends on I2C
+	select REGMAP_I2C
+config SND_SOC_TSCS454
+	depends on I2C
+	select REGMAP_I2C
+config SND_SOC_TWL4030
+	select MFD_TWL4030_AUDIO
+config SND_SOC_TWL6040
+config SND_SOC_UDA134X
+config SND_SOC_UDA1380
+	depends on I2C
+config SND_SOC_WL1273
+config SND_SOC_WM0010
+config SND_SOC_WM1250_EV1
+config SND_SOC_WM2000
+config SND_SOC_WM2200
+config SND_SOC_WM5100
+config SND_SOC_WM5102
+config SND_SOC_WM5110
+config SND_SOC_WM8350
+config SND_SOC_WM8400
+config SND_SOC_WM8510
+	depends on SND_SOC_I2C_AND_SPI
+config SND_SOC_WM8523
+	depends on I2C
+config SND_SOC_WM8524
+	depends on GPIOLIB
+config SND_SOC_WM8580
+	depends on I2C
+config SND_SOC_WM8711
+	depends on SND_SOC_I2C_AND_SPI
+config SND_SOC_WM8727
+config SND_SOC_WM8728
+	depends on SND_SOC_I2C_AND_SPI
+config SND_SOC_WM8731
+	depends on SND_SOC_I2C_AND_SPI
+config SND_SOC_WM8737
+	depends on SND_SOC_I2C_AND_SPI
+config SND_SOC_WM8741
+	depends on SND_SOC_I2C_AND_SPI
+config SND_SOC_WM8750
+	depends on SND_SOC_I2C_AND_SPI
+config SND_SOC_WM8753
+	depends on SND_SOC_I2C_AND_SPI
+config SND_SOC_WM8770
+	depends on SPI_MASTER
+config SND_SOC_WM8776
+	depends on SND_SOC_I2C_AND_SPI
+config SND_SOC_WM8782
+config SND_SOC_WM8804
+config SND_SOC_WM8804_I2C
+	depends on I2C
+	select SND_SOC_WM8804
+	select REGMAP_I2C
+config SND_SOC_WM8804_SPI
+	depends on SPI_MASTER
+	select SND_SOC_WM8804
+	select REGMAP_SPI
+config SND_SOC_WM8900
+config SND_SOC_WM8903
+	depends on I2C
+config SND_SOC_WM8904
+config SND_SOC_WM8940
+config SND_SOC_WM8955
+config SND_SOC_WM8960
+	depends on I2C
+config SND_SOC_WM8961
+config SND_SOC_WM8962
+	depends on I2C && INPUT
+config SND_SOC_WM8971
+config SND_SOC_WM8974
+	depends on I2C
+config SND_SOC_WM8978
+	depends on I2C
+config SND_SOC_WM8983
+config SND_SOC_WM8985
+	depends on SND_SOC_I2C_AND_SPI
+config SND_SOC_WM8988
+config SND_SOC_WM8990
+config SND_SOC_WM8991
+config SND_SOC_WM8993
+config SND_SOC_WM8994
+config SND_SOC_WM8995
+config SND_SOC_WM8996
+config SND_SOC_WM8997
+config SND_SOC_WM8998
+config SND_SOC_WM9081
+	depends on I2C
+config SND_SOC_WM9090
+config SND_SOC_WM9705
+	select REGMAP_AC97
+	select AC97_BUS_COMPAT if AC97_BUS_NEW
+config SND_SOC_WM9712
+	select REGMAP_AC97
+	select AC97_BUS_COMPAT if AC97_BUS_NEW
+config SND_SOC_WM9713
+	select REGMAP_AC97
+	select AC97_BUS_COMPAT if AC97_BUS_NEW
+config SND_SOC_ZX_AUD96P22
+	depends on I2C
+	select REGMAP_I2C
+config SND_SOC_LM4857
+config SND_SOC_MAX9759
+	select GPIOLIB
+config SND_SOC_MAX9768
+config SND_SOC_MAX9877
+config SND_SOC_MC13783
+config SND_SOC_ML26124
+config SND_SOC_MT6351
+config SND_SOC_NAU8540
+       depends on I2C
+config SND_SOC_NAU8810
+	depends on I2C
+config SND_SOC_NAU8824
+	depends on I2C
+config SND_SOC_NAU8825
+config SND_SOC_TPA6130A2
+	depends on I2C
+config SND_OMAP_SOC
+	depends on (ARCH_OMAP && DMA_OMAP) || (ARM && COMPILE_TEST)
+	select SND_SDMA_SOC
+config SND_SDMA_SOC
+	depends on DMA_OMAP || COMPILE_TEST
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_OMAP_SOC_DMIC
+config SND_OMAP_SOC_MCBSP
+config SND_OMAP_SOC_MCPDM
+config SND_OMAP_SOC_N810
+	depends on SND_SDMA_SOC && MACH_NOKIA_N810 && I2C
+	select SND_OMAP_SOC_MCBSP
+	select SND_SOC_TLV320AIC3X
+config SND_OMAP_SOC_RX51
+	depends on SND_SDMA_SOC && ARM && I2C
+	select SND_OMAP_SOC_MCBSP
+	select SND_SOC_TLV320AIC3X
+	select SND_SOC_TPA6130A2
+	depends on GPIOLIB
+config SND_OMAP_SOC_AMS_DELTA
+	depends on SND_SDMA_SOC && MACH_AMS_DELTA && TTY
+	select SND_OMAP_SOC_MCBSP
+	select SND_SOC_CX20442
+	  configured for at least 4 ports.  Then, from userspace, you must load
+config SND_OMAP_SOC_OSK5912
+	depends on SND_SDMA_SOC && MACH_OMAP_OSK && I2C
+	select SND_OMAP_SOC_MCBSP
+	select SND_SOC_TLV320AIC23_I2C
+config SND_OMAP_SOC_AM3517EVM
+	depends on SND_SDMA_SOC && MACH_OMAP3517EVM && I2C
+	select SND_OMAP_SOC_MCBSP
+	select SND_SOC_TLV320AIC23_I2C
+config SND_OMAP_SOC_OMAP_TWL4030
+	depends on TWL4030_CORE && SND_SDMA_SOC
+	select SND_OMAP_SOC_MCBSP
+	select SND_SOC_TWL4030
+config SND_OMAP_SOC_OMAP_ABE_TWL6040
+	depends on TWL6040_CORE && SND_SDMA_SOC && COMMON_CLK
+	depends on ARCH_OMAP4 || (SOC_OMAP5 && MFD_PALMAS) || COMPILE_TEST
+	select SND_OMAP_SOC_DMIC
+	select SND_OMAP_SOC_MCPDM
+	select SND_SOC_TWL6040
+	select SND_SOC_DMIC
+	select COMMON_CLK_PALMAS if (SOC_OMAP5 && MFD_PALMAS)
+	select CLK_TWL6040
+config SND_OMAP_SOC_OMAP3_PANDORA
+	depends on TWL4030_CORE && SND_SDMA_SOC && MACH_OMAP3_PANDORA
+	select SND_OMAP_SOC_MCBSP
+	select SND_SOC_TWL4030
+config SND_SOC_MEDIATEK
+config SND_SOC_MT2701
+	depends on ARCH_MEDIATEK
+	select SND_SOC_MEDIATEK
+	  If unsure select "N".
+config SND_SOC_MT2701_CS42448
+	depends on SND_SOC_MT2701 && I2C
+	select SND_SOC_CS42XX8_I2C
+	select SND_SOC_BT_SCO
+	  If unsure select "N".
+config SND_SOC_MT2701_WM8960
+	depends on SND_SOC_MT2701 && I2C
+	select SND_SOC_WM8960
+	  If unsure select "N".
+config SND_SOC_MT6797
+	depends on ARCH_MEDIATEK
+	select SND_SOC_MEDIATEK
+	  If unsure select "N".
+config SND_SOC_MT6797_MT6351
+	depends on SND_SOC_MT6797 && MTK_PMIC_WRAP
+	select SND_SOC_MT6351
+	  If unsure select "N".
+config SND_SOC_MT8173
+	depends on ARCH_MEDIATEK
+	select SND_SOC_MEDIATEK
+config SND_SOC_MT8173_MAX98090
+	depends on SND_SOC_MT8173 && I2C
+	select SND_SOC_MAX98090
+	  If unsure select "N".
+config SND_SOC_MT8173_RT5650
+	depends on SND_SOC_MT8173 && I2C
+	select SND_SOC_RT5645
+	select SND_SOC_HDMI_CODEC
+	  If unsure select "N".
+config SND_SOC_MT8173_RT5650_RT5514
+	depends on SND_SOC_MT8173 && I2C
+	select SND_SOC_RT5645
+	select SND_SOC_RT5514
+	  If unsure select "N".
+config SND_SOC_MT8173_RT5650_RT5676
+	depends on SND_SOC_MT8173 && I2C
+	select SND_SOC_RT5645
+	select SND_SOC_RT5677
+	select SND_SOC_HDMI_CODEC
+	  If unsure select "N".
+	depends on HAS_DMA
+config SND_ATMEL_SOC_SSC_PDC
+config SND_ATMEL_SOC_DMA
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_ATMEL_SOC_SSC_DMA
+	select SND_ATMEL_SOC_DMA
+	select SND_ATMEL_SOC_PDC
+config SND_ATMEL_SOC_SSC
+config SND_AT91_SOC_SAM9G20_WM8731
+	depends on ARCH_AT91 || COMPILE_TEST
+	depends on ATMEL_SSC && SND_SOC_I2C_AND_SPI
+	select SND_ATMEL_SOC_SSC_PDC
+	select SND_SOC_WM8731
+config SND_ATMEL_SOC_WM8904
+	depends on ARCH_AT91 || COMPILE_TEST
+	depends on ATMEL_SSC && I2C
+	select SND_ATMEL_SOC_SSC_DMA
+	select SND_SOC_WM8904
+config SND_AT91_SOC_SAM9X5_WM8731
+	depends on ARCH_AT91 || COMPILE_TEST
+	depends on ATMEL_SSC && SND_SOC_I2C_AND_SPI
+	select SND_ATMEL_SOC_SSC_DMA
+	select SND_SOC_WM8731
+config SND_ATMEL_SOC_CLASSD
+	depends on ARCH_AT91 || COMPILE_TEST
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+config SND_ATMEL_SOC_PDMIC
+	depends on OF && (ARCH_AT91 || COMPILE_TEST)
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+config SND_ATMEL_SOC_TSE850_PCM5142
+	depends on ARCH_AT91 && OF
+	depends on ATMEL_SSC && I2C
+	select SND_ATMEL_SOC_SSC_DMA
+	select SND_SOC_PCM512x_I2C
+config SND_ATMEL_SOC_I2S
+	depends on OF && (ARCH_AT91 || COMPILE_TEST)
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+	select SND_PXA2XX_LIB
+	  to select the audio interfaces to support below.
+config SND_MMP_SOC
+	depends on ARCH_MMP
+	select MMP_SRAM
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select SND_ARM
+config SND_PXA2XX_AC97
+	select SND_AC97_CODEC
+config SND_PXA2XX_SOC_AC97
+	select AC97_BUS
+	select SND_PXA2XX_LIB
+	select SND_PXA2XX_LIB_AC97
+	select SND_SOC_AC97_BUS
+config SND_PXA2XX_SOC_I2S
+	select SND_PXA2XX_LIB
+config SND_PXA_SOC_SSP
+	depends on PLAT_PXA
+	select PXA_SSP
+	select SND_PXA2XX_LIB
+config SND_MMP_SOC_SSPA
+config SND_PXA2XX_SOC_CORGI
+	depends on SND_PXA2XX_SOC && PXA_SHARP_C7xx && I2C
+	select SND_PXA2XX_SOC_I2S
+	select SND_SOC_WM8731
+config SND_PXA2XX_SOC_SPITZ
+	depends on SND_PXA2XX_SOC && PXA_SHARP_Cxx00 && I2C
+	select SND_PXA2XX_SOC_I2S
+	select SND_SOC_WM8750
+config SND_PXA2XX_SOC_Z2
+	depends on SND_PXA2XX_SOC && MACH_ZIPIT2 && I2C
+	select SND_PXA2XX_SOC_I2S
+	select SND_SOC_WM8750
+config SND_PXA2XX_SOC_POODLE
+	depends on SND_PXA2XX_SOC && MACH_POODLE && I2C
+	select SND_PXA2XX_SOC_I2S
+	select SND_SOC_WM8731
+config SND_PXA2XX_SOC_TOSA
+	depends on SND_PXA2XX_SOC && MACH_TOSA
+	depends on MFD_TC6393XB
+	select SND_PXA2XX_SOC_AC97
+	select SND_SOC_WM9712
+config SND_PXA2XX_SOC_E740
+	depends on SND_PXA2XX_SOC && MACH_E740
+	select SND_SOC_WM9705
+	select SND_PXA2XX_SOC_AC97
+config SND_PXA2XX_SOC_E750
+	depends on SND_PXA2XX_SOC && MACH_E750
+	select SND_SOC_WM9705
+	select SND_PXA2XX_SOC_AC97
+config SND_PXA2XX_SOC_E800
+	depends on SND_PXA2XX_SOC && MACH_E800
+	select SND_SOC_WM9712
+	select SND_PXA2XX_SOC_AC97
+config SND_PXA2XX_SOC_EM_X270
+	depends on SND_PXA2XX_SOC && (MACH_EM_X270 || MACH_EXEDA || \
+	select SND_PXA2XX_SOC_AC97
+	select SND_SOC_WM9712
+config SND_PXA2XX_SOC_PALM27X
+	depends on SND_PXA2XX_SOC && (MACH_PALMLD || MACH_PALMTX || \
+	select SND_PXA2XX_SOC_AC97
+	select SND_SOC_WM9712
+config SND_PXA910_SOC
+	depends on ARCH_MMP && SND
+	select SND_PCM
+config SND_SOC_TTC_DKB
+	depends on SND_PXA910_SOC && MACH_TTC_DKB && I2C=y
+	select PXA_SSP
+	select SND_PXA_SOC_SSP
+	select SND_MMP_SOC
+	select MFD_88PM860X
+	select SND_SOC_88PM860X
+config SND_SOC_ZYLONITE
+	depends on SND_PXA2XX_SOC && MACH_ZYLONITE
+	select SND_PXA2XX_SOC_AC97
+	select SND_PXA_SOC_SSP
+	select SND_SOC_WM9713
+config SND_SOC_RAUMFELD
+	depends on SND_PXA2XX_SOC && (MACH_RAUMFELD_SPEAKER || MACH_RAUMFELD_CONNECTOR)
+	depends on I2C && SPI_MASTER
+	select SND_PXA_SOC_SSP
+	select SND_SOC_CS4270
+	select SND_SOC_AK4104
+config SND_PXA2XX_SOC_HX4700
+	depends on SND_PXA2XX_SOC && MACH_H4700 && I2C
+	select SND_PXA2XX_SOC_I2S
+	select SND_SOC_AK4641
+config SND_PXA2XX_SOC_MAGICIAN
+	depends on SND_PXA2XX_SOC && MACH_MAGICIAN && I2C
+	select SND_PXA2XX_SOC_I2S
+	select SND_PXA_SOC_SSP
+	select SND_SOC_UDA1380
+config SND_PXA2XX_SOC_MIOA701
+        depends on SND_PXA2XX_SOC && MACH_MIOA701
+        select SND_PXA2XX_SOC_AC97
+        select SND_SOC_WM9713
+config SND_PXA2XX_SOC_IMOTE2
+       depends on SND_PXA2XX_SOC && MACH_INTELMOTE2 && I2C
+       select SND_PXA2XX_SOC_I2S
+       select SND_SOC_WM8940
+config SND_MMP_SOC_BROWNSTONE
+	depends on SND_MMP_SOC && MACH_BROWNSTONE && I2C
+	select SND_MMP_SOC_SSPA
+	select MFD_WM8994
+	select SND_SOC_WM8994
+config SND_SOC_NUC900
+	depends on ARCH_W90X900
+	select SND_SOC_NUC900_AC97
+config SND_SOC_NUC900_AC97
+	select AC97_BUS
+	select SND_AC97_CODEC
+	select SND_SOC_AC97_BUS
+config SND_SOC_NUC900EVB
+	depends on SND_SOC_NUC900
+	select SND_SOC_NUC900_AC97
+	select SND_SOC_AC97_CODEC
+config SND_SOC_FSL_ASRC
+	depends on HAS_DMA
+	select REGMAP_MMIO
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	  in-tree drivers select it automatically.
+config SND_SOC_FSL_SAI
+	select REGMAP_MMIO
+	select SND_SOC_IMX_PCM_DMA if SND_IMX_SOC != n
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	  in-tree drivers select it automatically.
+config SND_SOC_FSL_SSI
+	select SND_SOC_IMX_PCM_DMA if SND_IMX_SOC != n
+	select SND_SOC_IMX_PCM_FIQ if SND_IMX_SOC != n && (MXC_TZIC || MXC_AVIC)
+	select REGMAP_MMIO
+	  in-tree drivers select it automatically.
+config SND_SOC_FSL_SPDIF
+	select REGMAP_MMIO
+	select SND_SOC_IMX_PCM_DMA if SND_IMX_SOC != n
+	select SND_SOC_IMX_PCM_FIQ if SND_IMX_SOC != n && (MXC_TZIC || MXC_AVIC)
+	select BITREVERSE
+	  in-tree drivers select it automatically.
+config SND_SOC_FSL_ESAI
+	select REGMAP_MMIO
+	select SND_SOC_IMX_PCM_DMA if SND_IMX_SOC != n
+	  in-tree drivers select it automatically.
+config SND_SOC_FSL_UTILS
+config SND_SOC_IMX_PCM_DMA
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_IMX_AUDMUX
+	  in-tree drivers select it automatically.
+config SND_POWERPC_SOC
+	depends on FSL_SOC || PPC_MPC52xx
+	depends on ARCH_MXC || COMPILE_TEST
+config SND_MPC52xx_DMA
+config SND_SOC_POWERPC_DMA
+config SND_SOC_MPC8610_HPCD
+	depends on MPC8610_HPCD && I2C
+	select SND_SOC_FSL_SSI
+	select SND_SOC_FSL_UTILS
+	select SND_SOC_POWERPC_DMA
+	select SND_SOC_CS4270
+	select SND_SOC_CS4270_VD33_ERRATA
+config SND_SOC_P1022_DS
+	depends on P1022_DS && I2C
+	select SND_SOC_FSL_SSI
+	select SND_SOC_FSL_UTILS
+	select SND_SOC_POWERPC_DMA
+	select SND_SOC_WM8776
+config SND_SOC_P1022_RDK
+	depends on P1022_RDK && I2C
+	select SND_SOC_FSL_SSI
+	select SND_SOC_FSL_UTILS
+	select SND_SOC_POWERPC_DMA
+	select SND_SOC_WM8960
+config SND_SOC_MPC5200_I2S
+	depends on PPC_MPC52xx && PPC_BESTCOMM
+	select SND_MPC52xx_DMA
+	select PPC_BESTCOMM_GEN_BD
+config SND_SOC_MPC5200_AC97
+	depends on PPC_MPC52xx && PPC_BESTCOMM
+	select SND_SOC_AC97_BUS
+	select SND_MPC52xx_DMA
+	select PPC_BESTCOMM_GEN_BD
+config SND_MPC52xx_SOC_PCM030
+	depends on PPC_MPC5200_SIMPLE
+	select SND_SOC_MPC5200_AC97
+	select SND_SOC_WM9712
+config SND_MPC52xx_SOC_EFIKA
+	depends on PPC_EFIKA
+	select SND_SOC_MPC5200_AC97
+	select SND_SOC_STAC9766
+config SND_SOC_IMX_PCM_FIQ
+	select FIQ
+config SND_SOC_IMX_SSI
+	select SND_SOC_FSL_UTILS
+config SND_MXC_SOC_WM1133_EV1
+	depends on MACH_MX31ADS_WM1133_EV1
+	select SND_SOC_WM8350
+	select SND_SOC_IMX_PCM_FIQ
+	select SND_SOC_IMX_AUDMUX
+	select SND_SOC_IMX_SSI
+config SND_SOC_MX27VIS_AIC32X4
+	depends on MACH_IMX27_VISSTRIM_M10 && I2C
+	select SND_SOC_TLV320AIC32X4
+	select SND_SOC_IMX_PCM_DMA
+	select SND_SOC_IMX_AUDMUX
+	select SND_SOC_IMX_SSI
+config SND_SOC_PHYCORE_AC97
+	depends on MACH_PCM043 || MACH_PCA100
+	select SND_SOC_AC97_BUS
+	select SND_SOC_WM9712
+	select SND_SOC_IMX_PCM_FIQ
+	select SND_SOC_IMX_AUDMUX
+	select SND_SOC_IMX_SSI
+config SND_SOC_EUKREA_TLV320
+	depends on ARCH_MXC && !ARM64 && I2C
+	select SND_SOC_TLV320AIC23_I2C
+	select SND_SOC_IMX_AUDMUX
+	select SND_SOC_IMX_SSI
+	select SND_SOC_FSL_SSI
+	select SND_SOC_IMX_PCM_DMA
+config SND_SOC_IMX_ES8328
+	depends on OF && (I2C || SPI)
+	select SND_SOC_ES8328_I2C if I2C
+	select SND_SOC_ES8328_SPI if SPI_MASTER
+	select SND_SOC_IMX_PCM_DMA
+	select SND_SOC_IMX_AUDMUX
+	select SND_SOC_FSL_SSI
+config SND_SOC_IMX_SGTL5000
+	depends on OF && I2C
+	select SND_SOC_SGTL5000
+	select SND_SOC_IMX_PCM_DMA
+	select SND_SOC_IMX_AUDMUX
+	select SND_SOC_FSL_SSI
+config SND_SOC_IMX_SPDIF
+	select SND_SOC_IMX_PCM_DMA
+	select SND_SOC_FSL_SPDIF
+config SND_SOC_IMX_MC13783
+	depends on MFD_MC13XXX && ARM
+	select SND_SOC_IMX_SSI
+	select SND_SOC_IMX_AUDMUX
+	select SND_SOC_MC13783
+	select SND_SOC_IMX_PCM_DMA
+config SND_SOC_FSL_ASOC_CARD
+	depends on OF && I2C
+	depends on SND_AC97_CODEC || SND_AC97_CODEC=n
+	select SND_SOC_IMX_AUDMUX
+	select SND_SOC_IMX_PCM_DMA
+	select SND_SOC_FSL_ESAI
+	select SND_SOC_FSL_SAI
+	select SND_SOC_FSL_SSI
+config SND_SOC_SIRF
+	depends on ARCH_SIRF || COMPILE_TEST
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_SIRF_AUDIO
+	depends on SND_SOC_SIRF
+	select SND_SOC_SIRF_AUDIO_CODEC
+	select SND_SOC_SIRF_AUDIO_PORT
+config SND_SOC_SIRF_AUDIO_PORT
+	select REGMAP_MMIO
+config SND_SOC_SIRF_USP
+	depends on SND_SOC_SIRF
+	select REGMAP_MMIO
+config SND_SOC_TEGRA
+	depends on (ARCH_TEGRA && TEGRA20_APB_DMA) || COMPILE_TEST
+	depends on COMMON_CLK
+	depends on RESET_CONTROLLER
+	select REGMAP_MMIO
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_TEGRA20_AC97
+	depends on SND_SOC_TEGRA
+	select SND_SOC_AC97_BUS
+	select SND_SOC_TEGRA20_DAS
+	  Tegra20 AC97 interface. You will also need to select the individual
+config SND_SOC_TEGRA20_DAS
+	depends on SND_SOC_TEGRA
+	  You will also need to select the individual machine drivers to
+config SND_SOC_TEGRA20_I2S
+	depends on SND_SOC_TEGRA
+	select SND_SOC_TEGRA20_DAS
+	  Tegra20 I2S interface. You will also need to select the individual
+config SND_SOC_TEGRA20_SPDIF
+	depends on SND_SOC_TEGRA
+	  You will also need to select the individual machine drivers to support
+config SND_SOC_TEGRA30_AHUB
+	depends on SND_SOC_TEGRA
+	  You will also need to select the individual machine drivers to
+config SND_SOC_TEGRA30_I2S
+	depends on SND_SOC_TEGRA
+	select SND_SOC_TEGRA30_AHUB
+	  Tegra30 I2S interface. You will also need to select the individual
+config SND_SOC_TEGRA_RT5640
+	depends on SND_SOC_TEGRA && I2C && GPIOLIB
+	select SND_SOC_RT5640
+config SND_SOC_TEGRA_WM8753
+	depends on SND_SOC_TEGRA && I2C && GPIOLIB
+	select SND_SOC_WM8753
+config SND_SOC_TEGRA_WM8903
+	depends on SND_SOC_TEGRA && I2C && GPIOLIB
+	select SND_SOC_WM8903
+config SND_SOC_TEGRA_WM9712
+	depends on SND_SOC_TEGRA && GPIOLIB
+	select SND_SOC_TEGRA20_AC97
+	select SND_SOC_WM9712
+config SND_SOC_TEGRA_TRIMSLICE
+	depends on SND_SOC_TEGRA && I2C
+	select SND_SOC_TLV320AIC23_I2C
+config SND_SOC_TEGRA_ALC5632
+	depends on SND_SOC_TEGRA && I2C && GPIOLIB
+	select SND_SOC_ALC5632
+config SND_SOC_TEGRA_MAX98090
+	depends on SND_SOC_TEGRA && I2C && GPIOLIB
+	select SND_SOC_MAX98090
+config SND_SOC_TEGRA_RT5677
+	depends on SND_SOC_TEGRA && I2C && GPIOLIB
+	select SND_SOC_RT5677
+config SND_SOC_TEGRA_SGTL5000
+	depends on SND_SOC_TEGRA && I2C && GPIOLIB
+	select SND_SOC_SGTL5000
+	depends on SUPERH || ARCH_RENESAS || COMPILE_TEST
+config SND_SOC_PCM_SH7760
+	depends on CPU_SUBTYPE_SH7760 && SH_DMABRG
+config SND_SOC_SH4_HAC
+	select AC97_BUS
+	select SND_SOC_AC97_BUS
+config SND_SOC_SH4_SSI
+config SND_SOC_SH4_FSI
+	select SND_SIMPLE_CARD
+config SND_SOC_SH4_SIU
+	depends on ARCH_SHMOBILE && HAVE_CLK
+	select DMA_ENGINE
+	select DMADEVICES
+	select SH_DMAE
+	select FW_LOADER
+config SND_SOC_RCAR
+	depends on COMMON_CLK
+	depends on OF || COMPILE_TEST
+	select SND_SIMPLE_CARD_UTILS
+	select REGMAP_MMIO
+config SND_SH7760_AC97
+	depends on CPU_SUBTYPE_SH7760 && SND_SOC_PCM_SH7760
+	select SND_SOC_SH4_HAC
+	select SND_SOC_AC97_CODEC
+config SND_SIU_MIGOR
+	depends on SH_MIGOR && I2C
+	select SND_SOC_SH4_SIU
+	select SND_SOC_WM8978
+config SND_SOC_UNIPHIER
+	depends on (ARCH_UNIPHIER || COMPILE_TEST)
+	  UniPhier SoC audio interfaces. You will also need to select the
+	  If unsure select "N".
+config SND_SOC_UNIPHIER_AIO
+	select REGMAP_MMIO
+	select SND_SOC_COMPRESS
+	depends on SND_SOC_UNIPHIER
+	  If unsure select "N".
+config SND_SOC_UNIPHIER_LD11
+	depends on SND_SOC_UNIPHIER
+	select SND_SOC_UNIPHIER_AIO
+	  If unsure select "N".
+config SND_SOC_UNIPHIER_PXS2
+	depends on SND_SOC_UNIPHIER
+	select SND_SOC_UNIPHIER_AIO
+	  If unsure select "N".
+config SND_SOC_UNIPHIER_EVEA_CODEC
+	depends on SND_SOC_UNIPHIER
+	select REGMAP_MMIO
+	  If unsure select "N".
+config ZX_SPDIF
+	depends on ARCH_ZX || COMPILE_TEST
+	depends on COMMON_CLK
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config ZX_I2S
+	depends on ARCH_ZX || COMPILE_TEST
+	depends on COMMON_CLK
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config ZX_TDM
+        depends on COMMON_CLK
+        select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_STM32_SAI
+	depends on (ARCH_STM32 && OF) || COMPILE_TEST
+	depends on SND_SOC
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+	select SND_PCM_IEC958
+config SND_SOC_STM32_I2S
+	depends on (ARCH_STM32 && OF) || COMPILE_TEST
+	depends on SND_SOC
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+config SND_SOC_STM32_SPDIFRX
+	depends on (ARCH_STM32 && OF) || COMPILE_TEST
+	depends on SND_SOC
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+	select SND_SOC_SPDIF
+config SND_SOC_STM32_DFSDM
+	depends on ARCH_STM32 || COMPILE_TEST
+	depends on SND_SOC
+	depends on STM32_DFSDM_ADC
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select SND_SOC_DMIC
+	select IIO_BUFFER_CB
+config SND_BCM2835_SOC_I2S
+	depends on ARCH_BCM2835 || COMPILE_TEST
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+	  to select the audio interfaces to support below.
+config SND_SOC_CYGNUS
+	depends on ARCH_BCM_CYGNUS || COMPILE_TEST
+config SND_SOC_AU1XPSC
+	depends on MIPS_ALCHEMY
+config SND_SOC_AU1XPSC_I2S
+config SND_SOC_AU1XPSC_AC97
+	select AC97_BUS
+	select SND_AC97_CODEC
+	select SND_SOC_AC97_BUS
+config SND_SOC_AU1XAUDIO
+	depends on MIPS_ALCHEMY
+config SND_SOC_AU1XAC97C
+	select AC97_BUS
+	select SND_AC97_CODEC
+	select SND_SOC_AC97_BUS
+config SND_SOC_AU1XI2SC
+config SND_SOC_DB1000
+	depends on SND_SOC_AU1XAUDIO
+	select SND_SOC_AU1XAC97C
+	select SND_SOC_AC97_CODEC
+config SND_SOC_DB1200
+	depends on SND_SOC_AU1XPSC
+	select SND_SOC_AU1XPSC_AC97
+	select SND_SOC_AC97_CODEC
+	select SND_SOC_WM9712
+	select SND_SOC_AU1XPSC_I2S
+	select SND_SOC_WM8731
+# STM SoC audio configuration
+menuconfig SND_SOC_STI
+	depends on SND_SOC
+	depends on ARCH_STI || COMPILE_TEST
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_EP93XX_SOC
+	depends on ARCH_EP93XX || COMPILE_TEST
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_EP93XX_SOC_I2S
+config SND_EP93XX_SOC_I2S_WATCHDOG
+config SND_EP93XX_SOC_AC97
+	select AC97_BUS
+	select SND_SOC_AC97_BUS
+config SND_EP93XX_SOC_SNAPPERCL15
+        depends on SND_EP93XX_SOC && MACH_SNAPPER_CL15 && I2C
+        select SND_EP93XX_SOC_I2S
+        select SND_SOC_TLV320AIC23_I2C
+config SND_EP93XX_SOC_SIMONE
+	depends on SND_EP93XX_SOC && MACH_SIM_ONE
+	select SND_EP93XX_SOC_AC97
+	select SND_SOC_AC97_CODEC
+config SND_EP93XX_SOC_EDB93XX
+	depends on SND_EP93XX_SOC && (MACH_EDB9301 || MACH_EDB9302 || MACH_EDB9302A || MACH_EDB9307A || MACH_EDB9315A)
+	select SND_EP93XX_SOC_I2S
+	select SND_SOC_CS4271_I2C if I2C
+	select SND_SOC_CS4271_SPI if SPI_MASTER
+config SND_SPEAR_SOC
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SPEAR_SPDIF_OUT
+config SND_SPEAR_SPDIF_IN
+config SND_I2S_HI6210_I2S
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_QCOM
+	depends on ARCH_QCOM || COMPILE_TEST
+config SND_SOC_LPASS_CPU
+	select REGMAP_MMIO
+config SND_SOC_LPASS_PLATFORM
+	select REGMAP_MMIO
+config SND_SOC_LPASS_IPQ806X
+	select SND_SOC_LPASS_CPU
+	select SND_SOC_LPASS_PLATFORM
+config SND_SOC_LPASS_APQ8016
+	select SND_SOC_LPASS_CPU
+	select SND_SOC_LPASS_PLATFORM
+config SND_SOC_STORM
+	depends on SND_SOC_QCOM
+	select SND_SOC_LPASS_IPQ806X
+	select SND_SOC_MAX98357A
+config SND_SOC_APQ8016_SBC
+	depends on SND_SOC_QCOM
+	select SND_SOC_LPASS_APQ8016
+config SND_SOC_QCOM_COMMON
+config SND_SOC_QDSP6_COMMON
+config SND_SOC_QDSP6_CORE
+config SND_SOC_QDSP6_AFE
+config SND_SOC_QDSP6_AFE_DAI
+config SND_SOC_QDSP6_ADM
+config SND_SOC_QDSP6_ROUTING
+config SND_SOC_QDSP6_ASM
+config SND_SOC_QDSP6_ASM_DAI
+config SND_SOC_QDSP6
+	depends on QCOM_APR
+	select SND_SOC_QDSP6_COMMON
+	select SND_SOC_QDSP6_CORE
+	select SND_SOC_QDSP6_AFE
+	select SND_SOC_QDSP6_AFE_DAI
+	select SND_SOC_QDSP6_ADM
+	select SND_SOC_QDSP6_ROUTING
+	select SND_SOC_QDSP6_ASM
+	select SND_SOC_QDSP6_ASM_DAI
+config SND_SOC_MSM8996
+	depends on QCOM_APR
+	select SND_SOC_QDSP6
+	select SND_SOC_QCOM_COMMON
+config SND_SOC_SDM845
+	depends on QCOM_APR
+	select SND_SOC_QDSP6
+	select SND_SOC_QCOM_COMMON
+config SND_SOC_TXX9ACLC
+	depends on HAS_TXX9_ACLC && TXX9_DMAC
+config HAS_TXX9_ACLC
+config SND_SOC_TXX9ACLC_AC97
+	select AC97_BUS
+	select SND_AC97_CODEC
+	select SND_SOC_AC97_BUS
+config SND_SOC_TXX9ACLC_GENERIC
+	depends on SND_SOC_TXX9ACLC
+	select SND_SOC_TXX9ACLC_AC97
+	select SND_SOC_AC97_CODEC
+menuconfig SND_MXS_SOC
+	depends on ARCH_MXS || COMPILE_TEST
+	depends on COMMON_CLK
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_MXS_SGTL5000
+	depends on I2C
+	select SND_SOC_SGTL5000
+	depends on ARCH_DOVE || ARCH_MVEBU || COMPILE_TEST
+	  the Kirkwood I2S interface. You will also need to select the
+config SND_KIRKWOOD_SOC_ARMADA370_DB
+	depends on SND_KIRKWOOD_SOC && (ARCH_MVEBU || COMPILE_TEST) && I2C
+	select SND_SOC_CS42L51
+	select SND_SOC_SPDIF
+	depends on ARCH_SUNXI || COMPILE_TEST
+config SND_SUN4I_CODEC
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+config SND_SUN8I_CODEC
+	depends on OF
+	depends on MACH_SUN8I || COMPILE_TEST
+	select REGMAP_MMIO
+config SND_SUN8I_CODEC_ANALOG
+	depends on MACH_SUN8I || (ARM64 && ARCH_SUNXI) || COMPILE_TEST
+	select REGMAP
+config SND_SUN4I_I2S
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+	  the Allwinner A10 I2S. You will also need to select the
+config SND_SUN4I_SPDIF
+	depends on OF
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+# SoC audio configuration
+menuconfig SND_SOC
+	select SND_PCM
+	select AC97_BUS if SND_SOC_AC97_BUS
+	select SND_JACK
+	select REGMAP_I2C if I2C
+	select REGMAP_SPI if SPI_MASTER
+config SND_SOC_AC97_BUS
+config SND_SOC_GENERIC_DMAENGINE_PCM
+	select SND_DMAENGINE_PCM
+config SND_SOC_COMPRESS
+	select SND_COMPRESS_OFFLOAD
+config SND_SOC_TOPOLOGY
+config SND_SOC_ACPI
+source "sound/soc/adi/Kconfig"
+source "sound/soc/amd/Kconfig"
+source "sound/soc/atmel/Kconfig"
+source "sound/soc/au1x/Kconfig"
+source "sound/soc/bcm/Kconfig"
+source "sound/soc/cirrus/Kconfig"
+source "sound/soc/davinci/Kconfig"
+source "sound/soc/ux500/Kconfig"
+source "sound/soc/xtensa/Kconfig"
+source "sound/soc/zte/Kconfig"
+source "sound/soc/codecs/Kconfig"
+source "sound/soc/generic/Kconfig"
+# Ux500 SoC audio configuration
+menuconfig SND_SOC_UX500
+	depends on SND_SOC
+	depends on MFD_DB8500_PRCMU
+config SND_SOC_UX500_PLAT_MSP_I2S
+	depends on SND_SOC_UX500
+config SND_SOC_UX500_PLAT_DMA
+	depends on SND_SOC_UX500
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_UX500_MACH_MOP500
+	depends on AB8500_CORE && AB8500_GPADC && SND_SOC_UX500
+	select SND_SOC_AB8500_CODEC
+	select SND_SOC_UX500_PLAT_MSP_I2S
+	select SND_SOC_UX500_PLAT_DMA
+menuconfig SND_SOC_SAMSUNG
+	depends on PLAT_SAMSUNG || ARCH_EXYNOS || COMPILE_TEST
+	depends on COMMON_CLK
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	  select the audio interfaces to support below.
+config SND_S3C24XX_I2S
+config SND_S3C_I2SV2_SOC
+config SND_S3C2412_SOC_I2S
+	select SND_S3C_I2SV2_SOC
+config SND_SAMSUNG_PCM
+config SND_SAMSUNG_SPDIF
+	select SND_SOC_SPDIF
+config SND_SAMSUNG_I2S
+config SND_SOC_SAMSUNG_NEO1973_WM8753
+	depends on MACH_NEO1973_GTA02
+	select SND_S3C24XX_I2S
+	select SND_SOC_WM8753
+	select SND_SOC_BT_SCO
+config SND_SOC_SAMSUNG_JIVE_WM8750
+	depends on MACH_JIVE && I2C
+	select SND_SOC_WM8750
+	select SND_S3C2412_SOC_I2S
+config SND_SOC_SAMSUNG_SMDK_WM8580
+	depends on MACH_SMDK6410 || COMPILE_TEST
+	depends on I2C
+	select SND_SOC_WM8580
+	select SND_SAMSUNG_I2S
+config SND_SOC_SAMSUNG_SMDK_WM8994
+	depends on I2C=y
+	select MFD_WM8994
+	select SND_SOC_WM8994
+	select SND_SAMSUNG_I2S
+config SND_SOC_SAMSUNG_S3C24XX_UDA134X
+	depends on ARCH_S3C24XX
+	select SND_S3C24XX_I2S
+	select SND_SOC_L3
+	select SND_SOC_UDA134X
+config SND_SOC_SAMSUNG_SIMTEC
+config SND_SOC_SAMSUNG_SIMTEC_TLV320AIC23
+	depends on ARCH_S3C24XX && I2C
+	select SND_S3C24XX_I2S
+	select SND_SOC_TLV320AIC23_I2C
+	select SND_SOC_SAMSUNG_SIMTEC
+config SND_SOC_SAMSUNG_SIMTEC_HERMES
+	depends on ARCH_S3C24XX && I2C
+	select SND_S3C24XX_I2S
+	select SND_SOC_TLV320AIC3X
+	select SND_SOC_SAMSUNG_SIMTEC
+config SND_SOC_SAMSUNG_H1940_UDA1380
+	depends on ARCH_H1940 && I2C
+	select SND_S3C24XX_I2S
+	select SND_SOC_UDA1380
+config SND_SOC_SAMSUNG_RX1950_UDA1380
+	depends on MACH_RX1950 && I2C
+	select SND_S3C24XX_I2S
+	select SND_SOC_UDA1380
+config SND_SOC_SMARTQ
+	depends on MACH_SMARTQ || COMPILE_TEST
+	depends on GPIOLIB || COMPILE_TEST
+	depends on I2C
+	select SND_SAMSUNG_I2S
+	select SND_SOC_WM8750
+config SND_SOC_SAMSUNG_SMDK_SPDIF
+	select SND_SAMSUNG_SPDIF
+config SND_SOC_SMDK_WM8994_PCM
+	depends on I2C=y
+	select MFD_WM8994
+	select SND_SOC_WM8994
+	select SND_SAMSUNG_PCM
+config SND_SOC_SPEYSIDE
+	depends on I2C && SPI_MASTER
+	depends on MACH_WLF_CRAGG_6410 || COMPILE_TEST
+	select SND_SAMSUNG_I2S
+	select SND_SOC_WM8996
+	select SND_SOC_WM9081
+	select SND_SOC_WM0010
+	select SND_SOC_WM1250_EV1
+config SND_SOC_TOBERMORY
+	depends on INPUT && I2C
+	depends on MACH_WLF_CRAGG_6410 || COMPILE_TEST
+	select SND_SAMSUNG_I2S
+	select SND_SOC_WM8962
+config SND_SOC_BELLS
+	depends on MFD_ARIZONA && I2C && SPI_MASTER
+	depends on MACH_WLF_CRAGG_6410 || COMPILE_TEST
+	select SND_SAMSUNG_I2S
+	select SND_SOC_WM5102
+	select SND_SOC_WM5110
+	select SND_SOC_WM9081
+	select SND_SOC_WM0010
+	select SND_SOC_WM1250_EV1
+config SND_SOC_LOWLAND
+	depends on I2C
+	depends on MACH_WLF_CRAGG_6410 || COMPILE_TEST
+	select SND_SAMSUNG_I2S
+	select SND_SOC_WM5100
+	select SND_SOC_WM9081
+config SND_SOC_LITTLEMILL
+	depends on I2C
+	depends on MACH_WLF_CRAGG_6410 || COMPILE_TEST
+	select SND_SAMSUNG_I2S
+	select MFD_WM8994
+	select SND_SOC_WM8994
+config SND_SOC_SNOW
+	depends on I2C
+	select SND_SOC_MAX98090
+	select SND_SOC_MAX98095
+	select SND_SAMSUNG_I2S
+config SND_SOC_ODROID
+	depends on SND_SOC_SAMSUNG && I2C
+	select SND_SOC_MAX98090
+	select SND_SAMSUNG_I2S
+config SND_SOC_ARNDALE_RT5631_ALC5631
+        depends on I2C
+        select SND_SAMSUNG_I2S
+        select SND_SOC_RT5631
+config SND_SOC_SAMSUNG_TM2_WM5110
+	depends on SND_SOC_SAMSUNG && MFD_ARIZONA && I2C && SPI_MASTER
+	depends on GPIOLIB || COMPILE_TEST
+	select SND_SOC_MAX98504
+	select SND_SOC_WM5110
+	select SND_SAMSUNG_I2S
+config SND_SOC_ROCKCHIP
+	depends on COMPILE_TEST || ARCH_ROCKCHIP
+	  select the audio interfaces to support below.
+config SND_SOC_ROCKCHIP_I2S
+	depends on CLKDEV_LOOKUP && SND_SOC_ROCKCHIP
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_ROCKCHIP_PDM
+	depends on CLKDEV_LOOKUP && SND_SOC_ROCKCHIP
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_ROCKCHIP_SPDIF
+	depends on CLKDEV_LOOKUP && SND_SOC_ROCKCHIP
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_ROCKCHIP_MAX98090
+	depends on SND_SOC_ROCKCHIP && I2C && GPIOLIB && CLKDEV_LOOKUP
+	select SND_SOC_ROCKCHIP_I2S
+	select SND_SOC_MAX98090
+	select SND_SOC_TS3A227E
+config SND_SOC_ROCKCHIP_RT5645
+	depends on SND_SOC_ROCKCHIP && I2C && GPIOLIB && CLKDEV_LOOKUP
+	select SND_SOC_ROCKCHIP_I2S
+	select SND_SOC_RT5645
+config SND_SOC_RK3288_HDMI_ANALOG
+	depends on SND_SOC_ROCKCHIP && I2C && GPIOLIB && CLKDEV_LOOKUP
+	select SND_SOC_ROCKCHIP_I2S
+	select SND_SOC_HDMI_CODEC
+	select SND_SOC_ES8328_I2C
+	select SND_SOC_ES8328_SPI if SPI_MASTER
+	select DRM_DW_HDMI_I2S_AUDIO if DRM_DW_HDMI
+config SND_SOC_RK3399_GRU_SOUND
+	depends on SND_SOC_ROCKCHIP && I2C && GPIOLIB && CLKDEV_LOOKUP && SPI
+	select SND_SOC_ROCKCHIP_I2S
+	select SND_SOC_MAX98357A
+	select SND_SOC_RT5514
+	select SND_SOC_DA7219
+	select SND_SOC_RT5514_SPI
+	select SND_SOC_HDMI_CODEC
+	select SND_SOC_DMIC
+config SND_MESON_AXG_SPDIFOUT
+	select SND_PCM_IEC958
+config SND_DAVINCI_SOC
+	depends on ARCH_DAVINCI
+	select SND_EDMA_SOC
+config SND_EDMA_SOC
+	depends on TI_EDMA
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_DAVINCI_SOC_I2S
+config SND_DAVINCI_SOC_VCIF
+config SND_DAVINCI_SOC_GENERIC_EVM
+	select SND_SOC_TLV320AIC3X
+	select SND_DAVINCI_SOC_MCASP
+config SND_AM33XX_SOC_EVM
+	depends on SND_EDMA_SOC && SOC_AM33XX && I2C
+	select SND_DAVINCI_SOC_GENERIC_EVM
+config SND_DM365_AIC3X_CODEC
+config SND_DM365_VOICE_CODEC
+	select MFD_DAVINCI_VOICECODEC
+	select SND_DAVINCI_SOC_VCIF
+	select SND_SOC_CQ0093VC
+config  SND_DM6467_SOC_EVM
+	depends on SND_EDMA_SOC && MACH_DAVINCI_DM6467_EVM && I2C
+	select SND_DAVINCI_SOC_GENERIC_EVM
+	select SND_SOC_SPDIF
+config  SND_DA830_SOC_EVM
+	depends on SND_EDMA_SOC && MACH_DAVINCI_DA830_EVM && I2C
+	select SND_DAVINCI_SOC_GENERIC_EVM
+config SND_DESIGNWARE_I2S
+	depends on CLKDEV_LOOKUP
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_DESIGNWARE_PCM
+	depends on SND_DESIGNWARE_I2S
+config SND_SOC_AMD_ACP
+config SND_SOC_AMD_CZ_DA7219MX98357_MACH
+	select SND_SOC_DA7219
+	select SND_SOC_MAX98357A
+	select SND_SOC_ADAU7002
+	select REGULATOR
+	depends on SND_SOC_AMD_ACP && I2C
+config SND_SOC_AMD_CZ_RT5645_MACH
+	select SND_SOC_RT5645
+	depends on SND_SOC_AMD_ACP && I2C
+config SND_JZ4740_SOC
+	depends on MACH_JZ4740 || COMPILE_TEST
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	  the JZ4740 I2S interface. You will also need to select the audio
+config SND_JZ4740_SOC_I2S
+	depends on HAS_IOMEM
+config SND_JZ4740_SOC_QI_LB60
+	depends on HAS_IOMEM
+	depends on JZ4740_QI_LB60 || COMPILE_TEST
+	select SND_JZ4740_SOC_I2S
+    select SND_SOC_JZ4740_CODEC
+config SND_SOC_IMG
+config SND_SOC_IMG_I2S_IN
+	depends on SND_SOC_IMG
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_IMG_I2S_OUT
+	depends on SND_SOC_IMG
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_IMG_PARALLEL_OUT
+	depends on SND_SOC_IMG
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_IMG_SPDIF_IN
+	depends on SND_SOC_IMG
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_IMG_SPDIF_OUT
+	depends on SND_SOC_IMG
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+config SND_SOC_IMG_PISTACHIO_INTERNAL_DAC
+	depends on SND_SOC_IMG
+config SND_SOC_ADI
+	depends on MICROBLAZE || ARCH_ZYNQ || COMPILE_TEST
+config SND_SOC_ADI_AXI_I2S
+	depends on SND_SOC_ADI
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+config SND_SOC_ADI_AXI_SPDIF
+	depends on SND_SOC_ADI
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select REGMAP_MMIO
+config EXTCON_ADC_JACK
+	depends on IIO
+config EXTCON_ARIZONA
+	depends on MFD_ARIZONA && INPUT && SND_SOC
+config EXTCON_AXP288
+	depends on MFD_AXP20X && USB_SUPPORT && X86
+	select USB_ROLE_SWITCH
+config REGULATOR_AB8500
+	depends on AB8500_CORE
+config REGULATOR_ARIZONA_LDO1
+	depends on MFD_ARIZONA
+	depends on SND_SOC
+config REGULATOR_ARIZONA_MICSUPP
+	depends on MFD_ARIZONA
+	depends on SND_SOC
+config REGULATOR_AS3711
+	depends on MFD_AS3711
+	depends on INPUT_AD714X && SPI
+config INPUT_ARIZONA_HAPTICS
+	depends on MFD_ARIZONA && SND_SOC
+	select INPUT_FF_MEMLESS
+config INPUT_ATMEL_CAPTOUCH
+	depends on OF || COMPILE_TEST
+config REGMAP_SOUNDWIRE
+	depends on SOUNDWIRE
+config REGMAP_SCCB
+	depends on I2C
+config REGMAP_WCD_IRQ
+	depends on SND_SOC
+	select REGMAP_IRQ
+	  This config is intended for enabling REGMAP_IRQ for
+config REGMAP_ALLOW_WRITE_DEBUGFS
+config DRM_VC4
+	depends on ARCH_BCM || ARCH_BCM2835 || COMPILE_TEST
+	depends on DRM
+	depends on SND && SND_SOC
+	depends on COMMON_CLK
+	select DRM_KMS_HELPER
+	select DRM_KMS_CMA_HELPER
+	select DRM_GEM_CMA_HELPER
+	select DRM_PANEL_BRIDGE
+	select SND_PCM
+	select SND_PCM_ELD
+	select SND_SOC_GENERIC_DMAENGINE_PCM
+	select DRM_MIPI_DSI
+	  the config.txt for the firmware, to keep it from smashing
+config DRM_VC4_HDMI_CEC
+	select VIDEOMODE_HELPERS
+config DRM_MEDIATEK_HDMI
+	depends on DRM_MEDIATEK
+	select SND_SOC_HDMI_CODEC if SND_SOC
+	select GENERIC_PHY
+config DRM_ZTE
+	depends on DRM && ARCH_ZX
+	select DRM_KMS_CMA_HELPER
+	select DRM_KMS_HELPER
+	select SND_SOC_HDMI_CODEC if SND_SOC
+	select VIDEOMODE_HELPERS
+config DRM_STI
+	depends on OF && DRM && (ARCH_STI || ARCH_MULTIPLATFORM)
+	select RESET_CONTROLLER
+	select DRM_KMS_HELPER
+	select DRM_GEM_CMA_HELPER
+	select DRM_KMS_CMA_HELPER
+	select DRM_PANEL
+	select FW_LOADER
+	select SND_SOC_HDMI_CODEC if SND_SOC
+config DRM_EXYNOS
+	depends on OF && DRM && (ARCH_S3C64XX || ARCH_S5PV210 || ARCH_EXYNOS || ARCH_MULTIPLATFORM)
+	select DRM_KMS_HELPER
+	select VIDEOMODE_HELPERS
+	select SND_SOC_HDMI_CODEC if SND_SOC
+	  If M is selected the module will be called exynosdrm.
+config DRM_EXYNOS_IOMMU
+	depends on EXYNOS_IOMMU
+	select SND_PCM
+	select SND_PCM_ELD
+	select SND_PCM_IEC958
+config DRM_DW_HDMI_I2S_AUDIO
+	depends on SND_SOC
+	depends on DRM_DW_HDMI
+	select SND_SOC_HDMI_CODEC
+config DRM_DW_HDMI_CEC
+	depends on DRM_DW_HDMI
+	select CEC_CORE
+	select CEC_NOTIFIER
+config DRM_I2C_ADV7511
+	depends on OF
+	select DRM_KMS_HELPER
+	select REGMAP_I2C
+config DRM_I2C_ADV7511_AUDIO
+	depends on DRM_I2C_ADV7511 && SND_SOC
+	select SND_SOC_HDMI_CODEC
+config DRM_I2C_ADV7533
+	depends on DRM_I2C_ADV7511
+	select DRM_MIPI_DSI
+	depends on MMU
+	select QCOM_MDT_LOADER if ARCH_QCOM
+	select REGULATOR
+	select DRM_KMS_HELPER
+	select DRM_PANEL
+	select SHMEM
+	select TMPFS
+	select QCOM_SCM
+	select QCOM_COMMAND_DB if ARCH_QCOM
+	select WANT_DEV_COREDUMP
+	select SND_SOC_HDMI_CODEC if SND_SOC
+	select SYNC_FILE
+	select PM_OPP
+config DRM_MSM_REGISTER_LOGGING
+	depends on DRM_MSM
+config DRM_I2C_NXP_TDA998X
+	select CEC_CORE if CEC_NOTIFIER
+	select SND_SOC_HDMI_CODEC if SND_SOC
+config DRM_I2C_NXP_TDA9950
+	select CEC_NOTIFIER
+	select CEC_CORE
+config DRM_ROCKCHIP
+	depends on DRM && ROCKCHIP_IOMMU
+	select DRM_GEM_CMA_HELPER
+	select DRM_KMS_HELPER
+	select DRM_PANEL
+	select VIDEOMODE_HELPERS
+	select DRM_ANALOGIX_DP if ROCKCHIP_ANALOGIX_DP
+	select DRM_DW_HDMI if ROCKCHIP_DW_HDMI
+	select DRM_MIPI_DSI if ROCKCHIP_DW_MIPI_DSI
+	select SND_SOC_HDMI_CODEC if ROCKCHIP_CDN_DP && SND_SOC
+config ROCKCHIP_ANALOGIX_DP
+config SOUNDWIRE_CADENCE
+config SOUNDWIRE_INTEL
+	select SOUNDWIRE_CADENCE
+	depends on X86 && ACPI && SND_SOC
+	  enable this config option to get the SoundWire support for that
+config RADIO_SI4713
+	depends on VIDEO_V4L2
+source "drivers/media/radio/si4713/Kconfig"
+config RADIO_SI476X
+	depends on I2C && VIDEO_V4L2
+	depends on MFD_SI476X_CORE
+	depends on SND_SOC
+	select SND_SOC_SI476X
+	depends on I2C
+config VIDEO_TDA1997X
+	depends on VIDEO_V4L2 && I2C && VIDEO_V4L2_SUBDEV_API
+	depends on SND_SOC
+	select HDMI
+	select SND_PCM
+	select V4L2_FWNODE
+config VIDEO_TEA6415C
+# Helper to resolve issues with configs that have SPI enabled but I2C
+config RTC_I2C_AND_SPI
+	select REGMAP_I2C if I2C
+	select REGMAP_SPI if SPI_MASTER
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ # 验证HID子系统完整性（禁用QVR后）
+liu@liu-virtual-machine:~/kernel$ grep -r "HID" .config | grep -v "HID_QVR"
+# CONFIG_GKI_HIDDEN_DRM_CONFIGS is not set
+# CONFIG_GKI_HIDDEN_REGMAP_CONFIGS is not set
+# CONFIG_GKI_HIDDEN_CRYPTO_CONFIGS is not set
+# CONFIG_GKI_HIDDEN_SND_CONFIGS is not set
+# CONFIG_GKI_HIDDEN_SND_SOC_CONFIGS is not set
+# CONFIG_GKI_HIDDEN_GPIO_CONFIGS is not set
+# CONFIG_GKI_HIDDEN_VIRTUAL_CONFIGS is not set
+# CONFIG_GKI_HIDDEN_SOC_PM_CONFIGS is not set
+# CONFIG_GKI_HIDDEN_VIDEOBUF2_CONFIGS is not set
+# CONFIG_GKI_HIDDEN_USB_CONFIGS is not set
+# CONFIG_GKI_HIDDEN_SOC_BUS_CONFIGS is not set
+# CONFIG_GKI_HIDDEN_GPU_CONFIGS is not set
+# CONFIG_GKI_HIDDEN_IRQ_CONFIGS is not set
+# CONFIG_BT_HIDP is not set
+# HID support
+CONFIG_HID=y
+# CONFIG_HID_BATTERY_STRENGTH is not set
+CONFIG_HIDRAW=y
+CONFIG_UHID=y
+CONFIG_HID_GENERIC=m
+# Special HID drivers
+# CONFIG_HID_A4TECH is not set
+# CONFIG_HID_ACCUTOUCH is not set
+# CONFIG_HID_ACRUX is not set
+CONFIG_HID_APPLE=y
+# CONFIG_HID_APPLEIR is not set
+# CONFIG_HID_ASUS is not set
+# CONFIG_HID_AUREAL is not set
+# CONFIG_HID_BELKIN is not set
+# CONFIG_HID_BETOP_FF is not set
+# CONFIG_HID_CHERRY is not set
+# CONFIG_HID_CHICONY is not set
+# CONFIG_HID_CORSAIR is not set
+# CONFIG_HID_COUGAR is not set
+# CONFIG_HID_PRODIKEYS is not set
+# CONFIG_HID_CMEDIA is not set
+# CONFIG_HID_CP2112 is not set
+# CONFIG_HID_CYPRESS is not set
+# CONFIG_HID_DRAGONRISE is not set
+# CONFIG_HID_EMS_FF is not set
+# CONFIG_HID_ELAN is not set
+CONFIG_HID_ELECOM=y
+# CONFIG_HID_ELO is not set
+# CONFIG_HID_EZKEY is not set
+# CONFIG_HID_GEMBIRD is not set
+# CONFIG_HID_GFRM is not set
+# CONFIG_HID_HOLTEK is not set
+# CONFIG_HID_GOOGLE_HAMMER is not set
+# CONFIG_HID_GT683R is not set
+# CONFIG_HID_KEYTOUCH is not set
+# CONFIG_HID_KYE is not set
+# CONFIG_HID_UCLOGIC is not set
+# CONFIG_HID_WALTOP is not set
+# CONFIG_HID_GYRATION is not set
+# CONFIG_HID_ICADE is not set
+# CONFIG_HID_ITE is not set
+# CONFIG_HID_JABRA is not set
+# CONFIG_HID_TWINHAN is not set
+# CONFIG_HID_KENSINGTON is not set
+# CONFIG_HID_LCPOWER is not set
+# CONFIG_HID_LED is not set
+# CONFIG_HID_LENOVO is not set
+# CONFIG_HID_LOGITECH is not set
+CONFIG_HID_MAGICMOUSE=y
+# CONFIG_HID_MAYFLASH is not set
+# CONFIG_HID_REDRAGON is not set
+CONFIG_HID_MICROSOFT=y
+# CONFIG_HID_MONTEREY is not set
+CONFIG_HID_MULTITOUCH=y
+CONFIG_HID_NINTENDO=y
+# CONFIG_HID_NTI is not set
+# CONFIG_HID_NTRIG is not set
+# CONFIG_HID_ORTEK is not set
+# CONFIG_HID_PANTHERLORD is not set
+# CONFIG_HID_PENMOUNT is not set
+# CONFIG_HID_PETALYNX is not set
+# CONFIG_HID_PICOLCD is not set
+CONFIG_HID_PLANTRONICS=y
+CONFIG_HID_PLAYSTATION=y
+# CONFIG_HID_PRIMAX is not set
+# CONFIG_HID_RETRODE is not set
+# CONFIG_HID_ROCCAT is not set
+# CONFIG_HID_SAITEK is not set
+# CONFIG_HID_SAMSUNG is not set
+CONFIG_HID_SONY=m
+# CONFIG_HID_SPEEDLINK is not set
+# CONFIG_HID_STEAM is not set
+# CONFIG_HID_STEELSERIES is not set
+# CONFIG_HID_SUNPLUS is not set
+# CONFIG_HID_RMI is not set
+# CONFIG_HID_GREENASIA is not set
+# CONFIG_HID_SMARTJOYPLUS is not set
+# CONFIG_HID_TIVO is not set
+# CONFIG_HID_TOPSEED is not set
+# CONFIG_HID_THINGM is not set
+# CONFIG_HID_THRUSTMASTER is not set
+# CONFIG_HID_UDRAW_PS3 is not set
+# CONFIG_HID_WACOM is not set
+# CONFIG_HID_WIIMOTE is not set
+# CONFIG_HID_XINMO is not set
+# CONFIG_HID_ZEROPLUS is not set
+# CONFIG_HID_ZYDACRON is not set
+# CONFIG_HID_SENSOR_HUB is not set
+# CONFIG_HID_ALPS is not set
+# USB HID support
+CONFIG_USB_HID=y
+# CONFIG_HID_PID is not set
+CONFIG_USB_HIDDEV=y
+# I2C HID support
+# CONFIG_I2C_HID is not set
+CONFIG_USB_F_HID=y
+CONFIG_USB_CONFIGFS_F_HID=y
+# LED driver for blink(1) USB RGB LED is under Special HID drivers (HID_THINGM)
+# CONFIG_QCOM_HIDMA_MGMT is not set
+# CONFIG_QCOM_HIDMA is not set
