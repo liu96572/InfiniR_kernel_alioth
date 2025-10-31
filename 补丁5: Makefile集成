@@ -1,0 +1,8 @@
+# kernel/tombstone/Makefile
+obj-$(CONFIG_SMART_TOMBSTONE) += tombstone_manager.o
+obj-$(CONFIG_APP_CLASSIFIER) += smart_learner.o app_classifier.o
+
+# drivers/misc/Makefile  
+obj-$(CONFIG_ALIOTH_COMPAT) += alioth_compat.o
+obj-$(CONFIG_MEITUAN_FIX) += meituan_fix.o
+obj-$(CONFIG_PERFORMANCE_BOOST) += performance_boost.o
