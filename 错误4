@@ -1,0 +1,557 @@
+u@liu-virtual-machine:~/kernel$ # 1. 修改 techpack/audio 的 Makefile 添加包含路径
+liu@liu-virtual-machine:~/kernel$ echo 'ccflags-y += -I$(srctree)/techpack/audio/include' >> techpack/audio/Makefile
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ # 2. 修改 bolero 驱动的 Makefile
+liu@liu-virtual-machine:~/kernel$ echo 'ccflags-y += -I$(srctree)/techpack/audio/include' >> techpack/audio/asoc/codecs/bolero/Makefile
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ # 3. 验证修改
+liu@liu-virtual-machine:~/kernel$ tail -n 5 techpack/audio/Makefile
+obj-y += dsp/
+obj-y += ipc/
+obj-y += asoc/
+ccflags-y += -I$(srctree)/techpack/audio/include
+ccflags-y += -I$(srctree)/techpack/audio/include
+liu@liu-virtual-machine:~/kernel$ tail -n 5 techpack/audio/asoc/codecs/bolero/Makefile
+ccflags-y += -I$(srctree)/techpack/audio/include
+ccflags-y += -I$(srctree)/techpack/audio/include
+liu@liu-virtual-machine:~/kernel$ make -j$(nproc) O=out
+make[1]: 进入目录“/home/liu/kernel/out”
+  GEN     ./Makefile
+  Using .. as source for kernel
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.1.dtb
+  CALL    ../scripts/checksyscalls.sh
+  CHK     include/generated/compile.h
+  CC      techpack/audio/asoc/codecs/bolero/bolero-cdc.o
+  CC      techpack/audio/ipc/apr.o
+  CC      techpack/audio/dsp/codecs/q6audio_v2.o
+  CC      techpack/audio/asoc/codecs/bolero/bolero-cdc-utils.o
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c: 在函数‘bolero_set_port_map’中:
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:63:29: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   63 |   if (priv->macro_params[map->id].set_port_map)
+      |                             ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:64:26: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   64 |    priv->macro_params[map->id].set_port_map(component,
+      |                          ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:65:10: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   65 |       map->uc,
+      |          ^~
+  DTC     arch/arm64/boot/dts/vendor/qcom/alioth-sm8250-overlay.dtbo
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:66:7: 错误： ‘SWR_MSTR_PORT_LEN’未声明(在此函数内第一次使用)
+   66 |       SWR_MSTR_PORT_LEN,
+      |       ^~~~~~~~~~~~~~~~~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:66:7: 附注： 每个未声明的标识符在其出现的函数内只报告一次
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:67:10: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   67 |       map->swr_port_params);
+      |          ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:68:7: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   68 |   map += 1;
+      |       ^~
+make[6]: *** [../scripts/Makefile.build:338：techpack/audio/asoc/codecs/bolero/bolero-cdc.o] 错误 1
+make[6]: *** 正在等待未完成的任务....
+  CC      techpack/audio/ipc/apr_v2.o
+  CC      techpack/audio/dsp/codecs/q6audio_v2_aio.o
+make[5]: *** [../scripts/Makefile.build:642：techpack/audio/asoc/codecs/bolero] 错误 2
+make[4]: *** [../scripts/Makefile.build:642：techpack/audio/asoc/codecs] 错误 2
+make[3]: *** [../scripts/Makefile.build:642：techpack/audio/asoc] 错误 2
+make[3]: *** 正在等待未完成的任务....
+  CC      techpack/audio/dsp/msm-audio-event-notify.o
+  CC      techpack/audio/dsp/audio_calibration.o
+  CC      techpack/audio/dsp/codecs/audio_utils_aio.o
+  CC      techpack/audio/dsp/audio_cal_utils.o
+  CC      techpack/audio/ipc/apr_tal_rpmsg.o
+  AR      techpack/audio/ipc/built-in.a
+  CC      techpack/audio/dsp/q6adm.o
+  CC      techpack/audio/dsp/q6afe.o
+  CC      lib/crypto/chacha.o
+  CC      techpack/audio/dsp/codecs/audio_utils.o
+  CC      lib/crypto/libchacha.o
+  CC      techpack/audio/dsp/q6asm.o
+  CC      techpack/data/drivers/rmnet/perf/rmnet_perf_config.o
+In file included from ../include/linux/kernel.h:13,
+                 from ../include/linux/list.h:9,
+                 from ../include/linux/module.h:9,
+                 from ../techpack/audio/dsp/q6adm.c:5:
+../techpack/audio/dsp/q6adm.c: 在函数‘crus_adm_set_params’中:
+../include/linux/printk.h:311:2: 警告： 此函数中的‘port_idx’在使用前未初始化 [-Wuninitialized]
+  311 |  printk(KERN_INFO pr_fmt(fmt), ##__VA_ARGS__)
+      |  ^~~~~~
+../techpack/audio/dsp/q6adm.c:883:6: 附注： ‘port_idx’在此声明
+  883 |  int port_idx;
+      |      ^~~~~~~~
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_flash.o
+  CC      techpack/audio/dsp/codecs/audio_native.o
+  CC      lib/crypto/poly1305-donna64.o
+  CC      techpack/data/drivers/rmnet/perf/rmnet_perf_core.o
+In file included from ../drivers/input/touchscreen/focaltech_spi/focaltech_common.h:34,
+                 from ../drivers/input/touchscreen/focaltech_spi/focaltech_core.h:65,
+                 from ../drivers/input/touchscreen/focaltech_spi/focaltech_flash.c:36:
+../drivers/input/touchscreen/focaltech_spi/focaltech_config.h:265:50: 致命错误： include/firmware/fw_ft3658_k11.i：没有那个文件或目录
+  265 | #define FTS_UPGRADE_FW_FILE                      "include/firmware/fw_ft3658_k11.i"
+      |                                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+编译中断。
+make[5]: *** [../scripts/Makefile.build:338：drivers/input/touchscreen/focaltech_spi/focaltech_flash.o] 错误 1
+make[4]: *** [../scripts/Makefile.build:642：drivers/input/touchscreen/focaltech_spi] 错误 2
+make[3]: *** [../scripts/Makefile.build:642：drivers/input/touchscreen] 错误 2
+make[2]: *** [../scripts/Makefile.build:642：drivers/input] 错误 2
+make[1]: *** [/home/liu/kernel/Makefile:1256：drivers] 错误 2
+make[1]: *** 正在等待未完成的任务....
+  CC      techpack/audio/dsp/codecs/aac_in.o
+  CC      lib/crypto/poly1305.o
+  CC      techpack/audio/dsp/codecs/amrnb_in.o
+  CC      lib/crypto/blake2s.o
+  CC      techpack/data/drivers/rmnet/perf/rmnet_perf_opt.o
+  CC      lib/crypto/blake2s-generic.o
+  CC      techpack/audio/dsp/codecs/amrwb_in.o
+  CC      techpack/audio/dsp/codecs/audio_aac.o
+  CC      lib/crypto/chacha20poly1305.o
+  CC      lib/crypto/curve25519-hacl64.o
+  CC      lib/crypto/curve25519-generic.o
+  CC      techpack/audio/dsp/codecs/audio_alac.o
+  CC      techpack/data/drivers/rmnet/perf/rmnet_perf_tcp_opt.o
+  CC      techpack/audio/dsp/codecs/audio_amrnb.o
+  CC      lib/crypto/curve25519.o
+  CC      techpack/audio/dsp/codecs/audio_amrwb.o
+  CC      techpack/audio/dsp/q6audio-v2.o
+  CC      techpack/data/drivers/rmnet/shs/rmnet_shs_config.o
+  CC      techpack/data/drivers/rmnet/shs/rmnet_shs_main.o
+  CC      techpack/audio/dsp/codecs/audio_amrwbplus.o
+  CC      techpack/data/drivers/rmnet/perf/rmnet_perf_udp_opt.o
+  CC      techpack/audio/dsp/codecs/audio_ape.o
+  CC      techpack/audio/dsp/codecs/audio_evrc.o
+  CC      techpack/data/drivers/rmnet/shs/rmnet_shs_wq.o
+  CC      techpack/audio/dsp/q6voice.o
+  CC      techpack/audio/dsp/codecs/audio_g711alaw.o
+  CC      techpack/data/drivers/rmnet/shs/rmnet_shs_freq.o
+  AR      techpack/data/drivers/rmnet/perf/built-in.a
+  CC      techpack/data/drivers/rmnet/shs/rmnet_shs_wq_mem.o
+  CC      techpack/audio/dsp/q6core.o
+../techpack/data/drivers/rmnet/shs/rmnet_shs_wq.c: 在函数‘rmnet_shs_wq_get_max_flows_per_cluster’中:
+../techpack/data/drivers/rmnet/shs/rmnet_shs_wq.c:2240:2: 警告： 语句不起作用 [-Wunused-value]
+ 2240 |  for (start_core; start_core < end_core; start_core++) {
+      |  ^~~
+  CC      techpack/audio/dsp/codecs/audio_g711mlaw.o
+  AR      lib/crypto/built-in.a
+  CC      lib/lz4/lz4_compress.o
+  CC      lib/lz4/lz4hc_compress.o
+  CC      techpack/audio/dsp/codecs/audio_hwacc_effects.o
+  CC      techpack/data/drivers/rmnet/shs/rmnet_shs_wq_genl.o
+  CC      lib/lzo/lzo1x_compress.o
+  CC      lib/lzo/lzo1x_decompress_safe.o
+  CC      lib/lz4/lz4_decompress.o
+  CC      techpack/audio/dsp/codecs/audio_mp3.o
+  CC      techpack/audio/dsp/codecs/audio_multi_aac.o
+  CC      techpack/audio/dsp/codecs/audio_qcelp.o
+  CC      techpack/audio/dsp/q6common.o
+  AR      techpack/data/drivers/rmnet/shs/built-in.a
+  AR      techpack/data/built-in.a
+  CC      techpack/display/msm/dp/dp_usbpd.o
+  CC      techpack/stub/stub.o
+  AR      techpack/stub/built-in.a
+  CC      techpack/audio/dsp/rtac.o
+  AR      lib/lzo/built-in.a
+  CC      techpack/audio/dsp/q6lsm.o
+  CC      techpack/display/pll/pll_util.o
+  CC      techpack/audio/dsp/codecs/audio_wma.o
+  CC      techpack/audio/dsp/codecs/audio_wmapro.o
+  AR      lib/lz4/built-in.a
+  CC      lib/mpi/generic_mpih-lshift.o
+  CC      lib/mpi/generic_mpih-mul1.o
+  CC      techpack/audio/dsp/codecs/evrc_in.o
+  CC      techpack/display/pll/pll_drv.o
+  CC      techpack/display/pll/dsi_pll_10nm.o
+  CC      techpack/display/msm/dp/dp_parser.o
+  CC      lib/mpi/generic_mpih-mul2.o
+  CC      lib/mpi/generic_mpih-mul3.o
+  CC      techpack/audio/dsp/codecs/g711alaw_in.o
+  CC      techpack/audio/dsp/codecs/g711mlaw_in.o
+  CC      techpack/display/msm/dp/dp_power.o
+  CC      lib/mpi/generic_mpih-rshift.o
+  CC      techpack/audio/dsp/adsp_err.o
+  CC      techpack/audio/dsp/msm_audio_ion.o
+  CC      techpack/display/pll/dsi_pll_7nm.o
+  CC      techpack/display/pll/dsi_pll_28lpm.o
+  CC      techpack/audio/dsp/codecs/qcelp_in.o
+  CC      techpack/audio/dsp/avtimer.o
+  CC      techpack/display/rotator/sde_rotator_dev.o
+  CC      lib/mpi/generic_mpih-sub1.o
+  CC      lib/mpi/generic_mpih-add1.o
+  CC      lib/mpi/mpicoder.o
+  CC      techpack/display/msm/dp/dp_catalog.o
+  AR      techpack/audio/dsp/codecs/built-in.a
+  CC      techpack/display/pll/dsi_pll_28nm_util.o
+  CC      techpack/audio/dsp/q6_init.o
+  CC      techpack/display/msm/dp/dp_catalog_v420.o
+  CC      techpack/audio/dsp/apr_elliptic.o
+  CC      lib/mpi/mpi-bit.o
+  CC      techpack/audio/dsp/elliptic/elliptic.o
+  CC      techpack/display/pll/dsi_pll_14nm.o
+  CC      techpack/audio/dsp/elliptic/elliptic_sysfs.o
+  CC      lib/mpi/mpi-cmp.o
+  CC      techpack/display/pll/dsi_pll_14nm_util.o
+  CC      lib/mpi/mpih-cmp.o
+  CC      techpack/audio/dsp/elliptic/elliptic_mixer_controls.o
+../techpack/audio/dsp/elliptic/elliptic_sysfs.c: 在函数‘opmode_flags_show’中:
+../techpack/audio/dsp/elliptic/elliptic_sysfs.c:526:12: 警告： 此函数中的‘length’在使用前未初始化 [-Wuninitialized]
+  526 |  length += snprintf(buf + length, PAGE_SIZE - 1, "%d\n",
+      |            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  527 |        cache->operation_mode_flags);
+      |        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../techpack/audio/dsp/elliptic/elliptic_sysfs.c: 在函数‘opmode_show’中:
+../techpack/audio/dsp/elliptic/elliptic_sysfs.c:512:12: 警告： 此函数中的‘length’在使用前未初始化 [-Wuninitialized]
+  512 |  length += snprintf(buf + length, PAGE_SIZE - 1, "%d\n",
+      |            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  513 |        cache->operation_mode);
+      |        ~~~~~~~~~~~~~~~~~~~~~~
+  CC      techpack/display/rotator/sde_rotator_core.o
+  CC      techpack/display/msm/dp/dp_catalog_v200.o
+  CC      techpack/display/rotator/sde_rotator_base.o
+  CC      techpack/display/pll/hdmi_pll_28lpm.o
+  CC      lib/mpi/mpih-div.o
+  CC      techpack/display/msm/dp/dp_aux.o
+  CC      techpack/display/msm/dp/dp_panel.o
+  CC      techpack/audio/dsp/elliptic/io_modules/msm/elliptic_data_msm_io.o
+  CC      lib/mpi/mpih-mul.o
+  CC      techpack/display/pll/dp_pll_7nm.o
+  CC      techpack/display/pll/dp_pll_7nm_util.o
+  CC      techpack/audio/dsp/elliptic/io_modules/userspace/elliptic_data_userspace_io.o
+  CC      techpack/display/rotator/sde_rotator_formats.o
+  CC      techpack/display/pll/dp_pll_10nm.o
+  CC      lib/mpi/mpi-pow.o
+  CC      techpack/audio/dsp/elliptic/io_modules/userspace/elliptic_data_userspace_ctrl.o
+  CC      techpack/display/rotator/sde_rotator_util.o
+  CC      techpack/display/rotator/sde_rotator_io_util.o
+  CC      techpack/display/pll/dp_pll_10nm_util.o
+  CC      techpack/audio/dsp/apr_mius.o
+  CC      techpack/display/rotator/sde_rotator_smmu.o
+  CC      techpack/audio/dsp/mius/mius.o
+  CC      techpack/display/rotator/sde_rotator_r1_wb.o
+  CC      techpack/display/pll/dp_pll_14nm.o
+  CC      lib/mpi/mpiutil.o
+  CC      techpack/display/rotator/sde_rotator_r1_pipe.o
+  CC      techpack/display/rotator/sde_rotator_r1_ctl.o
+  CC      techpack/video/msm/vidc/msm_v4l2_vidc.o
+  CC      techpack/display/rotator/sde_rotator_r1.o
+  AR      techpack/display/pll/built-in.a
+  CC      techpack/audio/dsp/mius/mius_sysfs.o
+  CC      techpack/display/rotator/sde_rotator_r3.o
+  AR      lib/mpi/built-in.a
+  CC      lib/reed_solomon/reed_solomon.o
+  CC      techpack/video/msm/vidc/msm_v4l2_private.o
+../techpack/audio/dsp/mius/mius_sysfs.c: 在函数‘opmode_flags_show’中:
+../techpack/audio/dsp/mius/mius_sysfs.c:530:12: 警告： 此函数中的‘length’在使用前未初始化 [-Wuninitialized]
+  530 |  length += snprintf(buf + length, PAGE_SIZE - 1, "%d\n",
+      |            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  531 |        cache->operation_mode_flags);
+      |        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../techpack/audio/dsp/mius/mius_sysfs.c: 在函数‘opmode_show’中:
+../techpack/audio/dsp/mius/mius_sysfs.c:516:12: 警告： 此函数中的‘length’在使用前未初始化 [-Wuninitialized]
+  516 |  length += snprintf(buf + length, PAGE_SIZE - 1, "%d\n",
+      |            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  517 |        cache->operation_mode);
+      |        ~~~~~~~~~~~~~~~~~~~~~~
+  CC      techpack/display/rotator/sde_rotator_sync.o
+  CC      techpack/display/msm/dp/dp_link.o
+  CC      techpack/audio/dsp/mius/mius_mixer_controls.o
+  CC      techpack/display/msm/dp/dp_ctrl.o
+  CC      techpack/display/msm/dp/dp_audio.o
+  AR      lib/reed_solomon/built-in.a
+  CC      lib/zlib_deflate/deflate.o
+  CC      techpack/display/msm/dp/dp_debug.o
+  CC      techpack/display/msm/dp/dp_hpd.o
+  AR      techpack/display/rotator/built-in.a
+  CC      techpack/audio/dsp/mius/io_modules/msm/mius_data_msm_io.o
+  CC      techpack/video/msm/vidc/msm_vidc_platform.o
+  CC      lib/zlib_deflate/deftree.o
+  CC      techpack/display/msm/dp/dp_gpio_hpd.o
+  CC      techpack/display/msm/dp/dp_lphw_hpd.o
+  CC      techpack/audio/dsp/mius/io_modules/userspace/mius_data_userspace_io.o
+  CC      techpack/display/msm/dp/dp_display.o
+  CC      techpack/display/msm/dp/dp_drm.o
+  CC      techpack/display/msm/dp/dp_hdcp2p2.o
+  CC      lib/zlib_deflate/deflate_syms.o
+  CC      techpack/audio/dsp/mius/io_modules/userspace/mius_data_userspace_ctrl.o
+  CC      techpack/display/msm/dp/dp_mst_drm.o
+  CC      techpack/video/msm/vidc/msm_vidc_common.o
+  CC      techpack/video/msm/vidc/msm_vidc.o
+  AR      lib/zlib_deflate/built-in.a
+  CC      lib/zlib_inflate/inffast.o
+  CC      techpack/audio/dsp/msm-cirrus-playback.o
+  CC      lib/zlib_inflate/inflate.o
+  CC      lib/zlib_inflate/infutil.o
+  CC      lib/zlib_inflate/inftrees.o
+  CC      techpack/display/msm/sde/sde_crtc.o
+  CC      lib/zlib_inflate/inflate_syms.o
+  CC      techpack/display/msm/sde/sde_encoder.o
+  AR      lib/zlib_inflate/built-in.a
+  CC      lib/zstd/fse_compress.o
+  CC      techpack/display/msm/sde/sde_encoder_phys_vid.o
+  CC      techpack/display/msm/sde/sde_encoder_phys_cmd.o
+  CC      lib/zstd/huf_compress.o
+  CC      techpack/audio/dsp/voice_mhi.o
+  CC      lib/zstd/compress.o
+  CC      lib/zstd/entropy_common.o
+  CC      lib/zstd/fse_decompress.o
+  CC      techpack/audio/dsp/digital-cdc-rsc-mgr.o
+  CC      techpack/audio/dsp/usf.o
+  CC      techpack/display/msm/sde/sde_irq.o
+  CC      techpack/display/msm/sde/sde_core_irq.o
+  CC      techpack/display/msm/sde/sde_core_perf.o
+  CC      techpack/display/msm/sde/sde_rm.o
+  CC      techpack/audio/dsp/usfcdev.o
+  CC      lib/zstd/zstd_common.o
+  CC      lib/zstd/huf_decompress.o
+  CC      techpack/display/msm/sde/sde_kms_utils.o
+  CC      techpack/audio/dsp/q6usm.o
+  CC      lib/zstd/decompress.o
+  CC      techpack/video/msm/vidc/msm_vdec.o
+  CC      techpack/display/msm/sde/sde_kms.o
+  CC      techpack/video/msm/vidc/msm_venc.o
+  CC      techpack/audio/dsp/adsp-loader.o
+../techpack/display/msm/sde/sde_kms.c: 在函数‘_sde_kms_secure_ctrl’中:
+../techpack/display/msm/sde/sde_kms.c:521:31: 警告： 语句不起作用 [-Wunused-value]
+  521 |    smmu_state->sui_misr_state == NONE;
+      |    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+../techpack/display/msm/sde/sde_kms.c: 在函数‘sde_kms_complete_commit’中:
+../techpack/display/msm/sde/sde_kms.c:1174:54: 警告： comparison of constant ‘0’ with boolean expression is always false [-Wbool-compare]
+ 1174 |  if (sde_kms_power_resource_is_enabled(sde_kms->dev) < 0) {
+      |                                                      ^
+  CC      techpack/audio/dsp/audio_pdr.o
+  CC      techpack/audio/dsp/audio_notifier.o
+  CC      techpack/display/msm/sde/sde_plane.o
+  CC      techpack/display/msm/sde/sde_connector.o
+  CC      techpack/audio/dsp/audio_ssr.o
+  CC      techpack/display/msm/sde/clone_cooling_device.o
+  CC      techpack/display/msm/sde/sde_color_processing.o
+  AR      techpack/audio/dsp/built-in.a
+make[2]: *** [../scripts/Makefile.build:642：techpack/audio] 错误 2
+make[2]: *** 正在等待未完成的任务....
+  HOSTCC  lib/gen_crc32table
+  CC      techpack/display/msm/sde/sde_vbif.o
+  GEN     lib/oid_registry_data.c
+  CC      lib/lockref.o
+  CC      lib/bcd.o
+  CC      techpack/video/msm/vidc/msm_cvp_internal.o
+  CC      techpack/video/msm/vidc/msm_smem.o
+  CC      techpack/display/msm/xiaomi_frame_stat.o
+  CC      techpack/video/msm/vidc/msm_vidc_debug.o
+  CC      techpack/display/msm/sde_io_util.o
+  CC      techpack/display/msm/sde/sde_hw_reg_dma_v1_color_proc.o
+  CC      techpack/display/msm/sde/sde_hw_color_proc_v4.o
+  CC      lib/div64.o
+  CC      techpack/video/msm/vidc/msm_vidc_res_parse.o
+  CC      lib/sort.o
+  CC      lib/parser.o
+  CC      lib/debug_locks.o
+  AR      lib/zstd/built-in.a
+  CC      lib/random32.o
+  CC      lib/bust_spinlocks.o
+  CC      lib/kasprintf.o
+  CC      techpack/display/msm/sde/sde_hw_ad4.o
+  CC      lib/bitmap.o
+  CC      lib/scatterlist.o
+  CC      techpack/display/msm/sde/sde_hw_uidle.o
+  CC      lib/gcd.o
+  CC      techpack/display/msm/sde_edid_parser.o
+  CC      lib/lcm.o
+  CC      lib/list_sort.o
+  CC      techpack/display/msm/sde_hdcp_1x.o
+  CC      lib/uuid.o
+  CC      lib/flex_array.o
+  CC      techpack/video/msm/vidc/hfi_common.o
+  CC      techpack/video/msm/vidc/hfi_ar50.o
+  CC      techpack/video/msm/vidc/hfi_ar50_lt.o
+  CC      lib/iov_iter.o
+  CC      lib/clz_ctz.o
+  CC      techpack/display/msm/sde_hdcp_2x.o
+  CC      techpack/display/msm/sde/sde_hw_catalog.o
+  CC      techpack/display/msm/sde/sde_hw_cdm.o
+  CC      techpack/video/msm/vidc/hfi_iris1.o
+  CC      techpack/display/msm/sde/sde_hw_dspp.o
+  CC      techpack/display/msm/sde/sde_hw_intf.o
+  CC      techpack/video/msm/vidc/hfi_iris2.o
+  CC      techpack/display/msm/sde/sde_hw_lm.o
+  CC      lib/bsearch.o
+  CC      techpack/display/msm/sde/sde_hw_ctl.o
+  CC      techpack/display/msm/sde/sde_hw_util.o
+  CC      techpack/display/msm/sde/sde_hw_sspp.o
+  CC      lib/find_bit.o
+  CC      lib/llist.o
+  CC      lib/memweight.o
+  CC      lib/kfifo.o
+  CC      techpack/display/msm/sde/sde_hw_wb.o
+  CC      lib/percpu-refcount.o
+  CC      techpack/display/msm/sde/sde_hw_pingpong.o
+  CC      techpack/display/msm/sde/sde_hw_top.o
+  CC      techpack/video/msm/vidc/hfi_response_handler.o
+  CC      techpack/display/msm/sde/sde_hw_interrupts.o
+  CC      lib/rhashtable.o
+  CC      techpack/video/msm/vidc/hfi_packetization.o
+  CC      techpack/display/msm/sde/sde_hw_vbif.o
+  CC      techpack/display/msm/sde/sde_hw_blk.o
+  CC      techpack/video/msm/vidc/vidc_hfi.o
+  CC      techpack/display/msm/sde/sde_formats.o
+  CC      techpack/video/msm/vidc/msm_vidc_clocks.o
+  CC      lib/reciprocal_div.o
+  CC      techpack/display/msm/sde_power_handle.o
+  CC      lib/once.o
+  CC      lib/refcount.o
+  CC      lib/usercopy.o
+  CC      techpack/display/msm/sde/sde_hw_color_processing_v1_7.o
+  CC      lib/errseq.o
+  CC      lib/bucket_locks.o
+  CC      techpack/video/msm/vidc/msm_vidc_bus_ar50lite.o
+  CC      lib/string_helpers.o
+  CC      techpack/video/msm/vidc/msm_vidc_bus_iris1.o
+  CC      techpack/display/msm/sde/sde_hw_reg_dma_v1.o
+  CC      techpack/display/msm/sde/sde_reg_dma.o
+  CC      lib/hexdump.o
+  CC      lib/kstrtox.o
+../techpack/video/msm/vidc/msm_vidc_bus_iris1.c: 在函数‘__calculate_encoder’中:
+../techpack/video/msm/vidc/msm_vidc_bus_iris1.c:513:15: 警告： comparison of constant ‘90’ with boolean expression is always false [-Wbool-compare]
+  513 |  if (rotation == 90 || rotation == 270)
+      |               ^~
+../techpack/video/msm/vidc/msm_vidc_bus_iris1.c:513:33: 警告： comparison of constant ‘270’ with boolean expression is always false [-Wbool-compare]
+  513 |  if (rotation == 90 || rotation == 270)
+      |                                 ^~
+  CC      techpack/video/msm/vidc/msm_vidc_bus_iris2.o
+  CC      techpack/video/msm/vidc/msm_vidc_buffer_calculations.o
+  CC      techpack/display/msm/sde/sde_hw_dsc.o
+  CC      lib/pci_iomap.o
+  CC      lib/iomap_copy.o
+  CC      lib/devres.o
+  CC      lib/logic_pio.o
+  CC      techpack/display/msm/sde/sde_hw_ds.o
+  CC      techpack/display/msm/sde/sde_fence.o
+  CC      lib/hweight.o
+  CC      lib/assoc_array.o
+  CC      lib/bitrev.o
+  CC      lib/rational.o
+  CC      techpack/display/msm/sde/sde_hw_qdss.o
+  CC      lib/crc-ccitt.o
+  CC      lib/crc16.o
+  CC      lib/libcrc32c.o
+  CC      techpack/display/msm/sde_dbg.o
+  CC      lib/crc8.o
+  CC      lib/xxhash.o
+  CC      lib/genalloc.o
+  CC      lib/textsearch.o
+  CC      lib/ts_kmp.o
+  CC      techpack/display/msm/sde_dbg_evtlog.o
+  CC      lib/ts_bm.o
+  CC      lib/ts_fsm.o
+  CC      lib/percpu_counter.o
+  CC      lib/syscall.o
+  CC      techpack/display/msm/sde/sde_hw_rc.o
+  CC      techpack/display/msm/sde/sde_wb.o
+  CC      lib/nlattr.o
+  CC      lib/checksum.o
+  CC      lib/cpu_rmap.o
+  CC      lib/dynamic_queue_limits.o
+  CC      lib/glob.o
+  CC      lib/strncpy_from_user.o
+  CC      lib/strnlen_user.o
+  CC      lib/net_utils.o
+  CC      techpack/display/msm/sde/sde_encoder_phys_wb.o
+  CC      lib/sg_pool.o
+  CC      techpack/display/msm/sde_rsc.o
+  CC      techpack/display/msm/sde_rsc_hw.o
+  CC      lib/asn1_decoder.o
+  CC      lib/oid_registry.o
+  CC      techpack/display/msm/sde_rsc_hw_v3.o
+  AR      techpack/video/msm/built-in.a
+  AR      techpack/video/built-in.a
+  CC      techpack/display/msm/sde/sde_expo_dim_layer.o
+  CC      lib/sbitmap.o
+  CC      lib/sha256.o
+  CC      techpack/display/msm/dsi/dsi_phy.o
+  CC      techpack/display/msm/dsi/dsi_pwr.o
+  CC      techpack/display/msm/dsi/dsi_phy_hw_v2_0.o
+  CC      techpack/display/msm/dsi/dsi_phy_hw_v3_0.o
+  CC      lib/argv_split.o
+  CC      techpack/display/msm/dsi/dsi_phy_hw_v4_0.o
+  CC      techpack/display/msm/dsi/dsi_phy_timing_calc.o
+  CC      lib/bug.o
+  CC      techpack/display/msm/dsi/dsi_phy_timing_v2_0.o
+  CC      lib/clz_tab.o
+  CC      techpack/display/msm/dsi/dsi_phy_timing_v3_0.o
+  CC      lib/cmdline.o
+  CC      lib/cpumask.o
+  CC      lib/ctype.o
+  CC      techpack/display/msm/dsi/dsi_phy_timing_v4_0.o
+  CC      lib/dec_and_lock.o
+  CC      lib/decompress.o
+  CC      lib/decompress_inflate.o
+  CC      techpack/display/msm/dsi/dsi_ctrl_hw_cmn.o
+  CC      lib/decompress_unlz4.o
+  CC      techpack/display/msm/dsi/dsi_ctrl_hw_1_4.o
+  CC      techpack/display/msm/dsi/dsi_ctrl_hw_2_0.o
+  CC      lib/dump_stack.o
+  CC      techpack/display/msm/dsi/dsi_ctrl_hw_2_2.o
+  CC      lib/earlycpio.o
+  CC      lib/extable.o
+  CC      lib/fdt.o
+  CC      lib/fdt_empty_tree.o
+  CC      lib/fdt_ro.o
+  CC      lib/fdt_rw.o
+  CC      techpack/display/msm/dsi/dsi_ctrl.o
+  CC      lib/fdt_strerror.o
+  CC      techpack/display/msm/dsi/dsi_catalog.o
+  CC      lib/fdt_sw.o
+  CC      techpack/display/msm/dsi/dsi_drm.o
+  CC      lib/fdt_wip.o
+  CC      lib/flex_proportions.o
+  CC      techpack/display/msm/dsi/dsi_display.o
+  CC      techpack/display/msm/dsi/dsi_panel.o
+  CC      lib/idr.o
+  CC      lib/int_sqrt.o
+  CC      lib/ioremap.o
+  CC      lib/irq_regs.o
+  CC      techpack/display/msm/dsi/dsi_clk_manager.o
+  CC      lib/is_single_threaded.o
+  CC      techpack/display/msm/dsi/dsi_display_test.o
+  CC      lib/klist.o
+  CC      lib/kobject.o
+  CC      techpack/display/msm/dsi/dsi_display_mi.o
+../techpack/display/msm/dsi/dsi_panel.c: 在函数‘dsi_panel_get_fod_dim_alpha’中:
+../techpack/display/msm/dsi/dsi_panel.c:840:14: 错误： ‘-mgeneral-regs-only’ is incompatible with the use of floating-point types
+  840 |  return base - 0.0125*base;
+      |         ~~~~~^~~~~~~~~~~~~
+../techpack/display/msm/dsi/dsi_panel.c:840:14: 错误： ‘-mgeneral-regs-only’ is incompatible with the use of floating-point types
+../techpack/display/msm/dsi/dsi_panel.c:840:14: 错误： ‘-mgeneral-regs-only’ is incompatible with the use of floating-point types
+../techpack/display/msm/dsi/dsi_panel.c:840:14: 错误： ‘-mgeneral-regs-only’ is incompatible with the use of floating-point types
+../techpack/display/msm/dsi/dsi_panel.c:840：不能从先前的错误中恢复，退出
+make[4]: *** [../scripts/Makefile.build:338：techpack/display/msm/dsi/dsi_panel.o] 错误 1
+make[4]: *** 正在等待未完成的任务....
+  CC      lib/kobject_uevent.o
+  CC      lib/nmi_backtrace.o
+  CC      lib/nodemask.o
+  CC      lib/plist.o
+  CC      lib/radix-tree.o
+  CC      lib/ratelimit.o
+  CC      lib/rbtree.o
+  CC      lib/seq_buf.o
+  CC      lib/sha1.o
+  CC      lib/show_mem.o
+../lib/kobject_uevent.c: 在函数‘kobject_uevent_env’中:
+../lib/kobject_uevent.c:750:1: 警告： the frame size of 4688 bytes is larger than 4096 bytes [-Wframe-larger-than=]
+  750 | }
+      | ^
+  CC      lib/siphash.o
+  CC      lib/string.o
+  CC      lib/timerqueue.o
+  CC      lib/vsprintf.o
+  CC      lib/win_minmax.o
+  GEN     lib/crc32table.h
+  CC      lib/crc32.o
+make[3]: *** [../scripts/Makefile.build:642：techpack/display/msm] 错误 2
+make[2]: *** [../scripts/Makefile.build:642：techpack/display] 错误 2
+make[1]: *** [/home/liu/kernel/Makefile:1256：techpack] 错误 2
+  AR      lib/lib.a
+  EXPORTS lib/lib-ksyms.o
+  AR      lib/built-in.a
+make[1]: 离开目录“/home/liu/kernel/out”
+make: *** [Makefile:153：sub-make] 错误 2
+[ERROR] 命令失败: make -j$(nproc) O=out (在行号: 1490)
+[WARNING] 尝试继续执行...
