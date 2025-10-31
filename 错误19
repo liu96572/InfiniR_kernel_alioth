@@ -1,0 +1,36 @@
+iu@liu-virtual-machine:~/kernel$ # 在内核根目录执行
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ # 检查内核镜像
+liu@liu-virtual-machine:~/kernel$ ls -lh out/arch/arm64/boot/Image.gz
+ls: 无法访问 'out/arch/arm64/boot/Image.gz': 没有那个文件或目录
+[ERROR] 命令失败: ls --color=auto -lh out/arch/arm64/boot/Image.gz (在行号: 2743)
+[WARNING] 尝试继续执行...
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ # 检查设备树文件
+liu@liu-virtual-machine:~/kernel$ ls -lh out/arch/arm64/boot/dts/qcom/*.dtb | head -5
+ls: 无法访问 'out/arch/arm64/boot/dts/qcom/*.dtb': 没有那个文件或目录
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ # 检查生成的所有模块
+liu@liu-virtual-machine:~/kernel$ find out -name "*.ko" | wc -l
+0
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ # 检查我们的新模块
+liu@liu-virtual-machine:~/kernel$ find out -name "*tombstone*" -o -name "*ai_engine*" -o -name "*app_compat*"
+out/include/config/tombstone
+out/include/config/tombstone.h
+out/security/app_compat
+out/kernel/ai_engine.o
+out/kernel/.ai_engine.o.cmd
+out/kernel/.tombstone.o.d
+out/kernel/.ai_engine.o.d
+liu@liu-virtual-machine:~/kernel$ # 验证所有需要的功能都已启用
+liu@liu-virtual-machine:~/kernel$ echo "=== 功能配置状态 ==="
+=== 功能配置状态 ===
+liu@liu-virtual-machine:~/kernel$ grep -E "CONFIG_TOMBSTONE|CONFIG_AI_ENGINE|CONFIG_APP_COMPAT_LAYER|CONFIG_ZSTD|CONFIG_ZSWAP|CONFIG_PSI" out/.config
+# CONFIG_PSI is not set
+CONFIG_TOMBSTONE=y
+CONFIG_TOMBSTONE_SMART_ENGINE=y
+CONFIG_AI_ENGINE=y
+CONFIG_APP_COMPAT_LAYER=y
+CONFIG_ZSTD_COMPRESS=y
+CONFIG_ZSTD_DECOMPRESS=y
