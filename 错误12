@@ -1,0 +1,1858 @@
+liu@liu-virtual-machine:~/kernel$ # 在内核根目录执行
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ # 检查具体的Kconfig错误
+liu@liu-virtual-machine:~/kernel$ grep -r "depends on" techpack/audio/Kconfig
+grep: techpack/audio/Kconfig: 没有那个文件或目录
+[ERROR] 命令失败: grep --color=auto -r "depends on" techpack/audio/Kconfig (在行号: 1855)
+[WARNING] 尝试继续执行...
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ # 修复缺失的依赖符号
+liu@liu-virtual-machine:~/kernel$ ./scripts/config --file out/.config \
+>     -e CONFIG_SND_SOC \
+>     -e CONFIG_SND_SOC_MSM_QDSP6V2_CODECS \
+>     -e CONFIG_MSM_QDSP6V2_CODECS \
+>     -e CONFIG_SND_SOC_QDSP6V2
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ # 或者直接禁用整个techpack/audio
+liu@liu-virtual-machine:~/kernel$ ./scripts/config --file out/.config -d CONFIG_SND_SOC_BOLERO
+liu@liu-virtual-machine:~/kernel$ cat > fix_kconfig.sh << 'EOF'
+> #!/bin/bash
+> echo "修复Kconfig依赖问题..."
+> 
+> # 方法1: 启用所有音频相关配置
+> echo "启用音频驱动依赖..."
+> ./scripts/config --file out/.config \
+>     -e CONFIG_SND_SOC \
+>     -e CONFIG_SND_SOC_MSM_QDSP6V2_CODECS \
+>     -e CONFIG_MSM_QDSP6V2_CODECS \
+>     -e CONFIG_SND_SOC_QDSP6V2 \
+>     -e CONFIG_SND_SOC_WCD9XXX_V2 \
+>     -e CONFIG_SOUNDWIRE
+> 
+> # 方法2: 如果方法1失败，完全禁用音频驱动
+> if [ $? -ne 0 ]; then
+>     echo "启用依赖失败，禁用音频驱动..."
+>     ./scripts/config --file out/.config \
+>         -d CONFIG_SND_SOC_BOLERO \
+>         -d CONFIG_SND_SOC_MSM_QDSP6V2_CODECS \
+>         -d CONFIG_SND_SOC_QDSP6V2
+> fi
+> 
+> echo "Kconfig修复完成"
+> EOF
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ chmod +x fix_kconfig.sh
+liu@liu-virtual-machine:~/kernel$ ./fix_kconfig.sh
+修复Kconfig依赖问题...
+启用音频驱动依赖...
+Kconfig修复完成
+liu@liu-virtual-machine:~/kernel$ # 强制同步配置（忽略依赖错误）
+liu@liu-virtual-machine:~/kernel$ make O=out olddefconfig 2>/dev/null || true
+make[1]: 进入目录“/home/liu/kernel/out”
+  GEN     ./Makefile
+scripts/kconfig/conf  --olddefconfig Kconfig
+#
+# configuration written to .config
+#
+make[1]: 离开目录“/home/liu/kernel/out”
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ # 或者手动编辑.config文件
+liu@liu-virtual-machine:~/kernel$ sed -i 's/CONFIG_SND_SOC_BOLERO=y/CONFIG_SND_SOC_BOLERO=n/g' out/.config
+liu@liu-virtual-machine:~/kernel$ sed -i 's/CONFIG_SND_SOC_MSM_QDSP6V2_CODECS=y/CONFIG_SND_SOC_MSM_QDSP6V2_CODECS=n/g' out/.config
+liu@liu-virtual-machine:~/kernel$ # 设置最终的编译标志
+liu@liu-virtual-machine:~/kernel$ export KCFLAGS="-Wno-error -Wno-format -Wno-unused-variable -Wno-implicit-function-declaration -Wno-attribute-alias -Wno-maybe-uninitialized -Wno-unused-function -Wno-declaration-after-statement"
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ # 最终编译尝试
+liu@liu-virtual-machine:~/kernel$ make -j$(nproc) O=out
+make[1]: 进入目录“/home/liu/kernel/out”
+  GEN     ./Makefile
+scripts/kconfig/conf  --syncconfig Kconfig
+  GEN     ./Makefile
+  Using .. as source for kernel
+  CC      scripts/mod/empty.o
+  CC      scripts/mod/devicetable-offsets.s
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona.dtb
+  MKELF   scripts/mod/elfconfig.h
+  HOSTCC  scripts/mod/sumversion.o
+  CC      kernel/bounds.s
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.1.dtb
+  CC      arch/arm64/kernel/asm-offsets.s
+  HOSTCC  scripts/mod/modpost.o
+  HOSTCC  scripts/mod/file2alias.o
+  CALL    ../scripts/checksyscalls.sh
+  CC      arch/arm64/kernel/vdso/vgettimeofday.o
+  LD      arch/arm64/kernel/vdso/vdso.so.dbg
+  VDSOSYM include/generated/vdso-offsets.h
+  HOSTLD  scripts/mod/modpost
+  CC      init/main.o
+  CHK     include/generated/compile.h
+  CC      init/do_mounts.o
+  CC      init/do_mounts_rd.o
+  CC      arch/arm64/mm/dma-mapping.o
+  CC      arch/arm64/kernel/debug-monitors.o
+  CC      init/do_mounts_initrd.o
+  CC      arch/arm64/mm/extable.o
+  CC      arch/arm64/kernel/irq.o
+  CC      arch/arm64/kernel/fpsimd.o
+  CC      init/do_mounts_dm.o
+  CC      arch/arm64/mm/fault.o
+  CC      init/noinitramfs.o
+  CC      arch/arm64/mm/init.o
+  CC      init/initramfs.o
+  CC      arch/arm64/net/bpf_jit_comp.o
+  DTC     arch/arm64/boot/dts/vendor/qcom/alioth-sm8250-overlay.dtbo
+  CC      init/calibrate.o
+  CC      init/init_task.o
+  CC      init/version.o
+  CC      arch/arm64/kernel/process.o
+  CC      arch/arm64/mm/copypage.o
+  CC      arch/arm64/kernel/ptrace.o
+  CC      arch/arm64/kernel/setup.o
+  CC      arch/arm64/mm/flush.o
+  AR      init/built-in.a
+  CC      arch/arm64/mm/ioremap.o
+  CC      arch/arm64/mm/mmap.o
+  AR      arch/arm64/net/built-in.a
+  CC      arch/arm64/kernel/signal.o
+  CC      arch/arm64/crypto/sha1-ce-glue.o
+  CC      arch/arm64/kernel/sys.o
+  CC      arch/arm64/kernel/stacktrace.o
+  CC      arch/arm64/mm/pgd.o
+  CC      certs/system_keyring.o
+  CC      kernel/fork.o
+  CC      arch/arm64/mm/mmu.o
+  CC      arch/arm64/mm/context.o
+  CC      arch/arm64/crypto/sha2-ce-glue.o
+  CC      mm/filemap.o
+  CC      kernel/exec_domain.o
+  AR      certs/built-in.a
+  CC      arch/arm64/kernel/time.o
+  CC      arch/arm64/kernel/traps.o
+  CC      fs/open.o
+  CC      kernel/panic.o
+  CC      arch/arm64/crypto/sha512-ce-glue.o
+  CC      arch/arm64/mm/pageattr.o
+  CC      arch/arm64/kernel/io.o
+  CC      arch/arm64/crypto/ghash-ce-glue.o
+  CC      arch/arm64/kernel/vdso.o
+  CC      arch/arm64/kernel/psci.o
+  CC      security/keys/gc.o
+  AR      arch/arm64/mm/built-in.a
+  CC      arch/arm64/kernel/cpu_ops.o
+  CC      arch/arm64/crypto/aes-ce-glue.o
+  CC      arch/arm64/kernel/insn.o
+  CC      fs/read_write.o
+  CC      kernel/cpu.o
+  CC      security/keys/key.o
+  CC      security/selinux/avc.o
+  CC      crypto/api.o
+  CC      arch/arm64/crypto/aes-ce-ccm-glue.o
+  CC      mm/mempool.o
+  CC      arch/arm64/kernel/module.o
+  CC      arch/arm64/crypto/aes-glue-ce.o
+  CC      crypto/cipher.o
+  CC      security/keys/keyring.o
+  CC      security/selinux/hooks.o
+  CC      arch/arm64/kernel/return_address.o
+  CC      crypto/compress.o
+  CC      mm/oom_kill.o
+  CC      arch/arm64/crypto/aes-glue-neon.o
+  CC      fs/file_table.o
+  CC      arch/arm64/kernel/cpuinfo.o
+  CC      kernel/exit.o
+  CC      crypto/memneq.o
+  CC      security/keys/keyctl.o
+  CC      arch/arm64/kernel/cpu_errata.o
+  CC      arch/arm64/crypto/sha256-glue.o
+  CC      fs/super.o
+  CC      crypto/crypto_wq.o
+  CC      mm/fadvise.o
+  CC      security/keys/permission.o
+  CC      arch/arm64/kernel/cpufeature.o
+  CC      arch/arm64/crypto/sha512-glue.o
+  CC      crypto/algapi.o
+  CC      security/keys/process_keys.o
+  CC      mm/maccess.o
+  CC      kernel/softirq.o
+  CC      arch/arm64/crypto/chacha-neon-glue.o
+  CC      fs/char_dev.o
+  CC      arch/arm64/kernel/alternative.o
+  CC      security/selinux/selinuxfs.o
+  CC      mm/page_alloc.o
+  CC      security/keys/request_key.o
+  CC      arch/arm64/kernel/cacheinfo.o
+  CC      arch/arm64/crypto/poly1305-glue.o
+  CC      crypto/scatterwalk.o
+  CC      arch/arm64/kernel/smp.o
+  CC      kernel/resource.o
+  CC      fs/stat.o
+  CC      security/keys/request_key_auth.o
+  CC      arch/arm64/crypto/aes-cipher-glue.o
+  CC      security/selinux/netlink.o
+  CC      crypto/proc.o
+  CC      security/keys/user_defined.o
+  CC      arch/arm64/kernel/smp_spin_table.o
+  AR      arch/arm64/crypto/built-in.a
+  CC      security/selinux/nlmsgtab.o
+  CC      fs/exec.o
+  CC      fs/pipe.o
+  CC      crypto/aead.o
+  CC      kernel/sysctl.o
+  CC      security/keys/compat.o
+  CC      arch/arm64/kernel/topology.o
+  CC      security/selinux/netif.o
+  CC      security/keys/proc.o
+  CC      arch/arm64/kernel/syscall.o
+  CC      security/keys/sysctl.o
+  CC      crypto/ablkcipher.o
+  CC      arch/arm64/kernel/sys32.o
+  CC      fs/namei.o
+  CC      security/selinux/netnode.o
+  CC      mm/page-writeback.o
+  AR      security/keys/built-in.a
+  CC      mm/readahead.o
+  CC      arch/arm64/kernel/signal32.o
+  CC      arch/arm64/kernel/sys_compat.o
+  CC      kernel/sysctl_binary.o
+  CC      security/selinux/netport.o
+  CC      crypto/blkcipher.o
+  CC      security/selinux/exports.o
+  CC      kernel/capability.o
+  CC      crypto/skcipher.o
+  CC      arch/arm64/kernel/arm64ksyms.o
+  CC      arch/arm64/kernel/module-plts.o
+  CC      security/selinux/ss/ebitmap.o
+  CC      arch/arm64/kernel/perf_regs.o
+  CC      arch/arm64/kernel/perf_callchain.o
+  CC      mm/swap.o
+  CC      kernel/ptrace.o
+  CC      kernel/user.o
+  CC      mm/truncate.o
+  CC      security/selinux/ss/hashtab.o
+  CC      arch/arm64/kernel/perf_event.o
+  CC      crypto/seqiv.o
+  CC      security/selinux/ss/symtab.o
+  CC      mm/vmscan.o
+  CC      security/selinux/ss/sidtab.o
+  CC      fs/fcntl.o
+  CC      crypto/echainiv.o
+  CC      arch/arm64/kernel/perf_trace_counters.o
+  CC      arch/arm64/kernel/perf_trace_user.o
+  CC      kernel/signal.o
+  CC      crypto/ahash.o
+  CC      arch/arm64/kernel/hw_breakpoint.o
+  CC      security/selinux/ss/avtab.o
+  CC      security/selinux/ss/policydb.o
+  CC      block/bio.o
+  CC      fs/ioctl.o
+  CC      arch/arm64/kernel/suspend.o
+  CC      fs/readdir.o
+  CC      crypto/shash.o
+  CC      arch/arm64/kernel/cpuidle.o
+  CC      fs/select.o
+  CC      arch/arm64/kernel/jump_label.o
+  CC      arch/arm64/kernel/pci.o
+  CC      block/elevator.o
+  CC      crypto/akcipher.o
+  CC      mm/shmem.o
+  CC      security/selinux/ss/services.o
+  CC      crypto/kpp.o
+  CC      arch/arm64/kernel/armv8_deprecated.o
+  CC      crypto/rsapubkey.asn1.o
+  CC      crypto/rsaprivkey.asn1.o
+  CC      crypto/rsa.o
+  CC      arch/arm64/kernel/kaslr.o
+  CC      kernel/sys.o
+  CC      kernel/umh.o
+  CC      arch/arm64/kernel/ssbd.o
+  CC      fs/dcache.o
+  CC      crypto/rsa_helper.o
+  CC      block/blk-core.o
+  CC      arch/arm64/kernel/probes/uprobes.o
+  CC      crypto/rsa-pkcs1pad.o
+  CC      crypto/acompress.o
+  CC      arch/arm64/kernel/probes/decode-insn.o
+  CC      security/selinux/ss/conditional.o
+  CC      security/selinux/ss/mls.o
+  CC      arch/arm64/kernel/probes/simulate-insn.o
+  CC      mm/util.o
+  AR      arch/arm64/kernel/probes/built-in.a
+  OBJCOPY arch/arm64/kernel/vdso/vdso.so
+  AS      arch/arm64/kernel/vdso/vdso.o
+  CC      crypto/scompress.o
+  AR      arch/arm64/kernel/vdso/built-in.a
+  AR      arch/arm64/kernel/built-in.a
+  CC      crypto/algboss.o
+  CC      crypto/testmgr.o
+  CC      kernel/workqueue.o
+  CC      security/selinux/ss/status.o
+  CC      mm/mmzone.o
+  CC      fs/inode.o
+  CC      crypto/cmac.o
+  CC      crypto/hmac.o
+  CC      crypto/xcbc.o
+  AR      security/selinux/built-in.a
+  CC      security/commoncap.o
+  CC      mm/vmstat.o
+  CC      security/min_addr.o
+  CC      drivers/amba/bus.o
+  CC      crypto/crypto_null.o
+  CC      crypto/md5.o
+  CC      security/security.o
+  CC      block/blk-tag.o
+  AR      drivers/amba/built-in.a
+  CC      block/blk-sysfs.o
+  CC      drivers/android/binderfs.o
+  CC      mm/backing-dev.o
+  CC      fs/attr.o
+  CC      crypto/sha1_generic.o
+  CC      crypto/sha256_generic.o
+  CC      drivers/android/binder.o
+  CC      kernel/pid.o
+  CC      fs/bad_inode.o
+  CC      block/blk-flush.o
+  CC      mm/mm_init.o
+  CC      drivers/base/component.o
+  CC      crypto/sha512_generic.o
+  CC      fs/file.o
+  AR      security/built-in.a
+  CC      kernel/task_work.o
+  CC      crypto/blake2b_generic.o
+  CC      mm/mmu_context.o
+  CC      drivers/base/core.o
+  CC      block/blk-settings.o
+  CC      kernel/extable.o
+  CC      drivers/base/bus.o
+  CC      mm/percpu.o
+  CC      kernel/params.o
+  CC      fs/filesystems.o
+  CC      crypto/gf128mul.o
+  CC      block/blk-ioc.o
+  CC      crypto/ecb.o
+  CC      mm/slab_common.o
+  CC      fs/namespace.o
+  CC      kernel/kthread.o
+  CC      crypto/cbc.o
+  CC      drivers/base/dd.o
+  CC      drivers/android/binder_alloc.o
+  CC      block/blk-map.o
+  CC      crypto/cts.o
+  CC      block/blk-exec.o
+  CC      drivers/base/syscore.o
+  CC      crypto/xts.o
+  CC      block/blk-merge.o
+  CC      kernel/sys_ni.o
+  CC      drivers/android/hwui_mon.o
+  CC      drivers/android/jank_detect_demo.o
+  CC      kernel/nsproxy.o
+  CC      mm/compaction.o
+  CC      block/blk-softirq.o
+  CC      drivers/android/simple_lmk.o
+  CC      crypto/ctr.o
+  CC      fs/seq_file.o
+  CC      kernel/notifier.o
+  CC      drivers/base/driver.o
+  AR      drivers/android/built-in.a
+  CC      kernel/ksysfs.o
+  CC      crypto/gcm.o
+  CC      kernel/cred.o
+  CC      drivers/base/class.o
+  CC      block/blk-timeout.o
+  CC      fs/xattr.o
+  CC      drivers/base/platform.o
+  CC      drivers/base/cpu.o
+  CC      crypto/ccm.o
+  CC      kernel/reboot.o
+  CC      block/blk-lib.o
+  CC      kernel/async.o
+  CC      kernel/range.o
+  CC      crypto/chacha20poly1305.o
+  CC      crypto/cryptd.o
+  CC      mm/vmacache.o
+  CC      kernel/smpboot.o
+  CC      drivers/base/firmware.o
+  CC      fs/libfs.o
+  CC      fs/fs-writeback.o
+  CC      block/blk-mq.o
+  CC      mm/interval_tree.o
+  CC      drivers/base/init.o
+  CC      kernel/ucount.o
+  CC      drivers/base/map.o
+  CC      mm/list_lru.o
+  CC      kernel/kmod.o
+  CC      mm/workingset.o
+  CC      drivers/base/devres.o
+  CC      crypto/des_generic.o
+  CC      block/blk-mq-tag.o
+  CC      fs/pnode.o
+  CC      mm/debug.o
+  CC      drivers/base/attribute_container.o
+  CC      kernel/groups.o
+  CC      drivers/base/transport_class.o
+  CC      crypto/twofish_generic.o
+  CC      block/blk-stat.o
+  CC      mm/gup.o
+  CC      drivers/base/topology.o
+  CC      crypto/twofish_common.o
+  CC      kernel/bpf/core.o
+  CC      kernel/bpf/syscall.o
+  CC      block/blk-mq-sysfs.o
+  CC      fs/splice.o
+  CC      drivers/base/container.o
+  CC      drivers/base/property.o
+  CC      fs/sync.o
+  CC      crypto/aes_generic.o
+  CC      mm/highmem.o
+  CC      block/blk-mq-cpumap.o
+  CC      mm/memory.o
+  CC      block/blk-mq-sched.o
+  CC      fs/utimes.o
+  CC      crypto/chacha_generic.o
+  CC      kernel/bpf/verifier.o
+  CC      block/ioctl.o
+  CC      drivers/base/cacheinfo.o
+  CC      fs/d_path.o
+  CC      crypto/poly1305_generic.o
+  CC      drivers/base/devcon.o
+  CC      kernel/bpf/inode.o
+  CC      crypto/deflate.o
+  CC      block/genhd.o
+  CC      drivers/base/firmware_loader/fallback_table.o
+  CC      drivers/base/power/sysfs.o
+  CC      crypto/crc32c_generic.o
+  CC      fs/stack.o
+  CC      drivers/base/firmware_loader/main.o
+  CC      crypto/crc32_generic.o
+  CC      fs/fs_struct.o
+  CC      mm/mincore.o
+  CC      drivers/base/power/generic_ops.o
+  CC      sound/sound_core.o
+  CC      crypto/authenc.o
+  CC      block/partition-generic.o
+  CC      drivers/base/power/common.o
+  CC      mm/mlock.o
+  CC      drivers/base/firmware_loader/fallback.o
+  CC      sound/core/sound.o
+  CC      fs/statfs.o
+  CC      drivers/base/power/qos.o
+  AR      drivers/base/firmware_loader/built-in.a
+  CC      drivers/base/power/runtime.o
+  CC      crypto/authencesn.o
+  CC      sound/core/init.o
+  CC      fs/fs_pin.o
+  CC      block/ioprio.o
+  CC      kernel/bpf/helpers.o
+  CC      mm/mmap.o
+  CC      fs/nsfs.o
+  CC      crypto/lz4.o
+  CC      sound/core/memory.o
+  CC      kernel/bpf/tnum.o
+  CC      sound/core/control.o
+  CC      crypto/rng.o
+  CC      drivers/base/power/wakeirq.o
+  CC      fs/buffer.o
+  CC      kernel/bpf/hashtab.o
+  CC      block/badblocks.o
+  CC      drivers/base/power/main.o
+  CC      fs/block_dev.o
+  CC      crypto/ansi_cprng.o
+  CC      block/partitions/check.o
+  CC      block/partitions/msdos.o
+  CC      crypto/drbg.o
+  CC      mm/mmu_gather.o
+  CC      kernel/bpf/arraymap.o
+  CC      sound/core/misc.o
+  CC      mm/mprotect.o
+  CC      block/partitions/efi.o
+  CC      drivers/base/power/wakeup.o
+  CC      sound/core/device.o
+  CC      kernel/bpf/percpu_freelist.o
+  CC      crypto/jitterentropy.o
+  CC      crypto/jitterentropy-kcapi.o
+  CC      mm/mremap.o
+  CC      kernel/bpf/bpf_lru_list.o
+  CC      kernel/bpf/lpm_trie.o
+  CC      fs/direct-io.o
+  AR      block/partitions/built-in.a
+  CC      block/blk-rq-qos.o
+  CC      sound/core/info.o
+  CC      block/scsi_ioctl.o
+  CC      crypto/ghash-generic.o
+  CC      mm/msync.o
+  CC      crypto/ecc.o
+  CC      kernel/bpf/map_in_map.o
+  CC      drivers/base/power/wakeup_stats.o
+  CC      kernel/bpf/local_storage.o
+  CC      mm/page_vma_mapped.o
+  CC      sound/core/ctljack.o
+  CC      sound/core/jack.o
+  CC      drivers/base/power/domain.o
+  CC      drivers/base/power/domain_governor.o
+  CC      block/bsg.o
+  CC      crypto/ecdh.o
+  CC      sound/core/hwdep.o
+  CC      mm/pagewalk.o
+  CC      kernel/bpf/disasm.o
+  CC      kernel/bpf/btf.o
+  CC      sound/core/timer.o
+  CC      crypto/ecdh_helper.o
+  CC      fs/mpage.o
+  CC      mm/pgtable-generic.o
+  CC      block/blk-cgroup.o
+  CC      crypto/xor.o
+  CC      fs/proc_namespace.o
+  CC      mm/rmap.o
+  CC      drivers/base/power/clock_ops.o
+  CC      sound/core/pcm.o
+  CC      kernel/bpf/devmap.o
+  CC      crypto/asymmetric_keys/asymmetric_type.o
+  AR      drivers/base/power/built-in.a
+  CC      drivers/base/regmap/regmap.o
+  CC      fs/configfs/inode.o
+  CC      drivers/base/regmap/regcache.o
+  CC      crypto/asymmetric_keys/restrict.o
+  CC      kernel/bpf/cpumap.o
+  CC      mm/vmalloc.o
+  CC      block/anxiety-iosched.o
+  CC      sound/core/pcm_native.o
+  CC      fs/configfs/file.o
+  CC      crypto/asymmetric_keys/signature.o
+  CC      block/deadline-iosched.o
+  CC      fs/configfs/dir.o
+  CC      crypto/asymmetric_keys/public_key.o
+  CC      block/cfq-iosched.o
+  CC      kernel/bpf/offload.o
+  CC      crypto/asymmetric_keys/x509.asn1.o
+  CC      crypto/asymmetric_keys/x509_akid.asn1.o
+  CC      crypto/asymmetric_keys/x509_cert_parser.o
+  CC      sound/soc/soc-core.o
+  CC      crypto/asymmetric_keys/x509_public_key.o
+  CC      fs/configfs/symlink.o
+  CC      drivers/base/regmap/regcache-rbtree.o
+  CC      crypto/asymmetric_keys/pkcs7.asn1.o
+  CC      crypto/asymmetric_keys/pkcs7_parser.o
+  CC      kernel/bpf/stackmap.o
+  CC      fs/configfs/mount.o
+  CC      drivers/base/regmap/regcache-flat.o
+  CC      mm/mm_event.o
+  CC      drivers/base/regmap/regmap-i2c.o
+  CC      fs/configfs/item.o
+  CC      block/fiops-iosched.o
+  CC      crypto/asymmetric_keys/pkcs7_trust.o
+  CC      sound/core/pcm_lib.o
+  CC      kernel/bpf/cgroup.o
+  AR      fs/configfs/built-in.a
+  CC      crypto/asymmetric_keys/pkcs7_verify.o
+  CC      fs/crypto/crypto.o
+  CC      drivers/base/regmap/regmap-spi.o
+  CC      block/sio-iosched.o
+  CC      mm/process_vm_access.o
+  AR      crypto/asymmetric_keys/built-in.a
+  CC      crypto/hash_info.o
+  CC      crypto/simd.o
+  CC      block/zen-iosched.o
+  CC      drivers/base/regmap/regmap-spmi.o
+  CC      sound/soc/soc-dapm.o
+  CC      mm/showmem.o
+  CC      fs/crypto/fname.o
+  CC      mm/vmpressure.o
+  CC      block/compat_ioctl.o
+  CC      drivers/base/regmap/regmap-mmio.o
+  CC      kernel/bpf/reuseport_array.o
+  CC      sound/core/pcm_misc.o
+  AR      crypto/built-in.a
+  CC      block/blk-mq-pci.o
+  CC      mm/init-mm.o
+  CC      fs/crypto/hkdf.o
+  CC      mm/nobootmem.o
+  CC      drivers/base/regmap/regmap-irq.o
+  CC      sound/soc/soc-jack.o
+  AR      kernel/bpf/built-in.a
+  CC      kernel/cgroup/cgroup.o
+  CC      fs/crypto/hooks.o
+  CC      sound/core/pcm_memory.o
+  CC      block/blk-wbt.o
+  CC      mm/madvise.o
+  CC      sound/core/memalloc.o
+  CC      fs/crypto/keyring.o
+  AR      drivers/base/regmap/built-in.a
+  CC      drivers/base/module.o
+  CC      mm/memblock.o
+  CC      sound/soc/soc-utils.o
+  CC      drivers/base/soc.o
+  CC      sound/soc/soc-pcm.o
+  CC      sound/core/pcm_timer.o
+  CC      block/blk-pm.o
+  CC      drivers/base/pinctrl.o
+  CC      fs/crypto/keysetup.o
+  CC      block/keyslot-manager.o
+  CC      sound/core/pcm_drm_eld.o
+  CC      drivers/base/platform-msi.o
+  CC      mm/page_io.o
+  CC      mm/swap_state.o
+  CC      fs/crypto/keysetup_v1.o
+  CC      sound/core/pcm_iec958.o
+  CC      drivers/base/arch_topology.o
+  CC      fs/crypto/policy.o
+  CC      block/bio-crypt-ctx.o
+../fs/crypto/policy.c: 在函数‘fscrypt_update_context’中:
+../fs/crypto/policy.c:653:3: 警告： this ‘if’ clause does not guard... [-Wmisleading-indentation]
+  653 |   if (!strcmp(boot, SDHCI))
+      |   ^~
+../fs/crypto/policy.c:655:4: 附注： ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+  655 |    return 0;
+      |    ^~~~~~
+  CC      block/blk-crypto.o
+  AR      drivers/base/built-in.a
+  CC      mm/swapfile.o
+  CC      sound/core/rawmidi.o
+  CC      drivers/block/brd.o
+  CC      sound/soc/soc-io.o
+  CC      sound/soc/soc-devres.o
+  CC      fs/crypto/bio.o
+  CC      drivers/block/loop.o
+  CC      block/blk-crypto-fallback.o
+  CC      kernel/cgroup/rstat.o
+  CC      drivers/block/zram/zcomp.o
+  CC      sound/soc/soc-ops.o
+  CC      fs/crypto/inline_crypt.o
+  CC      drivers/block/zram/zram_drv.o
+  AR      block/built-in.a
+  CC      sound/soc/soc-compress.o
+  CC      kernel/cgroup/namespace.o
+  CC      sound/core/compress_offload.o
+  CC      kernel/cgroup/cgroup-v1.o
+  AR      fs/crypto/built-in.a
+  CC      fs/devpts/inode.o
+  CC      fs/ecryptfs/dentry.o
+  CC      mm/swap_slots.o
+  CC      fs/erofs/super.o
+  CC      drivers/block/zram/zram_dedup.o
+  CC      sound/soc/codecs/hdmi-codec.o
+  AR      sound/core/built-in.a
+  CC      fs/ecryptfs/file.o
+  AR      fs/devpts/built-in.a
+  CC      fs/exfat/inode.o
+  CC      fs/erofs/inode.o
+  CC      mm/swap_ratio.o
+  AR      drivers/block/zram/built-in.a
+  AR      drivers/block/built-in.a
+  CC      drivers/bluetooth/bluetooth-power.o
+  AR      sound/soc/codecs/built-in.a
+  CC      fs/ecryptfs/inode.o
+  CC      kernel/cgroup/freezer.o
+  CC      mm/dmapool.o
+  CC      fs/exfat/namei.o
+  CC      kernel/cgroup/legacy_freezer.o
+  CC      fs/erofs/data.o
+  AR      sound/soc/built-in.a
+  CC      drivers/bluetooth/btfm_slim.o
+  CC      sound/usb/card.o
+  CC      sound/usb/clock.o
+  CC      kernel/cgroup/cpuset.o
+  CC      fs/ecryptfs/main.o
+  CC      fs/erofs/namei.o
+  CC      mm/sparse.o
+  CC      fs/exfat/dir.o
+  CC      drivers/bluetooth/btfm_slim_codec.o
+  CC      drivers/bluetooth/btfm_slim_slave.o
+  CC      fs/erofs/dir.o
+  CC      sound/usb/endpoint.o
+  CC      fs/ecryptfs/super.o
+  CC      fs/ecryptfs/mmap.o
+  AR      drivers/bluetooth/built-in.a
+  CC      drivers/bus/qcom-ebi2.o
+  CC      mm/sparse-vmemmap.o
+  CC      fs/erofs/utils.o
+  CC      fs/exfat/super.o
+  CC      sound/usb/format.o
+  CC      drivers/bus/mhi/controllers/mhi_qcom.o
+  CC      drivers/bus/mhi/controllers/mhi_arch_qcom.o
+  CC      mm/slub.o
+  CC      fs/ecryptfs/read_write.o
+  CC      fs/erofs/pcpubuf.o
+  AR      kernel/cgroup/built-in.a
+  CC      kernel/dma/mapping.o
+  CC      sound/usb/helper.o
+  CC      fs/exfat/fatent.o
+  CC      sound/usb/mixer.o
+  CC      fs/ecryptfs/crypto.o
+  CC      fs/erofs/xattr.o
+  AR      drivers/bus/mhi/controllers/built-in.a
+  CC      drivers/bus/mhi/core/mhi_init.o
+  CC      kernel/dma/contiguous.o
+  CC      fs/exfat/cache.o
+  CC      drivers/bus/mhi/core/mhi_main.o
+In file included from ../drivers/bus/mhi/core/mhi_init.c:16:
+../drivers/bus/mhi/core/mhi_init.c: 在函数‘mhi_init_timesync’中:
+../drivers/bus/mhi/core/mhi_internal.h:533:64: 警告： 建议在‘|’的操作数中的算术表达式前后加上括号 [-Wparentheses]
+  533 |  TIMESYNC_CFG_CHAN_DB_ID_SHIFT) & TIMESYNC_CFG_CHAN_DB_ID_MASK | \
+      |                                                                ^
+../drivers/bus/mhi/core/mhi_init.c:830:9: 附注： in expansion of macro ‘MHI_TIMESYNC_DB_SETUP’
+  830 |         MHI_TIMESYNC_DB_SETUP(er_index));
+      |         ^~~~~~~~~~~~~~~~~~~~~
+../drivers/bus/mhi/core/mhi_internal.h:535:43: 警告： 建议在‘|’的操作数中的算术表达式前后加上括号 [-Wparentheses]
+  535 |  ((er_index) << TIMESYNC_CFG_ER_ID_SHIFT) & TIMESYNC_CFG_ER_ID_MASK)
+      |                                           ^
+../drivers/bus/mhi/core/mhi_init.c:830:9: 附注： in expansion of macro ‘MHI_TIMESYNC_DB_SETUP’
+  830 |         MHI_TIMESYNC_DB_SETUP(er_index));
+      |         ^~~~~~~~~~~~~~~~~~~~~
+../drivers/bus/mhi/core/mhi_init.c: 在函数‘mhi_init_bw_scale’中:
+../drivers/bus/mhi/core/mhi_internal.h:538:64: 警告： 建议在‘|’的操作数中的算术表达式前后加上括号 [-Wparentheses]
+  538 |  BW_SCALE_CFG_CHAN_DB_ID_SHIFT) & BW_SCALE_CFG_CHAN_DB_ID_MASK | \
+      |                                                                ^
+../drivers/bus/mhi/core/mhi_init.c:896:9: 附注： in expansion of macro ‘MHI_BW_SCALE_SETUP’
+  896 |         MHI_BW_SCALE_SETUP(er_index));
+      |         ^~~~~~~~~~~~~~~~~~
+../drivers/bus/mhi/core/mhi_internal.h:540:43: 警告： 建议在‘|’的操作数中的算术表达式前后加上括号 [-Wparentheses]
+  540 |  ((er_index) << BW_SCALE_CFG_ER_ID_SHIFT) & BW_SCALE_CFG_ER_ID_MASK)
+      |                                           ^
+../drivers/bus/mhi/core/mhi_init.c:896:9: 附注： in expansion of macro ‘MHI_BW_SCALE_SETUP’
+  896 |         MHI_BW_SCALE_SETUP(er_index));
+      |         ^~~~~~~~~~~~~~~~~~
+../drivers/bus/mhi/core/mhi_init.c: 在函数‘mhi_create_sysfs’中:
+../drivers/bus/mhi/core/mhi_init.c:328:2: 警告： ignoring return value of ‘sysfs_create_group’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  328 |  sysfs_create_group(&mhi_cntrl->mhi_dev->dev.kobj, &mhi_sysfs_group);
+      |  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../drivers/bus/mhi/core/mhi_init.c:330:3: 警告： ignoring return value of ‘sysfs_create_group’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  330 |   sysfs_create_group(&mhi_cntrl->mhi_dev->dev.kobj,
+      |   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  331 |        &mhi_tsync_group);
+      |        ~~~~~~~~~~~~~~~~~
+  CC      fs/erofs/decompressor.o
+  CC      fs/exfat/nls.o
+../drivers/bus/mhi/core/mhi_main.c: 在函数‘mhi_intvec_handlr’中:
+../drivers/bus/mhi/core/mhi_main.c:1723:3: 警告： ignoring return value of ‘mhi_read_reg_field’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1723 |   mhi_read_reg_field(mhi_cntrl, mhi_cntrl->regs, MHICTRL,
+      |   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1724 |    MHICTRL_RESET_MASK, MHICTRL_RESET_SHIFT, &in_reset);
+      |    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  CC      kernel/dma/coherent.o
+  CC      fs/ecryptfs/keystore.o
+  CC      fs/erofs/zmap.o
+  CC      fs/exfat/misc.o
+  CC      sound/usb/mixer_quirks.o
+  CC      mm/migrate.o
+  CC      mm/page_isolation.o
+  CC      fs/exfat/file.o
+  CC      kernel/dma/removed.o
+  CC      fs/erofs/zdata.o
+  CC      fs/ecryptfs/kthread.o
+  CC      sound/usb/mixer_scarlett.o
+  CC      sound/usb/mixer_us16x08.o
+  CC      fs/exfat/balloc.o
+  CC      drivers/bus/mhi/core/mhi_pm.o
+  CC      fs/ecryptfs/debug.o
+  CC      kernel/dma/direct.o
+  CC      fs/ecryptfs/messaging.o
+  AR      fs/erofs/built-in.a
+  CC      drivers/bus/mhi/core/mhi_boot.o
+  AR      fs/exfat/built-in.a
+  CC      sound/usb/pcm.o
+  CC      drivers/bus/mhi/devices/mhi_netdev.o
+  CC      drivers/bus/mhi/devices/mhi_uci.o
+  CC      mm/zsmalloc.o
+  CC      kernel/dma/swiotlb.o
+  CC      fs/ecryptfs/miscdev.o
+  CC      drivers/bus/mhi/core/mhi_dtr.o
+  CC      sound/last.o
+  CC      drivers/bus/mhi/devices/mhi_satellite.o
+  AR      fs/ecryptfs/built-in.a
+  CC      fs/exportfs/expfs.o
+  CC      sound/usb/power.o
+  CC      fs/ext4/balloc.o
+  CC      fs/ext4/bitmap.o
+  AR      kernel/dma/built-in.a
+  CC      sound/usb/proc.o
+  CC      kernel/events/core.o
+  CC      mm/early_ioremap.o
+  AR      drivers/bus/mhi/core/built-in.a
+  AR      fs/exportfs/built-in.a
+  CC      mm/cma.o
+  CC      sound/usb/quirks.o
+  AR      drivers/bus/mhi/devices/built-in.a
+  AR      drivers/bus/mhi/built-in.a
+  AR      drivers/bus/built-in.a
+  CC      drivers/char/mem.o
+  CC      drivers/char/random.o
+  CC      sound/usb/stream.o
+  CC      sound/usb/validate.o
+  CC      sound/usb/midi.o
+  CC      fs/ext4/block_validity.o
+  CC      mm/frame_vector.o
+  CC      mm/usercopy.o
+  CC      mm/memfd.o
+  CC      fs/ext4/dir.o
+  CC      drivers/char/diag/diagchar_core.o
+  CC      drivers/clk/clk-devres.o
+  CC      drivers/char/diag/diagchar_hdlc.o
+  CC      drivers/clocksource/timer-of.o
+  AR      mm/built-in.a
+  CC      drivers/clocksource/timer-probe.o
+  CC      drivers/cpuidle/cpuidle.o
+  CC      drivers/cpufreq/cpufreq.o
+  CC      drivers/clk/clk-bulk.o
+  CC      sound/usb/usb_audio_qmi_v01.o
+  CC      fs/ext4/ext4_jbd2.o
+  CC      drivers/clocksource/arm_arch_timer.o
+  CC      sound/usb/usb_audio_qmi_svc.o
+  CC      drivers/clk/clkdev.o
+  CC      fs/ext4/extents.o
+  CC      drivers/clk/clk.o
+  CC      drivers/cpuidle/driver.o
+  CC      drivers/clocksource/dummy_timer.o
+  AR      sound/usb/built-in.a
+  AR      sound/built-in.a
+  CC      fs/ext4/extents_status.o
+  AR      drivers/clocksource/built-in.a
+  CC      drivers/cpuidle/governor.o
+  CC      techpack/audio/asoc/codecs/bolero/bolero-cdc.o
+  CC      drivers/char/diag/diagfwd.o
+  CC      drivers/cpufreq/freq_table.o
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c: 在函数‘bolero_set_port_map’中:
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:63:29: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   63 |   if (priv->macro_params[map->id].set_port_map)
+      |                             ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:64:26: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   64 |    priv->macro_params[map->id].set_port_map(component,
+      |                          ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:65:10: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   65 |       map->uc,
+      |          ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:66:7: 错误： ‘SWR_MSTR_PORT_LEN’未声明(在此函数内第一次使用)
+   66 |       SWR_MSTR_PORT_LEN,
+      |       ^~~~~~~~~~~~~~~~~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:66:7: 附注： 每个未声明的标识符在其出现的函数内只报告一次
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:67:10: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   67 |       map->swr_port_params);
+      |          ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:68:7: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   68 |   map += 1;
+      |       ^~
+make[6]: *** [../scripts/Makefile.build:338：techpack/audio/asoc/codecs/bolero/bolero-cdc.o] 错误 1
+make[5]: *** [../scripts/Makefile.build:642：techpack/audio/asoc/codecs/bolero] 错误 2
+make[4]: *** [../scripts/Makefile.build:642：techpack/audio/asoc/codecs] 错误 2
+make[3]: *** [../scripts/Makefile.build:642：techpack/audio/asoc] 错误 2
+make[2]: *** [../scripts/Makefile.build:642：techpack/audio] 错误 2
+make[1]: *** [/home/liu/kernel/Makefile:1256：techpack] 错误 2
+make[1]: *** 正在等待未完成的任务....
+  CC      drivers/cpuidle/sysfs.o
+  CC      drivers/cpufreq/cpufreq_stats.o
+  CC      drivers/cpufreq/cpufreq_performance.o
+  CC      fs/ext4/file.o
+  CC      fs/ext4/fsmap.o
+  CC      drivers/cpufreq/cpufreq_powersave.o
+  CC      drivers/cpuidle/governors/teo.o
+  CC      drivers/char/diag/diagfwd_peripheral.o
+  CC      drivers/cpufreq/cpufreq_ondemand.o
+  AR      drivers/cpuidle/governors/built-in.a
+  CC      drivers/cpuidle/lpm-levels.o
+../fs/ext4/extents.c: 在函数‘ext4_ext_remove_space’中:
+../fs/ext4/extents.c:3100:1: 警告： the frame size of 4288 bytes is larger than 4096 bytes [-Wframe-larger-than=]
+ 3100 | }
+      | ^
+  CC      fs/ext4/fsync.o
+  CC      kernel/events/ring_buffer.o
+  CC      kernel/events/callchain.o
+  CC      drivers/cpufreq/cpufreq_governor.o
+  CC      drivers/char/diag/diagfwd_socket.o
+  CC      drivers/cpufreq/cpufreq_governor_attr_set.o
+  CC      fs/ext4/hash.o
+  CC      drivers/clk/clk-divider.o
+  CC      fs/ext4/ialloc.o
+  CC      fs/ext4/indirect.o
+  CC      drivers/cpufreq/cpu-boost.o
+  CC      kernel/events/hw_breakpoint.o
+  CC      drivers/cpuidle/lpm-levels-of.o
+  CC      drivers/char/diag/diagfwd_rpmsg.o
+  CC      drivers/clk/clk-fixed-factor.o
+  CC      drivers/cpufreq/cpu_input_boost.o
+  CC      drivers/cpufreq/qcom-cpufreq-hw.o
+  AR      drivers/cpuidle/built-in.a
+  CC      fs/ext4/inline.o
+  CC      drivers/char/diag/diag_mux.o
+../drivers/cpufreq/cpu_input_boost.c: 在函数‘get_input_boost_freq’中:
+../drivers/cpufreq/cpu_input_boost.c:103:2: 警告： this ‘else’ clause does not guard... [-Wmisleading-indentation]
+  103 |  else
+      |  ^~~~
+../drivers/cpufreq/cpu_input_boost.c:105:17: 附注： ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘else’
+  105 |                 return min(freq, policy->max);
+      |                 ^~~~~~
+../drivers/cpufreq/cpu_input_boost.c: 在函数‘get_max_boost_freq’中:
+../drivers/cpufreq/cpu_input_boost.c:117:9: 警告： this ‘else’ clause does not guard... [-Wmisleading-indentation]
+  117 |         else
+      |         ^~~~
+../drivers/cpufreq/cpu_input_boost.c:119:3: 附注： ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘else’
+  119 |   return min(freq, policy->max);
+      |   ^~~~~~
+  CC      drivers/clk/clk-fixed-rate.o
+  CC      kernel/events/uprobes.o
+  CC      drivers/clk/clk-gate.o
+  CC      drivers/clk/clk-multiplier.o
+  CC      drivers/clk/clk-mux.o
+  CC      drivers/char/diag/diag_memorydevice.o
+  AR      drivers/cpufreq/built-in.a
+  CC      drivers/clk/clk-composite.o
+  CC      fs/ext4/inode.o
+  CC      fs/ext4/ioctl.o
+  CC      fs/ext4/mballoc.o
+  CC      drivers/clk/clk-fractional-divider.o
+  CC      fs/ext4/migrate.o
+  CC      drivers/char/diag/diag_usb.o
+  CC      drivers/char/diag/diagmem.o
+  CC      drivers/clk/clk-gpio.o
+  AR      kernel/events/built-in.a
+  CC      kernel/irq/irqdesc.o
+  CC      drivers/char/diag/diagfwd_cntl.o
+  CC      drivers/char/diag/diag_dci.o
+  CC      kernel/irq/handle.o
+  CC      drivers/clk/clk-conf.o
+  CC      kernel/irq/manage.o
+  CC      fs/ext4/mmp.o
+  CC      fs/ext4/move_extent.o
+  CC      drivers/clk/clk-xgene.o
+  CC      drivers/clk/qcom/common.o
+  CC      drivers/clk/qcom/clk-regmap.o
+  CC      drivers/clk/qcom/clk-alpha-pll.o
+  CC      drivers/char/diag/diag_masks.o
+  CC      fs/ext4/namei.o
+  CC      kernel/irq/spurious.o
+  CC      kernel/irq/resend.o
+  CC      drivers/char/diag/diag_debugfs.o
+  CC      drivers/char/diag/diagfwd_bridge.o
+  CC      kernel/irq/chip.o
+  CC      drivers/clk/qcom/clk-pll.o
+  CC      drivers/char/diag/diagfwd_mhi.o
+  CC      fs/ext4/page-io.o
+  CC      fs/ext4/readpage.o
+  CC      drivers/clk/qcom/clk-rcg.o
+  CC      fs/ext4/resize.o
+  CC      drivers/char/hw_random/core.o
+  CC      kernel/irq/dummychip.o
+  AR      drivers/char/diag/built-in.a
+  CC      fs/ext4/super.o
+  CC      drivers/char/lrng/lrng_es_mgr.o
+  CC      fs/ext4/symlink.o
+  CC      drivers/char/lrng/lrng_drng_mgr.o
+  CC      kernel/irq/devres.o
+  CC      drivers/clk/qcom/clk-rcg2.o
+  CC      drivers/char/hw_random/msm_rng.o
+  CC      drivers/clk/qcom/clk-branch.o
+  CC      drivers/clk/qcom/clk-regmap-divider.o
+  CC      drivers/char/lrng/lrng_es_aux.o
+  CC      drivers/clk/qcom/clk-regmap-mux.o
+  CC      kernel/irq/autoprobe.o
+  CC      drivers/char/hw_random/cavium-rng.o
+  CC      drivers/char/hw_random/cavium-rng-vf.o
+  CC      drivers/clk/qcom/clk-regmap-mux-div.o
+  CC      drivers/clk/qcom/reset.o
+  AR      drivers/char/hw_random/built-in.a
+  CC      fs/ext4/sysfs.o
+  CC      drivers/char/lrng/lrng_sha256.o
+  CC      drivers/clk/qcom/clk-voter.o
+  CC      kernel/irq/irqdomain.o
+  CC      kernel/locking/mutex.o
+  CC      drivers/char/lrng/lrng_proc.o
+  CC      kernel/locking/semaphore.o
+  CC      drivers/clk/qcom/clk-dummy.o
+  CC      kernel/power/qos.o
+  CC      drivers/char/lrng/lrng_drng_chacha20.o
+  CC      fs/ext4/xattr.o
+  AR      drivers/char/lrng/built-in.a
+  CC      drivers/char/misc.o
+  CC      drivers/clk/qcom/clk-debug.o
+  CC      kernel/locking/rwsem.o
+  CC      drivers/char/adsprpc.o
+  CC      kernel/irq/proc.o
+  CC      kernel/power/main.o
+  CC      drivers/clk/qcom/gdsc-regulator.o
+  CC      drivers/clk/qcom/gdsc.o
+../kernel/power/main.c: 在函数‘sum_wakeup_time_store’中:
+../kernel/power/main.c:648:23: 警告： 此函数中的‘error’在使用前未初始化 [-Wuninitialized]
+  648 |  return error ? error : n;
+      |         ~~~~~~~~~~~~~~^~~
+../kernel/power/main.c: 在函数‘last_wake_time_store’中:
+../kernel/power/main.c:663:23: 警告： 此函数中的‘error’在使用前未初始化 [-Wuninitialized]
+  663 |  return error ? error : n;
+      |         ~~~~~~~~~~~~~~^~~
+../kernel/power/main.c: 在函数‘wake_times_store’中:
+../kernel/power/main.c:678:23: 警告： 此函数中的‘error’在使用前未初始化 [-Wuninitialized]
+  678 |  return error ? error : n;
+      |         ~~~~~~~~~~~~~~^~~
+  CC      kernel/irq/cpuhotplug.o
+  CC      kernel/locking/percpu-rwsem.o
+  CC      kernel/irq/pm.o
+  CC      fs/ext4/xattr_trusted.o
+  CC      kernel/irq/msi.o
+  CC      kernel/power/process.o
+  CC      kernel/locking/spinlock.o
+  CC      kernel/locking/osq_lock.o
+  CC      drivers/clk/qcom/camcc-kona.o
+  CC      drivers/clk/qcom/clk-aop-qmp.o
+  CC      kernel/irq/affinity.o
+  CC      kernel/locking/qspinlock.o
+  CC      kernel/locking/rtmutex.o
+  CC      kernel/power/suspend.o
+  CC      kernel/power/wakelock.o
+  CC      drivers/clk/qcom/dispcc-kona.o
+  CC      drivers/clk/qcom/gcc-kona.o
+  AR      kernel/irq/built-in.a
+  CC      kernel/printk/printk.o
+  CC      kernel/rcu/update.o
+  CC      drivers/clk/qcom/gpucc-kona.o
+  CC      drivers/char/adsprpc_compat.o
+  CC      drivers/clk/qcom/npucc-kona.o
+  CC      kernel/locking/qrwlock.o
+  CC      kernel/power/poweroff.o
+  CC      drivers/clk/qcom/videocc-kona.o
+  AR      kernel/locking/built-in.a
+  CC      drivers/clk/qcom/a53-pll.o
+  CC      kernel/rcu/sync.o
+  CC      kernel/power/energy_model.o
+  CC      kernel/rcu/srcutree.o
+  CC      drivers/char/xlogchar.o
+  CC      drivers/clk/qcom/apcs-msm8916.o
+  CC      drivers/clk/qcom/clk-rpmh.o
+  CC      kernel/printk/printk_safe.o
+  CC      fs/ext4/xattr_user.o
+  CC      kernel/power/wakeup_reason.o
+  CC      drivers/clk/qcom/clk-spmi-pmic-div.o
+  CC      fs/ext4/acl.o
+  CC      fs/f2fs/dir.o
+  AR      kernel/printk/built-in.a
+  AR      drivers/char/built-in.a
+  CC      fs/f2fs/file.o
+  CC      fs/ext4/xattr_security.o
+  CC      kernel/sched/core.o
+  CC      kernel/rcu/tree.o
+  AR      drivers/clk/qcom/built-in.a
+  AR      drivers/clk/built-in.a
+  AR      kernel/power/built-in.a
+  CC      drivers/crypto/msm/qce50.o
+  CC      kernel/time/time.o
+  CC      kernel/time/timer.o
+  CC      fs/ext4/verity.o
+  CC      kernel/time/hrtimer.o
+  AR      fs/ext4/built-in.a
+  CC      fs/fat/cache.o
+  CC      drivers/crypto/msm/qcedev.o
+  CC      fs/fat/dir.o
+../drivers/crypto/msm/qcedev.c: 在函数‘qcedev_ioctl’中:
+../drivers/crypto/msm/qcedev.c:1928:3: 警告： this ‘if’ clause does not guard... [-Wmisleading-indentation]
+ 1928 |   if (copy_to_user((void __user *)arg, &qcedev_areq->sha_op_req,
+      |   ^~
+../drivers/crypto/msm/qcedev.c:1931:4: 附注： ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+ 1931 |    goto exit_free_qcedev_areq;
+      |    ^~~~
+../drivers/crypto/msm/qcedev.c:2020:3: 警告： this ‘if’ clause does not guard... [-Wmisleading-indentation]
+ 2020 |   if (copy_to_user((void __user *)arg, &qcedev_areq->sha_op_req,
+      |   ^~
+../drivers/crypto/msm/qcedev.c:2023:4: 附注： ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+ 2023 |    goto exit_free_qcedev_areq;
+      |    ^~~~
+  CC      fs/fat/fatent.o
+  CC      kernel/time/timekeeping.o
+  CC      kernel/time/ntp.o
+  CC      fs/fat/file.o
+  CC      fs/fat/inode.o
+  CC      fs/f2fs/inode.o
+  CC      fs/f2fs/namei.o
+  CC      kernel/rcu/rcu_segcblist.o
+  CC      kernel/time/clocksource.o
+  AR      kernel/rcu/built-in.a
+  CC      kernel/trace/trace_clock.o
+  CC      kernel/trace/ring_buffer.o
+  CC      kernel/time/jiffies.o
+  CC      kernel/trace/trace.o
+  CC      fs/f2fs/hash.o
+  CC      fs/fat/misc.o
+  CC      fs/f2fs/super.o
+  CC      kernel/time/timer_list.o
+  CC      kernel/time/timeconv.o
+  CC      kernel/time/timecounter.o
+  CC      kernel/time/alarmtimer.o
+  CC      fs/fat/nfs.o
+  CC      drivers/crypto/msm/qcedev_smmu.o
+  CC      fs/fat/namei_vfat.o
+  CC      fs/f2fs/inline.o
+  CC      fs/fat/namei_msdos.o
+  CC      drivers/crypto/msm/qcrypto.o
+  CC      kernel/freezer.o
+  CC      kernel/time/posix-timers.o
+  AR      fs/fat/built-in.a
+  CC      kernel/time/posix-cpu-timers.o
+  CC      kernel/sched/loadavg.o
+  CC      kernel/sched/clock.o
+  CC      kernel/time/posix-clock.o
+  CC      kernel/time/itimer.o
+  CC      kernel/stacktrace.o
+  CC      kernel/trace/trace_output.o
+  CC      kernel/trace/trace_seq.o
+  CC      kernel/sched/cputime.o
+  CC      kernel/time/clockevents.o
+  CC      kernel/time/tick-common.o
+  CC      kernel/time/tick-broadcast.o
+  CC      kernel/time/tick-broadcast-hrtimer.o
+  AR      drivers/crypto/msm/built-in.a
+  AR      drivers/crypto/built-in.a
+  CC      drivers/devfreq/devfreq.o
+  CC      drivers/devfreq/governor_simpleondemand.o
+  CC      drivers/devfreq/governor_performance.o
+  CC      kernel/trace/trace_stat.o
+  CC      drivers/devfreq/governor_powersave.o
+  CC      kernel/time/sched_clock.o
+  CC      drivers/devfreq/governor_userspace.o
+  CC      kernel/sched/idle.o
+  CC      kernel/trace/trace_printk.o
+  CC      kernel/sched/fair.o
+  CC      kernel/time/tick-oneshot.o
+  CC      kernel/sched/rt.o
+  CC      fs/f2fs/checkpoint.o
+  CC      kernel/trace/trace_sched_switch.o
+  CC      kernel/time/tick-sched.o
+  CC      drivers/devfreq/governor_passive.o
+  CC      drivers/devfreq/bimc-bwmon.o
+  CC      drivers/devfreq/arm-memlat-mon.o
+../kernel/sched/fair.c: 在函数‘should_we_balance’中:
+  CC      kernel/trace/trace_nop.o
+../kernel/sched/fair.c:11058:5: 警告： "SCHED_FEAT_TTWU_QUEUE" is not defined, evaluates to 0 [-Wundef]
+11058 | #if SCHED_FEAT_TTWU_QUEUE
+      |     ^~~~~~~~~~~~~~~~~~~~~
+  CC      kernel/sched/deadline.o
+  CC      kernel/trace/blktrace.o
+  CC      kernel/time/vsyscall.o
+  CC      kernel/trace/trace_events.o
+  CC      drivers/devfreq/governor_bw_hwmon.o
+  CC      drivers/devfreq/governor_cache_hwmon.o
+  AR      kernel/time/built-in.a
+  CC      drivers/devfreq/governor_memlat.o
+  CC      fs/f2fs/gc.o
+  CC      fs/f2fs/data.o
+  CC      drivers/devfreq/governor_msm_adreno_tz.o
+  CC      drivers/dma/dmaengine.o
+  CC      drivers/dma/virt-dma.o
+  CC      drivers/devfreq/governor_bw_vbif.o
+  CC      kernel/sched/wait.o
+  CC      drivers/devfreq/governor_gpubw_mon.o
+  CC      drivers/devfreq/governor_cdsp_l3.o
+  CC      kernel/trace/trace_export.o
+  CC      drivers/dma/of-dma.o
+  CC      kernel/trace/trace_event_perf.o
+  CC      drivers/devfreq/devfreq_qcom_fw.o
+  CC      drivers/devfreq/devfreq_devbw.o
+  CC      drivers/devfreq/devfreq_simple_dev.o
+  CC      fs/f2fs/node.o
+  CC      drivers/dma/qcom/gpi.o
+  CC      kernel/trace/trace_events_filter.o
+  CC      fs/f2fs/segment.o
+  CC      fs/f2fs/recovery.o
+  CC      drivers/devfreq/devfreq_qcom_qoslat.o
+  CC      drivers/devfreq/governor_staticmap.o
+  CC      kernel/sched/wait_bit.o
+  CC      drivers/devfreq/devfreq_boost.o
+  AR      drivers/devfreq/built-in.a
+  CC      drivers/dma-buf/dma-buf.o
+  CC      kernel/trace/trace_events_trigger.o
+  CC      fs/f2fs/shrinker.o
+  AR      drivers/dma/qcom/built-in.a
+  AR      drivers/dma/built-in.a
+  CC      drivers/edac/edac_mc.o
+  CC      fs/f2fs/extent_cache.o
+  CC      fs/f2fs/sysfs.o
+  CC      kernel/sched/swait.o
+  CC      drivers/dma-buf/dma-fence.o
+  CC      kernel/trace/bpf_trace.o
+  CC      drivers/edac/edac_device.o
+  CC      kernel/sched/completion.o
+  CC      kernel/sched/cpupri.o
+  CC      kernel/sched/cpudeadline.o
+  CC      kernel/futex.o
+  CC      drivers/edac/edac_mc_sysfs.o
+  CC      drivers/dma-buf/dma-fence-array.o
+  CC      fs/f2fs/debug.o
+  CC      fs/f2fs/xattr.o
+  CC      fs/f2fs/acl.o
+  CC      kernel/sched/topology.o
+  CC      drivers/dma-buf/reservation.o
+  CC      drivers/edac/edac_module.o
+  CC      kernel/trace/power-traces.o
+  CC      drivers/dma-buf/seqno-fence.o
+  CC      drivers/dma-buf/sync_file.o
+  CC      fs/f2fs/verity.o
+  CC      fs/f2fs/compress.o
+  CC      kernel/sched/stop_task.o
+  CC      drivers/edac/edac_device_sysfs.o
+../drivers/dma-buf/sync_file.c: 在函数‘sync_file_ioctl’中:
+../drivers/dma-buf/sync_file.c:367:15: 警告： array subscript 0 is outside array bounds of ‘struct <匿名>[1]’ [-Warray-bounds]
+  367 |  info->status = dma_fence_get_status(fence);
+      |  ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../drivers/dma-buf/sync_file.c:419:5: 附注： while referencing ‘fence_info’
+  419 |   } fence_info;
+      |     ^~~~~~~~~~
+../drivers/dma-buf/sync_file.c:371:21: 警告： array subscript 0 is outside array bounds of ‘struct <匿名>[1]’ [-Warray-bounds]
+  371 |  info->timestamp_ns =
+      |  ~~~~~~~~~~~~~~~~~~~^
+  372 |   test_bit(DMA_FENCE_FLAG_TIMESTAMP_BIT, &fence->flags) ?
+      |   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  373 |   ktime_to_ns(fence->timestamp) :
+      |   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  374 |   ktime_set(0, 0);
+      |   ~~~~~~~~~~~~~~~    
+../drivers/dma-buf/sync_file.c:419:5: 附注： while referencing ‘fence_info’
+  419 |   } fence_info;
+      |     ^~~~~~~~~~
+../drivers/dma-buf/sync_file.c:376:13: 警告： array subscript 0 is outside array bounds of ‘struct <匿名>[1]’ [-Warray-bounds]
+  376 |  return info->status;
+      |         ~~~~^~~~~~~~
+../drivers/dma-buf/sync_file.c:419:5: 附注： while referencing ‘fence_info’
+  419 |   } fence_info;
+      |     ^~~~~~~~~~
+../drivers/dma-buf/sync_file.c:425:16: 警告： array subscript 0 is outside array bounds of ‘struct <匿名>[1]’ [-Warray-bounds]
+  425 |   finfo->flags = 0;
+      |   ~~~~~~~~~~~~~^~~
+../drivers/dma-buf/sync_file.c:419:5: 附注： while referencing ‘fence_info’
+  419 |   } fence_info;
+      |     ^~~~~~~~~~
+  CC      fs/f2fs/iostat.o
+  CC      kernel/sched/pelt.o
+  CC      kernel/sched/walt.o
+  AR      drivers/dma-buf/built-in.a
+  CC      drivers/edac/wq.o
+  CC      drivers/esoc/esoc_bus.o
+  CC      drivers/edac/edac_pci.o
+  CC      drivers/edac/edac_pci_sysfs.o
+  CC      kernel/sched/boost.o
+  CC      drivers/esoc/esoc_dev.o
+  CC      kernel/sched/sched_avg.o
+  CC      kernel/trace/rpm-traces.o
+  CC      kernel/trace/trace_probe.o
+  AR      fs/f2fs/built-in.a
+  CC      fs/fuse/dev.o
+  CC      drivers/edac/kryo_arm64_edac.o
+  CC      drivers/esoc/esoc_client.o
+  CC      drivers/esoc/esoc-mdm-pon.o
+  CC      drivers/esoc/esoc-mdm-4x.o
+  CC      kernel/trace/trace_uprobe.o
+  CC      drivers/esoc/esoc-mdm-drv.o
+  AR      drivers/edac/built-in.a
+  CC      drivers/extcon/extcon.o
+  CC      kernel/sched/autogroup.o
+  CC      fs/fuse/dir.o
+  CC      fs/fuse/file.o
+  AR      drivers/esoc/built-in.a
+  CC      kernel/sched/debug.o
+  AR      kernel/trace/built-in.a
+  CC      kernel/sched/tune.o
+  CC      kernel/sched/cpuacct.o
+  CC      drivers/extcon/devres.o
+  CC      drivers/extcon/extcon-usb-gpio.o
+  CC      fs/fuse/inode.o
+  CC      kernel/smp.o
+  CC      kernel/uid16.o
+  CC      kernel/sched/cpufreq.o
+  AR      drivers/extcon/built-in.a
+  CC      drivers/firmware/psci.o
+  CC      drivers/firmware/qcom_scm.o
+  CC      kernel/sched/cpufreq_schedutil.o
+  CC      kernel/sched/membarrier.o
+  CC      kernel/sched/isolation.o
+  CC      kernel/sched/core_ctl.o
+  CC      fs/fuse/control.o
+  CC      fs/fuse/xattr.o
+  CC      fs/fuse/acl.o
+  CC      drivers/firmware/qcom_scm-64.o
+  CC      fs/fuse/readdir.o
+  CC      fs/fuse/passthrough.o
+  CC      kernel/module.o
+  CC      kernel/kallsyms.o
+  CC      kernel/compat.o
+  CC      kernel/utsname.o
+  AR      drivers/firmware/built-in.a
+  CC      drivers/gpio/devres.o
+  CC      drivers/gpio/gpiolib.o
+  AR      fs/fuse/built-in.a
+  CC      kernel/stop_machine.o
+  CC      fs/incfs/data_mgmt.o
+  CC      drivers/gpio/gpiolib-legacy.o
+  CC      kernel/seccomp.o
+  AR      kernel/sched/built-in.a
+  CC      kernel/utsname_sysctl.o
+  CC      drivers/gpio/gpiolib-devprop.o
+  CC      fs/incfs/format.o
+  CC      fs/incfs/integrity.o
+  CC      kernel/taskstats.o
+  CC      drivers/gpio/gpiolib-of.o
+  CC      drivers/gpio/gpiolib-sysfs.o
+  CC      fs/incfs/main.o
+  CC      fs/incfs/vfs.o
+  CC      kernel/tsacct.o
+  CC      kernel/tracepoint.o
+  CC      kernel/irq_work.o
+  CC      kernel/cpu_pm.o
+  CC      kernel/jump_label.o
+  CC      fs/jbd2/transaction.o
+  CC      fs/jbd2/commit.o
+  CC      fs/jbd2/recovery.o
+  CC      kernel/iomem.o
+  CC      fs/jbd2/checkpoint.o
+  AR      drivers/gpio/built-in.a
+  AR      fs/incfs/built-in.a
+  CC      fs/kernfs/mount.o
+  CC      drivers/gpu/msm/kgsl.o
+  CC      drivers/gpu/drm/drm_crtc_helper.o
+  CC      kernel/configs.o
+  CC      drivers/gpu/drm/drm_dp_helper.o
+  CC      fs/kernfs/inode.o
+  CC      fs/jbd2/revoke.o
+  AR      kernel/built-in.a
+  CC      fs/jbd2/journal.o
+  CC      fs/kernfs/dir.o
+  CC      fs/kernfs/file.o
+  CC      fs/kernfs/symlink.o
+  CC      fs/nls/nls_base.o
+  CC      drivers/gpu/drm/drm_probe_helper.o
+  CC      drivers/gpu/drm/drm_plane_helper.o
+../fs/kernfs/file.c: 在函数‘kernfs_fop_write’中:
+../fs/kernfs/file.c:338:1: 警告： the frame size of 4112 bytes is larger than 4096 bytes [-Wframe-larger-than=]
+  338 | }
+      | ^
+  CC      drivers/gpu/drm/drm_dp_mst_topology.o
+  CC      fs/nls/nls_cp437.o
+  CC      fs/nls/nls_iso8859-1.o
+  CC      drivers/gpu/drm/drm_atomic_helper.o
+  AR      fs/kernfs/built-in.a
+  CC      fs/notify/fsnotify.o
+  AR      fs/nls/built-in.a
+  CC      fs/notify/notification.o
+  CC      fs/notify/group.o
+  CC      drivers/gpu/drm/drm_kms_helper_common.o
+  CC      fs/notify/mark.o
+  CC      fs/notify/fdinfo.o
+  CC      fs/ntfs/aops.o
+  CC      drivers/gpu/msm/kgsl_drawobj.o
+  AR      fs/jbd2/built-in.a
+  CC      fs/overlayfs/super.o
+  CC      fs/ntfs/attrib.o
+  CC      fs/notify/dnotify/dnotify.o
+  CC      fs/ntfs/collate.o
+  CC      fs/overlayfs/namei.o
+  AR      fs/notify/dnotify/built-in.a
+  CC      fs/ntfs/compress.o
+  CC      fs/ntfs/debug.o
+  CC      fs/notify/inotify/inotify_fsnotify.o
+  CC      fs/notify/inotify/inotify_user.o
+  CC      drivers/gpu/drm/drm_dp_dual_mode_helper.o
+  CC      fs/ntfs/dir.o
+  CC      fs/ntfs/file.o
+  CC      fs/overlayfs/util.o
+  CC      fs/overlayfs/inode.o
+  CC      drivers/gpu/msm/kgsl_ioctl.o
+  AR      fs/notify/inotify/built-in.a
+  AR      fs/notify/built-in.a
+  CC      fs/overlayfs/file.o
+  CC      fs/ntfs/index.o
+../drivers/gpu/msm/kgsl_ioctl.c: 在函数‘kgsl_ioctl’中:
+../drivers/gpu/msm/kgsl_ioctl.c:206:3: 警告： 标量初始化带花括号
+  206 |   .cpus_affine = ATOMIC_INIT(BIT(raw_smp_processor_id()))
+      |   ^
+../drivers/gpu/msm/kgsl_ioctl.c:206:3: 附注： (在‘req.cpus_affine’的初始化附近)
+  CC      fs/overlayfs/dir.o
+  CC      drivers/gpu/drm/drm_simple_kms_helper.o
+  CC      fs/ntfs/inode.o
+  CC      drivers/gpu/drm/drm_modeset_helper.o
+  CC      drivers/gpu/msm/kgsl_sharedmem.o
+  CC      drivers/gpu/msm/kgsl_pwrctrl.o
+  CC      fs/overlayfs/readdir.o
+  CC      fs/pstore/inode.o
+  CC      fs/pstore/platform.o
+  CC      drivers/gpu/drm/drm_scdc_helper.o
+  CC      fs/proc/task_mmu.o
+  CC      fs/overlayfs/copy_up.o
+  CC      fs/ntfs/mft.o
+  CC      fs/ntfs/mst.o
+  CC      fs/pstore/pmsg.o
+  CC      fs/pstore/ram.o
+  CC      fs/overlayfs/export.o
+  CC      drivers/gpu/drm/drm_gem_framebuffer_helper.o
+  CC      fs/pstore/ram_core.o
+  CC      drivers/gpu/drm/bridge/panel.o
+  CC      drivers/gpu/msm/kgsl_pwrscale.o
+  CC      fs/proc/inode.o
+  AR      fs/overlayfs/built-in.a
+  CC      drivers/gpu/msm/kgsl_mmu.o
+  CC      drivers/gpu/msm/kgsl_snapshot.o
+  AR      fs/pstore/built-in.a
+  CC      fs/proc/root.o
+  CC      fs/ntfs/namei.o
+  CC      fs/ntfs/runlist.o
+  CC      drivers/gpu/drm/drm_auth.o
+  CC      fs/proc/base.o
+  CC      drivers/gpu/drm/drm_bufs.o
+  CC      fs/proc/generic.o
+  CC      drivers/gpu/msm/kgsl_events.o
+  CC      fs/ntfs/super.o
+  CC      drivers/gpu/msm/kgsl_gmu_core.o
+  CC      fs/proc/array.o
+  CC      drivers/gpu/drm/drm_cache.o
+  CC      fs/proc/fd.o
+  CC      drivers/gpu/msm/kgsl_gmu.o
+  CC      drivers/gpu/drm/drm_context.o
+  CC      drivers/gpu/msm/kgsl_rgmu.o
+  CC      drivers/gpu/drm/drm_dma.o
+  CC      drivers/gpu/drm/drm_file.o
+  CC      fs/ntfs/sysctl.o
+  CC      fs/ntfs/unistr.o
+  CC      fs/proc/proc_tty.o
+  CC      fs/ntfs/upcase.o
+  CC      drivers/gpu/drm/drm_gem.o
+  CC      drivers/gpu/drm/drm_ioctl.o
+  CC      drivers/gpu/drm/drm_irq.o
+  CC      fs/proc/cmdline.o
+  CC      fs/ntfs/bitmap.o
+  CC      fs/ntfs/lcnalloc.o
+  CC      drivers/gpu/msm/kgsl_hfi.o
+  CC      fs/proc/consoles.o
+  CC      fs/ntfs/logfile.o
+  CC      fs/quota/dquot.o
+  CC      fs/proc/cpuinfo.o
+  CC      fs/quota/quota_v2.o
+  CC      fs/proc/devices.o
+  CC      fs/proc/interrupts.o
+  CC      fs/proc/loadavg.o
+  CC      drivers/gpu/msm/kgsl_timeline.o
+  CC      drivers/gpu/drm/drm_lock.o
+  CC      drivers/gpu/drm/drm_memory.o
+  CC      fs/ntfs/quota.o
+  CC      fs/ntfs/usnjrnl.o
+  CC      drivers/gpu/msm/kgsl_trace.o
+  CC      fs/proc/meminfo.o
+  CC      fs/proc/stat.o
+  AR      fs/ntfs/built-in.a
+  CC      fs/proc/uptime.o
+  CC      fs/proc/util.o
+  CC      drivers/gpu/drm/drm_drv.o
+  CC      fs/proc/version.o
+  CC      drivers/gpu/drm/drm_scatter.o
+  CC      fs/ramfs/inode.o
+  CC      fs/ramfs/file-mmu.o
+  CC      drivers/hid/hid-core.o
+  CC      fs/proc/softirqs.o
+  CC      fs/proc/namespaces.o
+  CC      drivers/hid/hid-input.o
+  CC      drivers/hid/hid-quirks.o
+  AR      fs/ramfs/built-in.a
+  CC      fs/proc/self.o
+  CC      fs/quota/quota_tree.o
+  CC      fs/quota/quota.o
+  CC      fs/proc/thread_self.o
+  CC      drivers/gpu/drm/drm_pci.o
+  CC      drivers/gpu/drm/drm_sysfs.o
+  CC      fs/proc/proc_sysctl.o
+  CC      drivers/gpu/drm/drm_hashtab.o
+  CC      drivers/gpu/drm/drm_mm.o
+  CC      fs/quota/kqid.o
+  CC      fs/quota/netlink.o
+  CC      drivers/gpu/drm/drm_crtc.o
+  CC      drivers/gpu/drm/drm_fourcc.o
+  CC      drivers/gpu/msm/kgsl_iommu.o
+  CC      drivers/hid/hidraw.o
+  CC      fs/proc/proc_net.o
+  CC      drivers/gpu/drm/drm_modes.o
+  AR      fs/quota/built-in.a
+  CC      drivers/gpu/drm/drm_edid.o
+  CC      drivers/gpu/drm/drm_info.o
+  CC      drivers/gpu/drm/drm_encoder_slave.o
+  CC      drivers/gpu/drm/drm_trace_points.o
+  CC      fs/proc/kmsg.o
+  CC      drivers/hid/uhid.o
+  CC      fs/proc/page.o
+  CC      fs/sdcardfs/dentry.o
+  CC      drivers/gpu/msm/kgsl_sync.o
+  CC      fs/sysfs/file.o
+  CC      fs/tracefs/inode.o
+  AR      fs/proc/built-in.a
+  CC      fs/unicode/utf8-norm.o
+  CC      drivers/gpu/drm/drm_global.o
+  CC      fs/sdcardfs/file.o
+  CC      drivers/gpu/msm/kgsl_compat.o
+  AR      fs/tracefs/built-in.a
+  CC      drivers/gpu/msm/kgsl_pool.o
+  CC      fs/sysfs/dir.o
+  CC      drivers/hid/hid-generic.o
+  CC      fs/verity/enable.o
+  CC      fs/sdcardfs/inode.o
+  CC      drivers/gpu/drm/drm_prime.o
+  CC      drivers/hid/hid-apple.o
+  CC      drivers/gpu/drm/drm_rect.o
+  CC      fs/unicode/utf8-core.o
+  CC      fs/sysfs/symlink.o
+  CC      drivers/gpu/msm/adreno_ioctl.o
+  CC      drivers/hid/hid-elecom.o
+  AR      fs/unicode/built-in.a
+  CC      drivers/gpu/msm/adreno_ringbuffer.o
+  CC      fs/sdcardfs/main.o
+  CC      fs/verity/hash_algs.o
+  CC      drivers/hid/hid-magicmouse.o
+  CC      fs/verity/init.o
+  CC      fs/sysfs/mount.o
+  CC      fs/sysfs/group.o
+  CC      fs/verity/measure.o
+  CC      drivers/gpu/drm/drm_vma_manager.o
+  CC      drivers/gpu/drm/drm_flip_work.o
+  CC      drivers/gpu/drm/drm_modeset_lock.o
+  CC      drivers/hid/hid-microsoft.o
+  CC      fs/sdcardfs/super.o
+  AR      fs/sysfs/built-in.a
+  CC      fs/verity/open.o
+  CC      fs/verity/read_metadata.o
+  CC      drivers/hid/hid-multitouch.o
+  CC      drivers/gpu/msm/adreno_drawctxt.o
+  CC      fs/sdcardfs/lookup.o
+  CC      drivers/gpu/drm/drm_atomic.o
+  CC      drivers/gpu/msm/adreno_dispatch.o
+  CC      drivers/gpu/drm/drm_bridge.o
+  CC      drivers/gpu/drm/drm_framebuffer.o
+../drivers/gpu/drm/drm_atomic.c: 在函数‘drm_mode_atomic_ioctl’中:
+../drivers/gpu/drm/drm_atomic.c:2755:3: 警告： 标量初始化带花括号
+ 2755 |   .cpus_affine = ATOMIC_INIT(BIT(raw_smp_processor_id()) |
+      |   ^
+../drivers/gpu/drm/drm_atomic.c:2755:3: 附注： (在‘req.cpus_affine’的初始化附近)
+  CC      drivers/hid/hid-nintendo.o
+  CC      fs/verity/verify.o
+  CC      drivers/hid/hid-plantronics.o
+  CC      fs/sdcardfs/mmap.o
+  CC      drivers/gpu/msm/adreno_snapshot.o
+  CC      fs/sdcardfs/packagelist.o
+  CC      drivers/hid/hid-playstation.o
+  CC      drivers/hid/hid-sony.o
+  CC      fs/verity/signature.o
+  CC      fs/sdcardfs/derived_perm.o
+  CC      drivers/gpu/drm/drm_connector.o
+  CC      drivers/hid/usbhid/hid-core.o
+  CC      drivers/hid/usbhid/hiddev.o
+  AR      fs/verity/built-in.a
+  CC      fs/eventpoll.o
+  CC      drivers/gpu/msm/adreno_a6xx.o
+  CC      drivers/gpu/drm/drm_blend.o
+  CC      drivers/gpu/drm/drm_encoder.o
+  AR      fs/sdcardfs/built-in.a
+  CC      fs/anon_inodes.o
+  CC      drivers/gpu/drm/drm_mode_object.o
+  CC      fs/signalfd.o
+  CC      drivers/gpu/drm/drm_property.o
+  AR      drivers/hid/usbhid/built-in.a
+  AR      drivers/hid/built-in.a
+  CC      drivers/hwmon/hwmon.o
+  CC      drivers/gpu/drm/drm_plane.o
+  CC      drivers/gpu/drm/drm_color_mgmt.o
+  CC      drivers/gpu/msm/adreno_a6xx_snapshot.o
+  CC      drivers/gpu/drm/drm_print.o
+  CC      fs/timerfd.o
+  CC      fs/eventfd.o
+  CC      drivers/gpu/msm/adreno_a6xx_preempt.o
+  AR      drivers/hwmon/built-in.a
+  CC      drivers/hwspinlock/hwspinlock_core.o
+  CC      drivers/hwspinlock/qcom_hwspinlock.o
+  CC      drivers/gpu/drm/drm_dumb_buffers.o
+  CC      fs/aio.o
+  CC      fs/locks.o
+  CC      drivers/gpu/drm/drm_mode_config.o
+  CC      drivers/gpu/drm/drm_vblank.o
+  CC      drivers/gpu/msm/adreno_a6xx_gmu.o
+  AR      drivers/hwspinlock/built-in.a
+  CC      drivers/hwtracing/google/coresight-clk-placeholder.o
+  CC      drivers/gpu/drm/drm_syncobj.o
+  CC      drivers/gpu/drm/drm_lease.o
+  CC      drivers/hwtracing/google/coresight-clk-amba-placeholder.o
+  CC      fs/compat.o
+  AR      drivers/hwtracing/google/built-in.a
+  CC      drivers/i2c/i2c-boardinfo.o
+  CC      drivers/gpu/msm/adreno_a6xx_rgmu.o
+  CC      fs/compat_ioctl.o
+  CC      drivers/i2c/i2c-core-base.o
+  CC      drivers/gpu/drm/drm_writeback.o
+  CC      drivers/gpu/msm/adreno_sysfs.o
+  CC      drivers/gpu/msm/adreno.o
+  CC      fs/binfmt_script.o
+  CC      fs/binfmt_elf.o
+  CC      fs/compat_binfmt_elf.o
+  CC      fs/mbcache.o
+  CC      drivers/gpu/drm/drm_client.o
+  CC      drivers/gpu/msm/adreno_cp_parser.o
+  CC      fs/posix_acl.o
+../fs/binfmt_elf.c: 在函数‘load_elf_binary’中:
+../fs/binfmt_elf.c:1205:1: 警告： the frame size of 4384 bytes is larger than 4096 bytes [-Wframe-larger-than=]
+ 1205 | }
+      | ^
+In file included from ../fs/compat_binfmt_elf.c:131:
+../fs/binfmt_elf.c: 在函数‘load_elf_binary’中:
+../fs/binfmt_elf.c:1205:1: 警告： the frame size of 4336 bytes is larger than 4096 bytes [-Wframe-larger-than=]
+ 1205 | }
+      | ^
+  CC      fs/coredump.o
+  CC      drivers/gpu/msm/adreno_perfcounter.o
+  CC      drivers/gpu/drm/drm_notifier_mi.o
+  CC      drivers/gpu/drm/drm_ioc32.o
+  CC      drivers/gpu/drm/ati_pcigart.o
+  CC      drivers/i2c/i2c-core-smbus.o
+  CC      drivers/gpu/drm/drm_panel.o
+  CC      fs/drop_caches.o
+  CC      fs/iomap.o
+  CC      drivers/gpu/msm/adreno_trace.o
+  CC      drivers/gpu/msm/adreno_iommu.o
+  CC      drivers/i2c/i2c-core-of.o
+  CC      drivers/gpu/drm/drm_of.o
+  CC      drivers/i3c/device.o
+  CC      drivers/i3c/master.o
+  CC      drivers/gpu/drm/drm_mipi_dsi.o
+  CC      drivers/i3c/master/i3c-master-qcom-geni.o
+  CC      drivers/i2c/i2c-dev.o
+  CC      drivers/i2c/i2c-mux.o
+  CC      drivers/gpu/drm/drm_panel_orientation_quirks.o
+  CC      drivers/gpu/msm/adreno_compat.o
+  CC      drivers/gpu/drm/bridge/lt9611uxc.o
+  CC      drivers/i2c/algos/i2c-algo-bit.o
+  CC      drivers/i2c/busses/i2c-qcom-geni.o
+  AR      drivers/i3c/master/built-in.a
+  CC      drivers/iio/industrialio-core.o
+  AR      drivers/i3c/built-in.a
+  CC      drivers/input/fingerprint/fpc_tee/fpc1020_tee.o
+  CC      drivers/input/serio/serio.o
+  AR      fs/built-in.a
+  AR      drivers/gpu/msm/built-in.a
+  CC      drivers/input/serio/libps2.o
+  CC      drivers/iommu/iommu.o
+../drivers/input/fingerprint/fpc_tee/fpc1020_tee.c: 在函数‘vendor_update’中:
+../drivers/input/fingerprint/fpc_tee/fpc1020_tee.c:838:17: 警告： 此函数中的‘rc’在使用前未初始化 [-Wuninitialized]
+  838 |  return rc ? rc : count;
+      |         ~~~~~~~~^~~~~~~
+  AR      drivers/i2c/algos/built-in.a
+  CC      drivers/irqchip/irqchip.o
+  AR      drivers/input/fingerprint/fpc_tee/built-in.a
+  AR      drivers/input/fingerprint/built-in.a
+  CC      drivers/input/joystick/xpad.o
+  AR      drivers/gpu/drm/bridge/built-in.a
+  AR      drivers/gpu/drm/built-in.a
+  AR      drivers/i2c/busses/built-in.a
+  AR      drivers/i2c/built-in.a
+  AR      drivers/gpu/built-in.a
+  CC      drivers/irqchip/irq-gic.o
+  AR      drivers/input/serio/built-in.a
+  CC      drivers/irqchip/irq-gic-common.o
+  CC      drivers/input/keyboard/atkbd.o
+  CC      drivers/input/misc/aw8697_haptic_new/ringbuffer.o
+  CC      drivers/irqchip/irq-gic-v2m.o
+  CC      drivers/iio/industrialio-event.o
+  CC      drivers/iio/inkern.o
+  CC      drivers/input/misc/aw8697_haptic_new/aw8697.o
+  AR      drivers/input/joystick/built-in.a
+  CC      drivers/irqchip/irq-gic-v3.o
+  CC      drivers/irqchip/irq-gic-v3-mbi.o
+  CC      drivers/input/tablet/acecad.o
+  CC      drivers/iommu/iommu-traces.o
+  CC      drivers/input/keyboard/gpio_keys.o
+  CC      drivers/iommu/iommu-sysfs.o
+  CC      drivers/iio/industrialio-buffer.o
+  CC      drivers/input/tablet/aiptek.o
+  CC      drivers/iommu/dma-iommu.o
+  CC      drivers/irqchip/irq-gic-v3-its.o
+  AR      drivers/input/keyboard/built-in.a
+  CC      drivers/irqchip/irq-gic-v3-its-platform-msi.o
+  CC      drivers/irqchip/irq-gic-v4.o
+  CC      drivers/input/tablet/gtco.o
+  CC      drivers/iommu/msm_dma_iommu_mapping.o
+  CC      drivers/iommu/io-pgtable.o
+  CC      drivers/iommu/io-pgtable-arm.o
+  CC      drivers/iio/industrialio-trigger.o
+  CC      drivers/input/misc/qpnp-power-on.o
+  CC      drivers/input/misc/uinput.o
+  CC      drivers/input/tablet/hanwang.o
+  AR      drivers/input/misc/aw8697_haptic_new/built-in.a
+  CC      drivers/iommu/iova.o
+  CC      drivers/iommu/io-pgtable-fast.o
+  CC      drivers/input/tablet/kbtab.o
+  CC      drivers/iommu/dma-mapping-fast.o
+  CC      drivers/iio/adc/qcom-spmi-adc5.o
+  CC      drivers/iio/adc/qcom-vadc-common.o
+  CC      drivers/irqchip/irq-gic-v3-its-pci-msi.o
+  AR      drivers/input/tablet/built-in.a
+  CC      drivers/irqchip/irq-partition-percpu.o
+  CC      drivers/iommu/of_iommu.o
+  CC      drivers/irqchip/qcom-pdc.o
+  CC      drivers/iommu/arm-smmu.o
+  AR      drivers/iio/adc/built-in.a
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_core.o
+  CC      drivers/iio/buffer/industrialio-buffer-cb.o
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_ex_fun.o
+  AR      drivers/input/misc/built-in.a
+  CC      drivers/input/input.o
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_ex_mode.o
+  AR      drivers/irqchip/built-in.a
+  CC      drivers/iommu/arm-smmu-debug.o
+  CC      drivers/iio/buffer/industrialio-triggered-buffer.o
+  CC      drivers/iio/buffer/kfifo_buf.o
+  CC      drivers/leds/led-core.o
+  CC      drivers/mailbox/mailbox.o
+  CC      drivers/leds/led-class.o
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_gesture.o
+  CC      drivers/iommu/iommu-logger.o
+  CC      drivers/leds/led-triggers.o
+  CC      drivers/mailbox/qcom-apcs-ipc-mailbox.o
+  AR      drivers/iio/buffer/built-in.a
+  CC      drivers/md/dm-uevent.o
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_esdcheck.o
+  CC      drivers/md/dm.o
+  CC      drivers/mailbox/msm_qmp.o
+  CC      drivers/input/input-compat.o
+  CC      drivers/iio/proximity/us_prox.o
+  CC      drivers/leds/leds-qti-tri-led.o
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_spi.o
+  CC      drivers/leds/leds-qpnp-flash-v2.o
+  AR      drivers/mailbox/built-in.a
+  CC      drivers/leds/leds-qpnp-flash-common.o
+  CC      drivers/leds/trigger/ledtrig-timer.o
+  CC      drivers/media/common/videobuf2/videobuf2-core.o
+  AR      drivers/iio/proximity/built-in.a
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_point_report_check.o
+  AR      drivers/iio/built-in.a
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_flash.o
+  CC      drivers/media/dvb-core/dvbdev.o
+  AR      drivers/leds/trigger/built-in.a
+  CC      drivers/md/dm-table.o
+  AR      drivers/iommu/built-in.a
+  CC      drivers/mfd/mfd-core.o
+  CC      drivers/mfd/qcom-i2c-pmic.o
+In file included from ../drivers/input/touchscreen/focaltech_spi/focaltech_common.h:34,
+                 from ../drivers/input/touchscreen/focaltech_spi/focaltech_core.h:65,
+                 from ../drivers/input/touchscreen/focaltech_spi/focaltech_flash.c:36:
+../drivers/input/touchscreen/focaltech_spi/focaltech_config.h:265:29: 错误： #include 中文件名为空
+  265 | #define FTS_UPGRADE_FW_FILE ""
+      |                             ^~
+../drivers/input/touchscreen/focaltech_spi/focaltech_config.h:271:50: 致命错误： include/firmware/fw_sample.i：没有那个文件或目录
+  271 | #define FTS_UPGRADE_FW2_FILE                     "include/firmware/fw_sample.i"
+      |                                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+编译中断。
+make[5]: *** [../scripts/Makefile.build:338：drivers/input/touchscreen/focaltech_spi/focaltech_flash.o] 错误 1
+make[4]: *** [../scripts/Makefile.build:642：drivers/input/touchscreen/focaltech_spi] 错误 2
+make[3]: *** [../scripts/Makefile.build:642：drivers/input/touchscreen] 错误 2
+make[2]: *** [../scripts/Makefile.build:642：drivers/input] 错误 2
+make[2]: *** 正在等待未完成的任务....
+  CC      drivers/mfd/qcom-spmi-pmic.o
+  CC      drivers/mfd/syscon.o
+  CC      drivers/media/dvb-core/dmxdev.o
+  CC      drivers/md/dm-target.o
+  CC      drivers/md/dm-linear.o
+  CC      drivers/md/dm-stripe.o
+  AR      drivers/leds/built-in.a
+  CC      drivers/md/dm-ioctl.o
+  AR      drivers/mfd/built-in.a
+  CC      drivers/media/common/videobuf2/vb2-trace.o
+  CC      drivers/md/dm-io.o
+  CC      drivers/media/common/videobuf2/videobuf2-v4l2.o
+  CC      drivers/md/dm-kcopyd.o
+  CC      drivers/md/dm-sysfs.o
+  CC      drivers/md/dm-stats.o
+  CC      drivers/media/common/videobuf2/videobuf2-memops.o
+  CC      drivers/md/dm-rq.o
+  CC      drivers/md/dm-builtin.o
+  CC      drivers/md/dm-bufio.o
+  CC      drivers/media/common/videobuf2/videobuf2-vmalloc.o
+  CC      drivers/md/dm-default-key.o
+  CC      drivers/md/dm-snap.o
+  CC      drivers/md/dm-exception-store.o
+  CC      drivers/md/dm-snap-transient.o
+  AR      drivers/media/common/videobuf2/built-in.a
+  AR      drivers/media/common/built-in.a
+  CC      drivers/media/dvb-core/dvb_demux.o
+  CC      drivers/md/dm-snap-persistent.o
+  CC      drivers/media/i2c/ir-kbd-i2c.o
+  CC      drivers/media/dvb-core/dvb_ca_en50221.o
+  CC      drivers/media/dvb-core/dvb_frontend.o
+  CC      drivers/media/dvb-core/dvb_net.o
+  CC      drivers/media/dvb-core/dvb_ringbuffer.o
+  CC      drivers/media/dvb-core/dvb_math.o
+  AR      drivers/media/i2c/built-in.a
+  CC      drivers/md/dm-verity-fec.o
+  CC      drivers/md/dm-verity-target.o
+  CC      drivers/media/platform/msm/cvp/msm_v4l2_cvp.o
+  CC      drivers/media/platform/msm/npu/npu_dbg.o
+  CC      drivers/media/platform/msm/cvp/msm_v4l2_private.o
+  CC      drivers/media/platform/msm/cvp/msm_cvp_platform.o
+  CC      drivers/media/platform/msm/npu/npu_dev.o
+  CC      drivers/media/platform/msm/npu/npu_debugfs.o
+  CC      drivers/media/platform/msm/npu/npu_host_ipc.o
+  CC      drivers/md/dm-user.o
+  AR      drivers/media/dvb-core/built-in.a
+  CC      drivers/media/rc/rc-main.o
+  CC      drivers/media/platform/msm/cvp/msm_cvp_common.o
+  CC      drivers/media/platform/msm/npu/npu_hw_access.o
+  CC      drivers/media/platform/msm/cvp/msm_cvp_core.o
+  CC      drivers/media/platform/msm/npu/npu_mgr.o
+  CC      drivers/media/platform/msm/cvp/msm_cvp.o
+  AR      drivers/md/built-in.a
+  CC      drivers/media/platform/msm/cvp/msm_smem.o
+  CC      drivers/media/platform/msm/cvp/msm_cvp_debug.o
+  CC      drivers/media/platform/msm/cvp/msm_cvp_res_parse.o
+  CC      drivers/media/platform/msm/cvp/cvp_hfi.o
+  CC      drivers/media/platform/msm/cvp/hfi_response_handler.o
+  CC      drivers/media/rc/rc-ir-raw.o
+  CC      drivers/media/platform/msm/cvp/hfi_packetization.o
+  CC      drivers/media/platform/msm/cvp/cvp_core_hfi.o
+  AR      drivers/media/platform/msm/npu/built-in.a
+../drivers/media/platform/msm/cvp/hfi_response_handler.c: 在函数‘hfi_process_session_init_done’中:
+../drivers/media/platform/msm/cvp/hfi_response_handler.c:237:55: 警告： 初始值设定周围缺少花括号 [-Wmissing-braces]
+  237 |  struct cvp_hal_session_init_done session_init_done = { {0} };
+      |                                                       ^
+      |                                                          {}
+  CC      drivers/media/platform/msm/synx/synx.o
+  CC      drivers/media/platform/msm/cvp/msm_cvp_clocks.o
+  CC      drivers/media/rc/lirc_dev.o
+  CC      drivers/media/platform/msm/cvp/msm_cvp_dsp.o
+  CC      drivers/media/rc/ir-spi.o
+  CC      drivers/media/platform/msm/synx/synx_util.o
+  CC      drivers/media/platform/msm/synx/synx_debugfs.o
+  CC      drivers/media/tuners/tuner-xc2028.o
+  CC      drivers/media/tuners/tuner-simple.o
+  CC      drivers/media/tuners/tuner-types.o
+  CC      drivers/media/tuners/mt20xx.o
+  CC      drivers/media/tuners/tda8290.o
+  AR      drivers/media/platform/msm/synx/built-in.a
+  CC      drivers/media/tuners/tda9887.o
+  AR      drivers/media/platform/msm/cvp/built-in.a
+  AR      drivers/media/platform/msm/built-in.a
+  AR      drivers/media/platform/built-in.a
+  AR      drivers/media/rc/built-in.a
+  CC      drivers/media/media-device.o
+  CC      drivers/media/v4l2-core/v4l2-dev.o
+  CC      drivers/media/v4l2-core/v4l2-ioctl.o
+  CC      drivers/media/tuners/tda827x.o
+  CC      drivers/media/tuners/tda18271-maps.o
+  CC      drivers/media/tuners/tda18271-common.o
+  CC      drivers/media/tuners/tda18271-fe.o
+  CC      drivers/media/media-devnode.o
+  CC      drivers/media/tuners/xc5000.o
+  CC      drivers/media/media-entity.o
+  CC      drivers/media/v4l2-core/v4l2-device.o
+  CC      drivers/media/tuners/xc4000.o
+  CC      drivers/media/tuners/mc44s803.o
+  CC      drivers/media/v4l2-core/v4l2-fh.o
+  CC      drivers/media/v4l2-core/v4l2-event.o
+  CC      drivers/media/v4l2-core/v4l2-ctrls.o
+  CC      drivers/media/v4l2-core/v4l2-subdev.o
+  CC      drivers/media/v4l2-core/v4l2-clk.o
+  CC      drivers/media/v4l2-core/v4l2-async.o
+  CC      drivers/media/v4l2-core/v4l2-compat-ioctl32.o
+  CC      drivers/media/v4l2-core/v4l2-trace.o
+  AR      drivers/media/tuners/built-in.a
+  CC      drivers/media/v4l2-core/v4l2-mc.o
+  CC      drivers/media/v4l2-core/v4l2-common.o
+  CC      drivers/media/v4l2-core/v4l2-dv-timings.o
+  CC      drivers/media/v4l2-core/v4l2-mem2mem.o
+  AR      drivers/media/v4l2-core/built-in.a
+  AR      drivers/media/built-in.a
+make[1]: *** [/home/liu/kernel/Makefile:1256：drivers] 错误 2
+make[1]: 离开目录“/home/liu/kernel/out”
+make: *** [Makefile:153：sub-make] 错误 2
+[ERROR] 命令失败: make -j$(nproc) O=out (在行号: 1904)
+[WARNING] 尝试继续执行...
