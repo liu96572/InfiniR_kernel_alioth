@@ -1,0 +1,17 @@
+// 保持音乐应用的音频会话
+static void preserve_music_audio_session(struct task_struct *tsk) {
+    struct music_app_policy *policy = find_music_policy(tsk);
+    
+    if (policy && policy->preserve_audio_session) {
+        // 保持音频设备打开
+        keep_audio_device_open(tsk);
+        
+        // 保护音频缓冲区
+        protect_audio_buffers(tsk);
+        
+        // 允许后台音频处理
+        if (policy->allow_background_play) {
+            enable_background_audio_processing(tsk);
+        }
+    }
+}
