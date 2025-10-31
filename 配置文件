@@ -1,0 +1,14 @@
+// 用户可配置参数
+struct tombstone_config {
+    // 学习参数
+    int learning_interval;          // 学习间隔
+    int prediction_threshold;       // 预测阈值
+    
+    // 保活策略
+    bool enable_smart_preservation; // 智能保活
+    bool enable_predictive_restore; // 预测恢复
+    
+    // 应用白名单
+    char preserve_whitelist[10][128]; // 保活白名单
+    char compress_blacklist[10][128]; // 压缩黑名单
+};
