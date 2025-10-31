@@ -1,0 +1,108 @@
+liu@liu-virtual-machine:~/kernel$ # 重新编译
+liu@liu-virtual-machine:~/kernel$ make -j$(nproc) O=out
+make[1]: 进入目录“/home/liu/kernel/out”
+  GEN     ./Makefile
+  Using .. as source for kernel
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.1.dtb
+  CALL    ../scripts/checksyscalls.sh
+  CHK     include/generated/compile.h
+  CC      security/app_compat/core.o
+../security/app_compat/core.c:21:13: 警告： ‘is_target_app’ defined but not used [-Wunused-function]
+   21 | static bool is_target_app(const char *comm)
+      |             ^~~~~~~~~~~~~
+  AR      security/app_compat/built-in.a
+  GEN     security/selinux/flask.h security/selinux/av_permissions.h
+  CC      security/selinux/avc.o
+  CC      block/partitions/check.o
+  CC      security/selinux/hooks.o
+  CC      kernel/tombstone.o
+  CC      block/partitions/msdos.o
+../kernel/tombstone.c: 在函数‘tombstone_insert’中:
+../kernel/tombstone.c:60:9: 警告： ISO C90 不允许混合使用声明和代码 [-Wdeclaration-after-statement]
+   60 |         struct tombstone_entry *entry = rb_entry(parent, struct tombstone_entry, node);
+      |         ^~~~~~
+../kernel/tombstone.c: 在函数‘tombstone_save_task’中:
+../kernel/tombstone.c:97:39: 错误： invalid use of undefined type ‘struct signal_struct’
+   97 |     entry->oom_score_adj = tsk->signal->oom_score_adj;
+      |                                       ^~
+在文件作用域：
+../kernel/tombstone.c:36:32: 警告： ‘tombstone_lookup’ defined but not used [-Wunused-function]
+   36 | static struct tombstone_entry *tombstone_lookup(pid_t pid)
+      |                                ^~~~~~~~~~~~~~~~
+make[2]: *** [../scripts/Makefile.build:338：kernel/tombstone.o] 错误 1
+make[1]: *** [/home/liu/kernel/Makefile:1256：kernel] 错误 2
+make[1]: *** 正在等待未完成的任务....
+  CC      block/partitions/efi.o
+  CC      security/selinux/selinuxfs.o
+  CC      security/selinux/netlink.o
+  CC      security/commoncap.o
+  AR      block/partitions/built-in.a
+  CC      block/bio.o
+  CC      security/min_addr.o
+  CC      block/elevator.o
+  DTC     arch/arm64/boot/dts/vendor/qcom/alioth-sm8250-overlay.dtbo
+  CC      security/selinux/nlmsgtab.o
+  CC      security/security.o
+  CC      security/selinux/netif.o
+  CC      security/selinux/netnode.o
+  CC      security/selinux/netport.o
+  CC      security/selinux/exports.o
+  CC      block/blk-core.o
+  CC      security/selinux/ss/ebitmap.o
+  CC      block/blk-tag.o
+  CC      security/selinux/ss/hashtab.o
+  CC      security/selinux/ss/symtab.o
+  CC      block/blk-sysfs.o
+  CC      security/selinux/ss/sidtab.o
+  CC      security/selinux/ss/avtab.o
+  CC      block/blk-flush.o
+  CC      security/selinux/ss/policydb.o
+  CC      security/selinux/ss/services.o
+  CC      security/selinux/ss/conditional.o
+  CC      security/selinux/ss/mls.o
+  CC      security/selinux/ss/status.o
+  CC      block/blk-settings.o
+  CC      block/blk-ioc.o
+  CC      block/blk-map.o
+  CC      block/blk-exec.o
+  CC      block/blk-merge.o
+  CC      block/blk-softirq.o
+  CC      block/blk-timeout.o
+  CC      block/blk-lib.o
+  CC      block/blk-mq.o
+  CC      block/blk-mq-tag.o
+  AR      security/selinux/built-in.a
+  AR      security/built-in.a
+  CC      block/blk-stat.o
+  CC      block/blk-mq-sysfs.o
+  CC      block/blk-mq-cpumap.o
+  CC      block/blk-mq-sched.o
+  CC      block/ioctl.o
+  CC      block/genhd.o
+  CC      block/partition-generic.o
+  CC      block/ioprio.o
+  CC      block/badblocks.o
+  CC      block/blk-rq-qos.o
+  CC      block/scsi_ioctl.o
+  CC      block/bsg.o
+  CC      block/blk-cgroup.o
+  CC      block/anxiety-iosched.o
+  CC      block/deadline-iosched.o
+  CC      block/cfq-iosched.o
+  CC      block/fiops-iosched.o
+  CC      block/sio-iosched.o
+  CC      block/zen-iosched.o
+  CC      block/compat_ioctl.o
+  CC      block/blk-mq-pci.o
+  CC      block/blk-wbt.o
+  CC      block/blk-pm.o
+  CC      block/keyslot-manager.o
+  CC      block/bio-crypt-ctx.o
+  CC      block/blk-crypto.o
+  CC      block/blk-crypto-fallback.o
+  AR      block/built-in.a
+make[1]: 离开目录“/home/liu/kernel/out”
+make: *** [Makefile:153：sub-make] 错误 2
+[ERROR] 命令失败: make -j$(nproc) O=out (在行号: 2937)
