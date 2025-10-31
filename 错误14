@@ -1,0 +1,900 @@
+liu@liu-virtual-machine:~/kernel$ # 重新编译
+liu@liu-virtual-machine:~/kernel$ export KCFLAGS="-Wno-error -Wno-format -Wno-unused-variable -Wno-implicit-function-declaration"
+liu@liu-virtual-machine:~/kernel$ make -j$(nproc) O=out
+make[1]: 进入目录“/home/liu/kernel/out”
+  GEN     ./Makefile
+scripts/kconfig/conf  --syncconfig Kconfig
+  GEN     ./Makefile
+  Using .. as source for kernel
+  CC      scripts/mod/empty.o
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.dtb
+  CC      scripts/mod/devicetable-offsets.s
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.1.dtb
+  MKELF   scripts/mod/elfconfig.h
+  HOSTCC  scripts/mod/sumversion.o
+  HOSTCC  scripts/mod/modpost.o
+  HOSTCC  scripts/mod/file2alias.o
+  CC      kernel/bounds.s
+  CC      arch/arm64/kernel/asm-offsets.s
+  HOSTLD  scripts/mod/modpost
+  CALL    ../scripts/checksyscalls.sh
+  CC      arch/arm64/kernel/vdso/vgettimeofday.o
+  LD      arch/arm64/kernel/vdso/vdso.so.dbg
+  VDSOSYM include/generated/vdso-offsets.h
+  AS      usr/initramfs_data.o
+  CC      init/main.o
+  AR      usr/built-in.a
+  CC      arch/arm64/net/bpf_jit_comp.o
+  CC      arch/arm64/mm/dma-mapping.o
+  CC      arch/arm64/crypto/sha1-ce-glue.o
+  CC      arch/arm64/kernel/debug-monitors.o
+  AS      arch/arm64/kernel/entry.o
+  CC      arch/arm64/kernel/irq.o
+  AS      arch/arm64/crypto/sha1-ce-core.o
+  CC      arch/arm64/crypto/sha2-ce-glue.o
+  CC      arch/arm64/kernel/fpsimd.o
+  AS      arch/arm64/kernel/entry-fpsimd.o
+  DTC     arch/arm64/boot/dts/vendor/qcom/alioth-sm8250-overlay.dtbo
+  CC      arch/arm64/kernel/process.o
+  CC      arch/arm64/kernel/ptrace.o
+  AS      arch/arm64/crypto/sha2-ce-core.o
+  CC      arch/arm64/crypto/sha512-ce-glue.o
+  CC      arch/arm64/mm/extable.o
+  AR      arch/arm64/net/built-in.a
+  CHK     include/generated/compile.h
+  CC      arch/arm64/mm/fault.o
+  CC      init/do_mounts.o
+  CC      kernel/fork.o
+  CC      arch/arm64/mm/init.o
+  AS      arch/arm64/crypto/sha512-ce-core.o
+  CC      arch/arm64/crypto/ghash-ce-glue.o
+  AS      arch/arm64/crypto/ghash-ce-core.o
+  AS      arch/arm64/crypto/aes-ce-core.o
+  CC      arch/arm64/kernel/setup.o
+  CC      arch/arm64/kernel/signal.o
+  CC      arch/arm64/kernel/sys.o
+  CC      arch/arm64/crypto/aes-ce-glue.o
+  AS      arch/arm64/mm/cache.o
+  CC      arch/arm64/mm/flush.o
+  CC      arch/arm64/mm/copypage.o
+  CC      arch/arm64/kernel/stacktrace.o
+  CC      arch/arm64/crypto/aes-ce-ccm-glue.o
+  CC      init/do_mounts_rd.o
+  CC      arch/arm64/mm/ioremap.o
+  CC      arch/arm64/mm/mmap.o
+  CC      init/do_mounts_initrd.o
+  CC      arch/arm64/kernel/time.o
+  CC      init/do_mounts_dm.o
+  AS      arch/arm64/crypto/aes-ce-ccm-core.o
+  CC      arch/arm64/crypto/aes-glue-ce.o
+  CC      init/noinitramfs.o
+  CC      init/initramfs.o
+  CC      arch/arm64/mm/pgd.o
+  CC      init/calibrate.o
+  CC      arch/arm64/kernel/traps.o
+  CC      arch/arm64/kernel/io.o
+  CC      kernel/exec_domain.o
+  CC      kernel/panic.o
+  CC      init/init_task.o
+  CC      arch/arm64/mm/mmu.o
+  AS      arch/arm64/crypto/aes-ce.o
+  CC      arch/arm64/crypto/aes-glue-neon.o
+  CC      init/version.o
+  AS      arch/arm64/crypto/aes-neon.o
+  CC      kernel/cpu.o
+  CC      arch/arm64/kernel/vdso.o
+  CC      arch/arm64/crypto/sha256-glue.o
+  AS      arch/arm64/kernel/hyp-stub.o
+  CC      arch/arm64/kernel/psci.o
+  CC      arch/arm64/kernel/cpu_ops.o
+  AR      init/built-in.a
+  CC      arch/arm64/kernel/insn.o
+  CC      arch/arm64/kernel/module.o
+  CC      arch/arm64/kernel/return_address.o
+  CC      arch/arm64/mm/context.o
+  CC      arch/arm64/kernel/cpuinfo.o
+  AS      arch/arm64/mm/proc.o
+  CC      arch/arm64/kernel/cpu_errata.o
+  CC      arch/arm64/mm/pageattr.o
+  CC      arch/arm64/crypto/sha512-glue.o
+  CC      certs/system_keyring.o
+  CC      arch/arm64/kernel/cpufeature.o
+  CC      arch/arm64/kernel/alternative.o
+  CC      arch/arm64/kernel/cacheinfo.o
+  AR      arch/arm64/mm/built-in.a
+  AR      certs/built-in.a
+  CC      arch/arm64/kernel/smp.o
+  CC      mm/filemap.o
+  CC      fs/open.o
+  CC      fs/read_write.o
+  CC      arch/arm64/kernel/smp_spin_table.o
+  AS      arch/arm64/crypto/chacha-neon-core.o
+  CC      kernel/exit.o
+  CC      arch/arm64/crypto/chacha-neon-glue.o
+  CC      kernel/softirq.o
+  CC      kernel/resource.o
+  CC      arch/arm64/crypto/poly1305-glue.o
+  CC      arch/arm64/kernel/topology.o
+  CC      fs/file_table.o
+  AS      arch/arm64/crypto/aes-cipher-core.o
+  CC      kernel/sysctl.o
+  CC      arch/arm64/crypto/aes-cipher-glue.o
+  CC      fs/super.o
+  CC      arch/arm64/kernel/syscall.o
+  CC      security/app_compat/core.o
+  CC      arch/arm64/kernel/sys32.o
+../security/app_compat/core.c: 在函数‘app_compat_task_prctl’中:
+../security/app_compat/core.c:60:19: 错误： ‘PR_GET_DUMPABLE’ undeclared (first use in this function); did you mean ‘KERN_SETUID_DUMPABLE’?
+   60 |     if (option == PR_GET_DUMPABLE) {
+      |                   ^~~~~~~~~~~~~~~
+      |                   KERN_SETUID_DUMPABLE
+../security/app_compat/core.c:60:19: 附注： 每个未声明的标识符在其出现的函数内只报告一次
+../security/app_compat/core.c: 在文件作用域：
+../security/app_compat/core.c:68:15: 错误： 变量‘app_compat_ops’有初始值设定但类型不完全
+   68 | static struct security_operations app_compat_ops = {
+      |               ^~~~~~~~~~~~~~~~~~~
+../security/app_compat/core.c:69:6: 错误： ‘struct security_operations’没有名为‘name’的成员
+   69 |     .name = "app_compat",
+      |      ^~~~
+../security/app_compat/core.c:69:13: 警告： 结构初始值设定项中有多余元素
+   69 |     .name = "app_compat",
+      |             ^~~~~~~~~~~~
+../security/app_compat/core.c:69:13: 附注： (在‘app_compat_ops’的初始化附近)
+../security/app_compat/core.c:70:6: 错误： ‘struct security_operations’没有名为‘task_prctl’的成员
+   70 |     .task_prctl = app_compat_task_prctl,
+      |      ^~~~~~~~~~
+../security/app_compat/core.c:70:19: 警告： 结构初始值设定项中有多余元素
+   70 |     .task_prctl = app_compat_task_prctl,
+      |                   ^~~~~~~~~~~~~~~~~~~~~
+../security/app_compat/core.c:70:19: 附注： (在‘app_compat_ops’的初始化附近)
+../security/app_compat/core.c:68:35: 错误： ‘app_compat_ops’的存储大小未知
+   68 | static struct security_operations app_compat_ops = {
+      |                                   ^~~~~~~~~~~~~~
+../security/app_compat/core.c:33:13: 警告： ‘hide_root_from_app’ defined but not used [-Wunused-function]
+   33 | static void hide_root_from_app(struct task_struct *task)
+      |             ^~~~~~~~~~~~~~~~~~
+  AR      arch/arm64/crypto/built-in.a
+make[3]: *** [../scripts/Makefile.build:339：security/app_compat/core.o] 错误 1
+make[2]: *** [../scripts/Makefile.build:642：security/app_compat] 错误 2
+make[1]: *** [/home/liu/kernel/Makefile:1256：security] 错误 2
+make[1]: *** 正在等待未完成的任务....
+  CC      arch/arm64/kernel/signal32.o
+  CC      kernel/sysctl_binary.o
+  CC      mm/mempool.o
+  CC      arch/arm64/kernel/sys_compat.o
+  CC      fs/char_dev.o
+  CC      mm/oom_kill.o
+  CC      mm/fadvise.o
+  CC      mm/maccess.o
+  CC      arch/arm64/kernel/arm64ksyms.o
+  CC      arch/arm64/kernel/module-plts.o
+  CC      mm/page_alloc.o
+  CC      arch/arm64/kernel/perf_regs.o
+  CC      fs/stat.o
+  CC      kernel/capability.o
+  CC      mm/page-writeback.o
+  CC      mm/readahead.o
+  CC      arch/arm64/kernel/perf_callchain.o
+  CC      arch/arm64/kernel/perf_event.o
+  CC      mm/swap.o
+  CC      mm/truncate.o
+  CC      kernel/ptrace.o
+  CC      arch/arm64/kernel/perf_trace_counters.o
+  CC      fs/exec.o
+  CC      fs/pipe.o
+../fs/exec.c: 在函数‘__do_execve_file’中:
+../fs/exec.c:1776:2: 警告： ISO C90 不允许混合使用声明和代码 [-Wdeclaration-after-statement]
+ 1776 |  char *pathbuf = NULL;
+      |  ^~~~
+  CC      arch/arm64/kernel/perf_trace_user.o
+  CC      mm/vmscan.o
+  CC      mm/shmem.o
+  CC      arch/arm64/kernel/hw_breakpoint.o
+  CC      kernel/user.o
+  CC      mm/util.o
+  CC      fs/namei.o
+  CC      kernel/signal.o
+  AS      arch/arm64/kernel/sleep.o
+  CC      arch/arm64/kernel/suspend.o
+  CC      mm/mmzone.o
+  CC      fs/fcntl.o
+  CC      mm/vmstat.o
+  CC      arch/arm64/kernel/cpuidle.o
+  CC      mm/backing-dev.o
+  CC      arch/arm64/kernel/jump_label.o
+  CC      arch/arm64/kernel/pci.o
+  CC      mm/mm_init.o
+  CC      mm/mmu_context.o
+  CC      arch/arm64/kernel/armv8_deprecated.o
+  CC      arch/arm64/kernel/kaslr.o
+  CC      arch/arm64/kernel/ssbd.o
+  CC      fs/ioctl.o
+  CC      mm/percpu.o
+  CC      fs/readdir.o
+  CC      mm/slab_common.o
+  CC      mm/compaction.o
+  CC      arch/arm64/kernel/probes/decode-insn.o
+  CC      fs/select.o
+  CC      arch/arm64/kernel/probes/simulate-insn.o
+  CC      kernel/sys.o
+  CC      fs/dcache.o
+  CC      arch/arm64/kernel/probes/uprobes.o
+  CC      mm/vmacache.o
+  CC      arch/arm64/kernel/probes/kprobes.o
+  CC      mm/interval_tree.o
+  CC      mm/list_lru.o
+  AS      arch/arm64/kernel/probes/kprobes_trampoline.o
+  AR      arch/arm64/kernel/probes/built-in.a
+  CC      mm/workingset.o
+  OBJCOPY arch/arm64/kernel/vdso/vdso.so
+  AS      arch/arm64/kernel/vdso/vdso.o
+  CC      mm/debug.o
+  AR      arch/arm64/kernel/vdso/built-in.a
+  AS      arch/arm64/kernel/head.o
+  LDS     arch/arm64/kernel/vmlinux.lds
+  AR      arch/arm64/kernel/built-in.a
+  CC      mm/gup.o
+  CC      kernel/umh.o
+  CC      mm/highmem.o
+  CC      mm/memory.o
+  CC      fs/inode.o
+  CC      mm/mincore.o
+  CC      kernel/workqueue.o
+  CC      fs/attr.o
+  CC      mm/mlock.o
+  CC      mm/mmap.o
+  CC      fs/bad_inode.o
+  CC      kernel/pid.o
+  CC      fs/file.o
+  CC      mm/mmu_gather.o
+  CC      fs/filesystems.o
+  CC      fs/namespace.o
+  CC      kernel/task_work.o
+  CC      mm/mprotect.o
+  CC      fs/seq_file.o
+  CC      mm/mremap.o
+  CC      kernel/extable.o
+  CC      mm/msync.o
+  CC      mm/page_vma_mapped.o
+  CC      kernel/params.o
+  CC      kernel/kthread.o
+  CC      kernel/sys_ni.o
+  CC      mm/pagewalk.o
+  CC      fs/xattr.o
+  CC      fs/libfs.o
+  CC      kernel/nsproxy.o
+  CC      mm/pgtable-generic.o
+  CC      fs/fs-writeback.o
+  CC      kernel/notifier.o
+  CC      mm/rmap.o
+  CC      kernel/ksysfs.o
+  CC      kernel/cred.o
+  CC      mm/vmalloc.o
+  CC      kernel/reboot.o
+  CC      mm/mm_event.o
+  CC      kernel/async.o
+  CC      mm/process_vm_access.o
+  CC      kernel/range.o
+  CC      mm/showmem.o
+  CC      mm/vmpressure.o
+  CC      kernel/smpboot.o
+  CC      mm/init-mm.o
+  CC      kernel/ucount.o
+  CC      mm/nobootmem.o
+  CC      mm/madvise.o
+  CC      mm/memblock.o
+  CC      kernel/kmod.o
+  CC      mm/page_io.o
+  CC      kernel/groups.o
+  CC      fs/pnode.o
+  CC      fs/splice.o
+  CC      mm/swap_state.o
+  CC      fs/sync.o
+  CC      mm/swapfile.o
+  CC      fs/utimes.o
+  CC      kernel/cgroup/cgroup.o
+  CC      mm/swap_slots.o
+  CC      kernel/bpf/core.o
+  CC      fs/d_path.o
+  CC      mm/swap_ratio.o
+  CC      fs/stack.o
+  CC      mm/dmapool.o
+  CC      mm/sparse.o
+  CC      mm/sparse-vmemmap.o
+  CC      fs/fs_struct.o
+  CC      fs/statfs.o
+  CC      fs/fs_pin.o
+  CC      kernel/cgroup/rstat.o
+  CC      kernel/cgroup/namespace.o
+  CC      fs/nsfs.o
+  CC      kernel/bpf/syscall.o
+  CC      mm/slub.o
+  CC      mm/migrate.o
+  CC      kernel/cgroup/cgroup-v1.o
+  CC      fs/buffer.o
+  CC      kernel/cgroup/freezer.o
+  CC      kernel/bpf/verifier.o
+  CC      kernel/cgroup/legacy_freezer.o
+  CC      kernel/cgroup/cpuset.o
+  CC      kernel/bpf/inode.o
+  CC      fs/block_dev.o
+  CC      fs/direct-io.o
+  CC      kernel/bpf/helpers.o
+  CC      mm/page_isolation.o
+  CC      mm/zsmalloc.o
+  CC      kernel/bpf/tnum.o
+  CC      fs/mpage.o
+  AR      kernel/cgroup/built-in.a
+  CC      fs/proc_namespace.o
+  CC      kernel/bpf/hashtab.o
+  CC      kernel/bpf/arraymap.o
+  CC      kernel/dma/mapping.o
+  CC      kernel/dma/contiguous.o
+  CC      kernel/bpf/percpu_freelist.o
+  CC      mm/early_ioremap.o
+  CC      kernel/bpf/bpf_lru_list.o
+  CC      mm/cma.o
+  CC      kernel/dma/coherent.o
+  CC      kernel/bpf/lpm_trie.o
+  CC      kernel/events/core.o
+  CC      kernel/irq/irqdesc.o
+  CC      fs/configfs/inode.o
+  CC      kernel/events/ring_buffer.o
+  CC      kernel/events/callchain.o
+  CC      fs/configfs/file.o
+  CC      kernel/events/hw_breakpoint.o
+  CC      kernel/dma/removed.o
+  CC      kernel/bpf/map_in_map.o
+  CC      kernel/irq/handle.o
+  CC      fs/configfs/dir.o
+  CC      kernel/bpf/local_storage.o
+  CC      mm/frame_vector.o
+  CC      kernel/bpf/disasm.o
+  CC      kernel/irq/manage.o
+  CC      kernel/irq/spurious.o
+  CC      kernel/dma/direct.o
+  CC      kernel/events/uprobes.o
+  CC      mm/usercopy.o
+  CC      kernel/bpf/btf.o
+  CC      kernel/bpf/devmap.o
+  CC      kernel/dma/swiotlb.o
+  CC      fs/configfs/symlink.o
+  CC      mm/memfd.o
+  CC      kernel/bpf/cpumap.o
+  CC      fs/configfs/mount.o
+  CC      kernel/irq/resend.o
+  AR      mm/built-in.a
+  CC      kernel/irq/chip.o
+  CC      kernel/irq/dummychip.o
+  CC      kernel/irq/devres.o
+  CC      fs/configfs/item.o
+  CC      kernel/irq/autoprobe.o
+  AR      kernel/dma/built-in.a
+  CC      kernel/bpf/offload.o
+  CC      kernel/bpf/stackmap.o
+  CC      kernel/bpf/cgroup.o
+  AR      fs/configfs/built-in.a
+  CC      kernel/irq/irqdomain.o
+  CC      fs/crypto/crypto.o
+  CC      kernel/irq/proc.o
+  CC      kernel/irq/cpuhotplug.o
+  CC      kernel/bpf/reuseport_array.o
+  CC      kernel/locking/mutex.o
+  CC      kernel/irq/pm.o
+  CC      fs/crypto/fname.o
+  CC      kernel/irq/msi.o
+  CC      fs/crypto/hkdf.o
+  CC      kernel/irq/affinity.o
+  AR      kernel/bpf/built-in.a
+  CC      kernel/power/qos.o
+  CC      kernel/power/main.o
+  AR      kernel/events/built-in.a
+  CC      kernel/power/process.o
+  CC      kernel/printk/printk.o
+  CC      kernel/locking/semaphore.o
+  CC      kernel/rcu/update.o
+  AR      kernel/irq/built-in.a
+  CC      kernel/locking/rwsem.o
+../kernel/power/main.c: 在函数‘sum_wakeup_time_store’中:
+../kernel/power/main.c:648:23: 警告： 此函数中的‘error’在使用前未初始化 [-Wuninitialized]
+  648 |  return error ? error : n;
+      |         ~~~~~~~~~~~~~~^~~
+../kernel/power/main.c: 在函数‘last_wake_time_store’中:
+../kernel/power/main.c:663:23: 警告： 此函数中的‘error’在使用前未初始化 [-Wuninitialized]
+  663 |  return error ? error : n;
+      |         ~~~~~~~~~~~~~~^~~
+../kernel/power/main.c: 在函数‘wake_times_store’中:
+../kernel/power/main.c:678:23: 警告： 此函数中的‘error’在使用前未初始化 [-Wuninitialized]
+  678 |  return error ? error : n;
+      |         ~~~~~~~~~~~~~~^~~
+  CC      fs/crypto/hooks.o
+  CC      kernel/power/suspend.o
+  CC      kernel/rcu/sync.o
+  CC      kernel/rcu/srcutree.o
+  CC      fs/crypto/keyring.o
+  CC      kernel/locking/percpu-rwsem.o
+  CC      kernel/locking/spinlock.o
+  CC      kernel/rcu/tree.o
+  CC      kernel/rcu/rcu_segcblist.o
+  CC      kernel/locking/osq_lock.o
+  CC      kernel/locking/qspinlock.o
+  CC      kernel/locking/rtmutex.o
+  CC      kernel/power/wakelock.o
+  CC      kernel/locking/qrwlock.o
+  CC      kernel/power/poweroff.o
+  CC      kernel/power/energy_model.o
+  CC      fs/crypto/keysetup.o
+  CC      kernel/printk/printk_safe.o
+  CC      fs/crypto/keysetup_v1.o
+  CC      kernel/power/wakeup_reason.o
+  CC      kernel/power/autosleep.o
+  AR      kernel/printk/built-in.a
+  CC      fs/crypto/policy.o
+  AR      kernel/locking/built-in.a
+  CC      fs/crypto/bio.o
+  CC      kernel/time/time.o
+  CC      fs/crypto/inline_crypt.o
+../fs/crypto/policy.c: 在函数‘fscrypt_update_context’中:
+../fs/crypto/policy.c:653:3: 警告： this ‘if’ clause does not guard... [-Wmisleading-indentation]
+  653 |   if (!strcmp(boot, SDHCI))
+      |   ^~
+../fs/crypto/policy.c:655:4: 附注： ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+  655 |    return 0;
+      |    ^~~~~~
+  AR      kernel/power/built-in.a
+  CC      kernel/sched/core.o
+  CC      kernel/trace/trace_clock.o
+  CC      fs/devpts/inode.o
+  CC      kernel/trace/ring_buffer.o
+  CC      kernel/trace/trace.o
+  CC      kernel/trace/trace_output.o
+  AR      fs/devpts/built-in.a
+  CC      fs/ecryptfs/dentry.o
+  AR      fs/crypto/built-in.a
+  CC      fs/ecryptfs/file.o
+  CC      kernel/time/timer.o
+  CC      fs/ecryptfs/inode.o
+  CC      fs/ecryptfs/main.o
+  CC      fs/ecryptfs/super.o
+  CC      fs/ecryptfs/mmap.o
+  AR      kernel/rcu/built-in.a
+  CC      kernel/freezer.o
+  CC      kernel/stacktrace.o
+  CC      kernel/futex.o
+  CC      kernel/trace/trace_seq.o
+  CC      fs/ecryptfs/read_write.o
+  CC      fs/ecryptfs/crypto.o
+  CC      fs/ecryptfs/keystore.o
+  CC      kernel/time/hrtimer.o
+  CC      fs/ecryptfs/kthread.o
+  CC      kernel/trace/trace_stat.o
+  CC      fs/ecryptfs/debug.o
+  CC      fs/ecryptfs/messaging.o
+  CC      kernel/trace/trace_printk.o
+  CC      fs/erofs/super.o
+  CC      kernel/smp.o
+  CC      kernel/uid16.o
+  CC      fs/erofs/inode.o
+  CC      fs/ecryptfs/miscdev.o
+  CC      kernel/time/timekeeping.o
+  CC      kernel/module.o
+  CC      fs/erofs/data.o
+  CC      kernel/trace/trace_sched_switch.o
+  AR      fs/ecryptfs/built-in.a
+  CC      kernel/kallsyms.o
+  CC      fs/exfat/inode.o
+  CC      fs/erofs/namei.o
+  CC      fs/exportfs/expfs.o
+  CC      kernel/trace/trace_nop.o
+  CC      fs/erofs/dir.o
+  CC      fs/exfat/namei.o
+  CC      kernel/trace/blktrace.o
+  CC      kernel/time/ntp.o
+  CC      fs/erofs/utils.o
+  AR      fs/exportfs/built-in.a
+  CC      fs/ext4/balloc.o
+  CC      kernel/compat.o
+  CC      kernel/time/clocksource.o
+  CC      fs/exfat/dir.o
+  CC      fs/erofs/pcpubuf.o
+  CC      kernel/trace/trace_events.o
+  CC      fs/erofs/xattr.o
+  CC      kernel/time/jiffies.o
+  CC      kernel/utsname.o
+  CC      fs/ext4/bitmap.o
+  CC      kernel/time/timer_list.o
+  CC      fs/exfat/super.o
+  CC      kernel/sched/loadavg.o
+  CC      fs/exfat/fatent.o
+  CC      fs/ext4/block_validity.o
+  CC      fs/erofs/decompressor.o
+  CC      fs/erofs/zmap.o
+  CC      kernel/time/timeconv.o
+  CC      fs/exfat/cache.o
+  CC      fs/exfat/nls.o
+  CC      kernel/time/timecounter.o
+  CC      kernel/stop_machine.o
+  CC      fs/ext4/dir.o
+  CC      kernel/time/alarmtimer.o
+  CC      fs/erofs/zdata.o
+  CC      fs/exfat/misc.o
+  CC      kernel/sched/clock.o
+  CC      kernel/sched/cputime.o
+  CC      kernel/trace/trace_export.o
+  CC      fs/exfat/file.o
+  CC      fs/ext4/ext4_jbd2.o
+  CC      fs/ext4/extents.o
+  AR      fs/erofs/built-in.a
+  CC      kernel/seccomp.o
+  CC      kernel/trace/trace_event_perf.o
+  CC      fs/exfat/balloc.o
+  CC      kernel/time/posix-timers.o
+  CC      kernel/trace/trace_events_filter.o
+  CC      kernel/trace/trace_events_trigger.o
+  CC      kernel/sched/idle.o
+  AR      fs/exfat/built-in.a
+  CC      kernel/trace/bpf_trace.o
+  CC      kernel/utsname_sysctl.o
+  CC      kernel/time/posix-cpu-timers.o
+  CC      kernel/trace/power-traces.o
+  CC      kernel/taskstats.o
+  CC      kernel/trace/rpm-traces.o
+  CC      kernel/trace/trace_probe.o
+../fs/ext4/extents.c: 在函数‘ext4_ext_remove_space’中:
+../fs/ext4/extents.c:3100:1: 警告： the frame size of 4288 bytes is larger than 4096 bytes [-Wframe-larger-than=]
+ 3100 | }
+      | ^
+  CC      kernel/sched/fair.o
+  CC      kernel/time/posix-clock.o
+  CC      kernel/time/itimer.o
+  CC      kernel/trace/trace_uprobe.o
+  CC      kernel/trace/trace_kprobe.o
+  CC      fs/ext4/extents_status.o
+  CC      fs/ext4/file.o
+  CC      kernel/time/clockevents.o
+  CC      kernel/time/tick-common.o
+../kernel/sched/fair.c: 在函数‘should_we_balance’中:
+../kernel/sched/fair.c:11058:5: 警告： "SCHED_FEAT_TTWU_QUEUE" is not defined, evaluates to 0 [-Wundef]
+11058 | #if SCHED_FEAT_TTWU_QUEUE
+      |     ^~~~~~~~~~~~~~~~~~~~~
+  CC      fs/ext4/fsmap.o
+  CC      kernel/time/tick-broadcast.o
+  CC      fs/ext4/fsync.o
+  CC      kernel/sched/rt.o
+  CC      fs/ext4/hash.o
+  AR      kernel/trace/built-in.a
+  CC      kernel/tsacct.o
+  CC      kernel/time/tick-broadcast-hrtimer.o
+  CC      kernel/time/sched_clock.o
+  CC      kernel/tracepoint.o
+  CC      kernel/time/tick-oneshot.o
+  CC      fs/ext4/ialloc.o
+  CC      fs/ext4/indirect.o
+  CC      fs/ext4/inline.o
+  CC      kernel/time/tick-sched.o
+  CC      kernel/time/vsyscall.o
+  CC      fs/ext4/inode.o
+  CC      kernel/irq_work.o
+  CC      kernel/sched/deadline.o
+  CC      fs/ext4/ioctl.o
+  AR      kernel/time/built-in.a
+  CC      fs/ext4/mballoc.o
+  CC      fs/ext4/migrate.o
+  CC      fs/ext4/mmp.o
+  CC      kernel/cpu_pm.o
+  CC      kernel/jump_label.o
+  CC      fs/ext4/move_extent.o
+  CC      kernel/sched/wait.o
+  CC      fs/ext4/namei.o
+  CC      kernel/iomem.o
+  CC      fs/ext4/page-io.o
+  CC      fs/ext4/readpage.o
+  CC      fs/ext4/resize.o
+  CC      fs/ext4/super.o
+  CC      kernel/sched/wait_bit.o
+  CC      kernel/sched/swait.o
+  CC      kernel/sched/completion.o
+  CC      fs/f2fs/dir.o
+  CC      fs/f2fs/file.o
+  CC      fs/ext4/symlink.o
+  CC      fs/ext4/sysfs.o
+  CC      fs/f2fs/inode.o
+  CC      fs/ext4/xattr.o
+  CC      kernel/sched/cpupri.o
+  CC      kernel/sched/cpudeadline.o
+  CC      fs/ext4/xattr_trusted.o
+  CC      fs/f2fs/namei.o
+  CC      fs/ext4/xattr_user.o
+  CC      fs/ext4/acl.o
+  CC      kernel/sched/topology.o
+  CC      fs/f2fs/hash.o
+  CC      fs/fat/cache.o
+  CC      fs/fat/dir.o
+  CC      fs/fat/fatent.o
+  CC      fs/ext4/xattr_security.o
+  CC      fs/ext4/verity.o
+  CC      fs/f2fs/super.o
+  CC      fs/fat/file.o
+  CC      kernel/sched/stop_task.o
+  CC      kernel/sched/pelt.o
+  CC      fs/fat/inode.o
+  CC      fs/f2fs/inline.o
+  CC      fs/f2fs/checkpoint.o
+  CC      kernel/sched/walt.o
+  CC      kernel/sched/boost.o
+  CC      fs/f2fs/gc.o
+  CC      kernel/sched/sched_avg.o
+  CC      fs/fat/misc.o
+  CC      fs/f2fs/data.o
+  CC      fs/fat/nfs.o
+  AR      fs/ext4/built-in.a
+  CC      fs/fat/namei_vfat.o
+  CC      fs/f2fs/node.o
+  CC      fs/f2fs/segment.o
+  CC      kernel/sched/autogroup.o
+  CC      fs/fat/namei_msdos.o
+  CC      fs/fuse/dev.o
+  AR      fs/fat/built-in.a
+  CC      fs/incfs/data_mgmt.o
+  CC      fs/f2fs/recovery.o
+  CC      kernel/sched/debug.o
+  CC      fs/incfs/format.o
+  CC      fs/incfs/integrity.o
+  CC      fs/incfs/main.o
+  CC      fs/fuse/dir.o
+  CC      fs/fuse/file.o
+  CC      fs/f2fs/shrinker.o
+  CC      fs/fuse/inode.o
+  CC      fs/incfs/vfs.o
+  CC      kernel/sched/tune.o
+  CC      fs/fuse/control.o
+  CC      fs/fuse/xattr.o
+../kernel/sched/tune.c: 在函数‘schedtune_boostgroup_release’中:
+../kernel/sched/tune.c:980:2: 警告： ISO C90 不允许混合使用声明和代码 [-Wdeclaration-after-statement]
+  980 |  struct boost_groups *bg;
+      |  ^~~~~~
+在文件作用域：
+../kernel/sched/tune.c:871:12: 警告： ‘prefer_high_cap_write’ defined but not used [-Wunused-function]
+  871 | static int prefer_high_cap_write(struct cgroup_subsys_state *css,
+      |            ^~~~~~~~~~~~~~~~~~~~~
+../kernel/sched/tune.c:865:12: 警告： ‘prefer_high_cap_read’ defined but not used [-Wunused-function]
+  865 | static u64 prefer_high_cap_read(struct cgroup_subsys_state *css,
+      |            ^~~~~~~~~~~~~~~~~~~~
+  CC      fs/fuse/acl.o
+  CC      fs/f2fs/extent_cache.o
+  CC      fs/fuse/readdir.o
+  CC      fs/f2fs/sysfs.o
+  CC      kernel/sched/cpuacct.o
+  CC      kernel/sched/cpufreq.o
+  CC      fs/f2fs/debug.o
+  AR      fs/incfs/built-in.a
+  CC      fs/fuse/passthrough.o
+  CC      fs/jbd2/transaction.o
+  CC      fs/f2fs/xattr.o
+  CC      kernel/sched/cpufreq_schedutil.o
+  AR      fs/fuse/built-in.a
+  CC      fs/kernfs/mount.o
+  CC      fs/nls/nls_base.o
+  CC      fs/kernfs/inode.o
+  CC      kernel/sched/membarrier.o
+  CC      fs/f2fs/acl.o
+  CC      fs/kernfs/dir.o
+../kernel/sched/cpufreq_schedutil.c:399:13: 警告： ‘sugov_cpu_is_busy’ defined but not used [-Wunused-function]
+  399 | static bool sugov_cpu_is_busy(struct sugov_cpu *sg_cpu)
+      |             ^~~~~~~~~~~~~~~~~
+  CC      fs/nls/nls_cp437.o
+  CC      fs/kernfs/file.o
+  CC      fs/f2fs/verity.o
+  CC      fs/nls/nls_iso8859-1.o
+  CC      kernel/sched/isolation.o
+  CC      kernel/kprobes.o
+  CC      kernel/tombstone.o
+  AR      fs/nls/built-in.a
+  CC      fs/notify/fsnotify.o
+../kernel/tombstone.c: 在函数‘tombstone_insert’中:
+../kernel/tombstone.c:58:9: 警告： ISO C90 不允许混合使用声明和代码 [-Wdeclaration-after-statement]
+   58 |         struct tombstone_entry *entry = rb_entry(parent, struct tombstone_entry, node);
+      |         ^~~~~~
+../kernel/tombstone.c: 在函数‘tombstone_save_task’中:
+../kernel/tombstone.c:95:39: 错误： invalid use of undefined type ‘struct signal_struct’
+   95 |     entry->oom_score_adj = tsk->signal->oom_score_adj;
+      |                                       ^~
+../kernel/tombstone.c: 在文件作用域：
+../kernel/tombstone.c:119:1: 警告： 数据定义时没有类型或存储类
+  119 | module_init(tombstone_init);
+      | ^~~~~~~~~~~
+../kernel/tombstone.c:119:1: 错误： 在‘module_init’的声明中，类型默认为‘int’ [-Werror=implicit-int]
+../kernel/tombstone.c:119:1: 警告： 函数声明中出现形参名却未指定类型
+../kernel/tombstone.c:120:1: 警告： 数据定义时没有类型或存储类
+  120 | module_exit(tombstone_exit);
+      | ^~~~~~~~~~~
+../kernel/tombstone.c:120:1: 错误： 在‘module_exit’的声明中，类型默认为‘int’ [-Werror=implicit-int]
+../kernel/tombstone.c:120:1: 警告： 函数声明中出现形参名却未指定类型
+../kernel/tombstone.c:122:16: 错误： expected declaration specifiers or ‘...’ before string constant
+  122 | MODULE_LICENSE("GPL");
+      |                ^~~~~
+../kernel/tombstone.c:123:15: 错误： expected declaration specifiers or ‘...’ before string constant
+  123 | MODULE_AUTHOR("InfiniR Kernel");
+      |               ^~~~~~~~~~~~~~~~
+../kernel/tombstone.c:124:20: 错误： expected declaration specifiers or ‘...’ before string constant
+  124 | MODULE_DESCRIPTION("Smart Tombstone Manager");
+      |                    ^~~~~~~~~~~~~~~~~~~~~~~~~
+../kernel/tombstone.c:105:19: 警告： ‘tombstone_init’ defined but not used [-Wunused-function]
+  105 | static int __init tombstone_init(void)
+      |                   ^~~~~~~~~~~~~~
+../kernel/tombstone.c:34:32: 警告： ‘tombstone_lookup’ defined but not used [-Wunused-function]
+   34 | static struct tombstone_entry *tombstone_lookup(pid_t pid)
+      |                                ^~~~~~~~~~~~~~~~
+cc1：有些警告被当作是错误
+make[2]: *** [../scripts/Makefile.build:338：kernel/tombstone.o] 错误 1
+make[2]: *** 正在等待未完成的任务....
+  CC      fs/notify/notification.o
+../fs/kernfs/file.c: 在函数‘kernfs_fop_write’中:
+../fs/kernfs/file.c:338:1: 警告： the frame size of 4112 bytes is larger than 4096 bytes [-Wframe-larger-than=]
+  338 | }
+      | ^
+  CC      fs/f2fs/compress.o
+  CC      fs/jbd2/commit.o
+  CC      fs/f2fs/iostat.o
+  CC      fs/kernfs/symlink.o
+  CC      fs/notify/group.o
+  CC      kernel/sched/core_ctl.o
+  CC      fs/notify/mark.o
+  CC      fs/notify/fdinfo.o
+  AR      fs/kernfs/built-in.a
+  CC      kernel/sched/psi.o
+  CC      fs/notify/dnotify/dnotify.o
+  CC      fs/ntfs/aops.o
+  CC      fs/jbd2/recovery.o
+  CC      fs/jbd2/checkpoint.o
+  CC      fs/jbd2/revoke.o
+  AR      fs/notify/dnotify/built-in.a
+  CC      fs/notify/inotify/inotify_fsnotify.o
+  AR      fs/f2fs/built-in.a
+  CC      fs/notify/inotify/inotify_user.o
+  CC      fs/jbd2/journal.o
+  CC      fs/ntfs/attrib.o
+  CC      fs/ntfs/collate.o
+  CC      fs/overlayfs/super.o
+  CC      fs/ntfs/compress.o
+  CC      fs/ntfs/debug.o
+  CC      fs/ntfs/dir.o
+  CC      fs/ntfs/file.o
+  AR      fs/notify/inotify/built-in.a
+  AR      fs/notify/built-in.a
+  AR      kernel/sched/built-in.a
+make[1]: *** [/home/liu/kernel/Makefile:1256：kernel] 错误 2
+  CC      fs/pstore/inode.o
+  CC      fs/overlayfs/namei.o
+  CC      fs/proc/task_mmu.o
+  CC      fs/pstore/platform.o
+  CC      fs/quota/dquot.o
+  CC      fs/ntfs/index.o
+  CC      fs/pstore/pmsg.o
+  CC      fs/overlayfs/util.o
+  CC      fs/ntfs/inode.o
+  CC      fs/ntfs/mft.o
+  CC      fs/pstore/ram.o
+  CC      fs/proc/inode.o
+  CC      fs/proc/root.o
+  CC      fs/overlayfs/inode.o
+  CC      fs/pstore/ram_core.o
+  CC      fs/overlayfs/file.o
+  CC      fs/proc/base.o
+  AR      fs/jbd2/built-in.a
+  CC      fs/proc/generic.o
+  CC      fs/ntfs/mst.o
+  CC      fs/overlayfs/dir.o
+  AR      fs/pstore/built-in.a
+  CC      fs/ramfs/inode.o
+  CC      fs/overlayfs/readdir.o
+  CC      fs/ntfs/namei.o
+  CC      fs/sdcardfs/dentry.o
+  CC      fs/quota/quota_v2.o
+  CC      fs/ramfs/file-mmu.o
+  CC      fs/ntfs/runlist.o
+  CC      fs/ntfs/super.o
+  CC      fs/ntfs/sysctl.o
+  CC      fs/ntfs/unistr.o
+  CC      fs/quota/quota_tree.o
+  CC      fs/sdcardfs/file.o
+  AR      fs/ramfs/built-in.a
+  CC      fs/overlayfs/copy_up.o
+  CC      fs/sysfs/file.o
+  CC      fs/quota/quota.o
+  CC      fs/sdcardfs/inode.o
+  CC      fs/proc/array.o
+  CC      fs/overlayfs/export.o
+  CC      fs/sdcardfs/main.o
+  CC      fs/sysfs/dir.o
+  CC      fs/sysfs/symlink.o
+  CC      fs/ntfs/upcase.o
+  CC      fs/quota/kqid.o
+  CC      fs/proc/fd.o
+  CC      fs/ntfs/bitmap.o
+  AR      fs/overlayfs/built-in.a
+  CC      fs/tracefs/inode.o
+  CC      fs/sysfs/mount.o
+  CC      fs/sdcardfs/super.o
+  CC      fs/unicode/utf8-norm.o
+  CC      fs/verity/enable.o
+  CC      fs/ntfs/lcnalloc.o
+  CC      fs/sysfs/group.o
+  CC      fs/quota/netlink.o
+  CC      fs/proc/proc_tty.o
+  AR      fs/tracefs/built-in.a
+  CC      fs/eventpoll.o
+  CC      fs/sdcardfs/lookup.o
+  CC      fs/proc/cmdline.o
+  CC      fs/ntfs/logfile.o
+  AR      fs/sysfs/built-in.a
+  CC      fs/proc/consoles.o
+  CC      fs/unicode/utf8-core.o
+  CC      fs/proc/cpuinfo.o
+  CC      fs/sdcardfs/mmap.o
+  AR      fs/quota/built-in.a
+  CC      fs/sdcardfs/packagelist.o
+  CC      fs/anon_inodes.o
+  CC      fs/verity/hash_algs.o
+  CC      fs/proc/devices.o
+  AR      fs/unicode/built-in.a
+  CC      fs/signalfd.o
+  CC      fs/verity/init.o
+  CC      fs/ntfs/quota.o
+  CC      fs/proc/interrupts.o
+  CC      fs/sdcardfs/derived_perm.o
+  CC      fs/verity/measure.o
+  CC      fs/verity/open.o
+  CC      fs/timerfd.o
+  CC      fs/ntfs/usnjrnl.o
+  CC      fs/proc/loadavg.o
+  CC      fs/eventfd.o
+  CC      fs/verity/read_metadata.o
+  AR      fs/ntfs/built-in.a
+  CC      fs/verity/verify.o
+  CC      fs/aio.o
+  CC      fs/proc/meminfo.o
+  CC      fs/verity/signature.o
+  CC      fs/proc/stat.o
+  AR      fs/sdcardfs/built-in.a
+  CC      fs/locks.o
+  CC      fs/compat.o
+  CC      fs/proc/uptime.o
+  CC      fs/proc/util.o
+  CC      fs/proc/version.o
+  CC      fs/proc/softirqs.o
+  AR      fs/verity/built-in.a
+  CC      fs/compat_ioctl.o
+  CC      fs/binfmt_script.o
+  CC      fs/binfmt_elf.o
+  CC      fs/compat_binfmt_elf.o
+  CC      fs/proc/namespaces.o
+  CC      fs/proc/self.o
+  CC      fs/mbcache.o
+  CC      fs/proc/thread_self.o
+  CC      fs/posix_acl.o
+../fs/binfmt_elf.c: 在函数‘load_elf_binary’中:
+../fs/binfmt_elf.c:1205:1: 警告： the frame size of 4384 bytes is larger than 4096 bytes [-Wframe-larger-than=]
+ 1205 | }
+      | ^
+In file included from ../fs/compat_binfmt_elf.c:131:
+../fs/binfmt_elf.c: 在函数‘load_elf_binary’中:
+../fs/binfmt_elf.c:1205:1: 警告： the frame size of 4336 bytes is larger than 4096 bytes [-Wframe-larger-than=]
+ 1205 | }
+      | ^
+  CC      fs/proc/proc_sysctl.o
+  CC      fs/proc/proc_net.o
+  CC      fs/coredump.o
+  CC      fs/drop_caches.o
+  CC      fs/proc/kmsg.o
+  CC      fs/proc/page.o
+  CC      fs/iomap.o
+  AR      fs/proc/built-in.a
+  AR      fs/built-in.a
+make[1]: 离开目录“/home/liu/kernel/out”
+make: *** [Makefile:153：sub-make] 错误 2
+[ERROR] 命令失败: make -j$(nproc) O=out (在行号: 2442)
+[WARNING] 尝试继续执行...
+liu@liu-virtual-machine:~/kernel$ 
+
