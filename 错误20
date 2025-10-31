@@ -1,0 +1,186 @@
+make[1]: 进入目录“/home/liu/kernel/out”
+  GEN     ./Makefile
+  Using .. as source for kernel
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.1.dtb
+  CALL    ../scripts/checksyscalls.sh
+  CHK     include/generated/compile.h
+  CC      security/app_compat/core.o
+  CC      crypto/asymmetric_keys/asymmetric_type.o
+  CC      security/keys/gc.o
+../security/app_compat/core.c:49:21: 错误： 变量‘app_compat_proc_ops’有初始值设定但类型不完全
+   49 | static const struct proc_ops app_compat_proc_ops = {
+      |                     ^~~~~~~~
+../security/app_compat/core.c:50:6: 错误： ‘const struct proc_ops’没有名为‘proc_open’的成员
+   50 |     .proc_open = app_compat_proc_open,
+      |      ^~~~~~~~~
+../security/app_compat/core.c:50:18: 警告： 结构初始值设定项中有多余元素
+   50 |     .proc_open = app_compat_proc_open,
+      |                  ^~~~~~~~~~~~~~~~~~~~
+../security/app_compat/core.c:50:18: 附注： (在‘app_compat_proc_ops’的初始化附近)
+../security/app_compat/core.c:51:6: 错误： ‘const struct proc_ops’没有名为‘proc_read’的成员
+   51 |     .proc_read = seq_read,
+      |      ^~~~~~~~~
+../security/app_compat/core.c:51:18: 警告： 结构初始值设定项中有多余元素
+   51 |     .proc_read = seq_read,
+      |                  ^~~~~~~~
+../security/app_compat/core.c:51:18: 附注： (在‘app_compat_proc_ops’的初始化附近)
+../security/app_compat/core.c:52:6: 错误： ‘const struct proc_ops’没有名为‘proc_lseek’的成员
+   52 |     .proc_lseek = seq_lseek,
+      |      ^~~~~~~~~~
+../security/app_compat/core.c:52:19: 警告： 结构初始值设定项中有多余元素
+   52 |     .proc_lseek = seq_lseek,
+      |                   ^~~~~~~~~
+../security/app_compat/core.c:52:19: 附注： (在‘app_compat_proc_ops’的初始化附近)
+../security/app_compat/core.c:53:6: 错误： ‘const struct proc_ops’没有名为‘proc_release’的成员
+   53 |     .proc_release = single_release,
+      |      ^~~~~~~~~~~~
+../security/app_compat/core.c:53:21: 警告： 结构初始值设定项中有多余元素
+   53 |     .proc_release = single_release,
+      |                     ^~~~~~~~~~~~~~
+../security/app_compat/core.c:53:21: 附注： (在‘app_compat_proc_ops’的初始化附近)
+../security/app_compat/core.c: 在函数‘app_compat_init’中:
+../security/app_compat/core.c:62:58: 错误： 传递‘proc_create’的第 4 个参数时在不兼容的指针类型间转换 [-Werror=incompatible-pointer-types]
+   62 |     entry = proc_create("app_compat_status", 0444, NULL, &app_compat_proc_ops);
+      |                                                          ^~~~~~~~~~~~~~~~~~~~
+      |                                                          |
+      |                                                          const struct proc_ops *
+In file included from ../security/app_compat/core.c:6:
+../include/linux/proc_fs.h:50:129: 附注： 需要类型‘const struct file_operations *’，但实参的类型为‘const struct proc_ops *’
+   50 | struct proc_dir_entry *proc_create(const char *name, umode_t mode, struct proc_dir_entry *parent, const struct file_operations *proc_fops);
+      |                                                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~
+../security/app_compat/core.c: 在文件作用域：
+../security/app_compat/core.c:49:30: 错误： ‘app_compat_proc_ops’的存储大小未知
+   49 | static const struct proc_ops app_compat_proc_ops = {
+      |                              ^~~~~~~~~~~~~~~~~~~
+../security/app_compat/core.c:21:13: 警告： ‘is_target_app’ defined but not used [-Wunused-function]
+   21 | static bool is_target_app(const char *comm)
+      |             ^~~~~~~~~~~~~
+cc1：有些警告被当作是错误
+make[3]: *** [../scripts/Makefile.build:339：security/app_compat/core.o] 错误 1
+make[2]: *** [../scripts/Makefile.build:642：security/app_compat] 错误 2
+make[2]: *** 正在等待未完成的任务....
+  CC      security/keys/key.o
+  CC      security/keys/keyring.o
+  CC      crypto/asymmetric_keys/restrict.o
+  CC      crypto/asymmetric_keys/signature.o
+  CC      kernel/configs.o
+  CC      crypto/asymmetric_keys/public_key.o
+  CC      kernel/tombstone.o
+  CC      security/keys/keyctl.o
+../kernel/tombstone.c: 在函数‘tombstone_insert’中:
+../kernel/tombstone.c:60:9: 警告： ISO C90 不允许混合使用声明和代码 [-Wdeclaration-after-statement]
+   60 |         struct tombstone_entry *entry = rb_entry(parent, struct tombstone_entry, node);
+      |         ^~~~~~
+../kernel/tombstone.c: 在函数‘tombstone_save_task’中:
+../kernel/tombstone.c:97:39: 错误： invalid use of undefined type ‘struct signal_struct’
+   97 |     entry->oom_score_adj = tsk->signal->oom_score_adj;
+      |                                       ^~
+在文件作用域：
+../kernel/tombstone.c:36:32: 警告： ‘tombstone_lookup’ defined but not used [-Wunused-function]
+   36 | static struct tombstone_entry *tombstone_lookup(pid_t pid)
+      |                                ^~~~~~~~~~~~~~~~
+make[2]: *** [../scripts/Makefile.build:338：kernel/tombstone.o] 错误 1
+make[1]: *** [/home/liu/kernel/Makefile:1256：kernel] 错误 2
+make[1]: *** 正在等待未完成的任务....
+  CC      security/keys/permission.o
+  CC      security/keys/process_keys.o
+  CC      security/keys/request_key.o
+  ASN.1   crypto/asymmetric_keys/x509.asn1.c
+  ASN.1   crypto/asymmetric_keys/x509_akid.asn1.c
+  CC      crypto/asymmetric_keys/x509_public_key.o
+  DTC     arch/arm64/boot/dts/vendor/qcom/alioth-sm8250-overlay.dtbo
+  ASN.1   crypto/asymmetric_keys/pkcs7.asn1.c
+  CC      crypto/asymmetric_keys/pkcs7_trust.o
+  CC      crypto/asymmetric_keys/pkcs7_verify.o
+  CC      security/keys/request_key_auth.o
+  CC      security/keys/user_defined.o
+  CC      security/keys/compat.o
+  CC      crypto/asymmetric_keys/x509.asn1.o
+  CC      security/keys/proc.o
+  CC      crypto/asymmetric_keys/x509_akid.asn1.o
+  CC      security/keys/sysctl.o
+  CC      crypto/asymmetric_keys/x509_cert_parser.o
+  CC      crypto/asymmetric_keys/pkcs7.asn1.o
+  CC      crypto/asymmetric_keys/pkcs7_parser.o
+  CC      crypto/api.o
+  CC      crypto/cipher.o
+  CC      crypto/compress.o
+  CC      crypto/memneq.o
+  AR      security/keys/built-in.a
+make[1]: *** [/home/liu/kernel/Makefile:1256：security] 错误 2
+  CC      crypto/crypto_wq.o
+  CC      crypto/algapi.o
+  AR      crypto/asymmetric_keys/built-in.a
+  CC      crypto/scatterwalk.o
+  CC      crypto/proc.o
+  CC      crypto/aead.o
+  CC      crypto/ablkcipher.o
+  CC      crypto/blkcipher.o
+  CC      crypto/skcipher.o
+  CC      crypto/seqiv.o
+  CC      crypto/echainiv.o
+  CC      crypto/ahash.o
+  CC      crypto/shash.o
+  CC      crypto/akcipher.o
+  CC      crypto/kpp.o
+  ASN.1   crypto/rsapubkey.asn1.c
+  ASN.1   crypto/rsaprivkey.asn1.c
+  CC      crypto/rsa.o
+  CC      crypto/rsa_helper.o
+  CC      crypto/rsa-pkcs1pad.o
+  CC      crypto/acompress.o
+  CC      crypto/scompress.o
+  CC      crypto/algboss.o
+  CC      crypto/testmgr.o
+  CC      crypto/cmac.o
+  CC      crypto/hmac.o
+  CC      crypto/xcbc.o
+  CC      crypto/crypto_null.o
+  CC      crypto/md5.o
+  CC      crypto/sha1_generic.o
+  CC      crypto/sha256_generic.o
+  CC      crypto/sha512_generic.o
+  CC      crypto/blake2b_generic.o
+  CC      crypto/gf128mul.o
+  CC      crypto/ecb.o
+  CC      crypto/cbc.o
+  CC      crypto/cts.o
+  CC      crypto/xts.o
+  CC      crypto/ctr.o
+  CC      crypto/gcm.o
+  CC      crypto/ccm.o
+  CC      crypto/chacha20poly1305.o
+  CC      crypto/cryptd.o
+  CC      crypto/des_generic.o
+  CC      crypto/twofish_generic.o
+  CC      crypto/twofish_common.o
+  CC      crypto/aes_generic.o
+  CC      crypto/chacha_generic.o
+  CC      crypto/poly1305_generic.o
+  CC      crypto/deflate.o
+  CC      crypto/crc32c_generic.o
+  CC      crypto/crc32_generic.o
+  CC      crypto/authenc.o
+  CC      crypto/authencesn.o
+  CC      crypto/lz4.o
+  CC      crypto/rng.o
+  CC      crypto/ansi_cprng.o
+  CC      crypto/drbg.o
+  CC      crypto/jitterentropy.o
+  CC      crypto/jitterentropy-kcapi.o
+  CC      crypto/ghash-generic.o
+  CC      crypto/ecc.o
+  CC      crypto/ecdh.o
+  CC      crypto/ecdh_helper.o
+  CC      crypto/xor.o
+  CC      crypto/hash_info.o
+  CC      crypto/simd.o
+  CC      crypto/rsapubkey.asn1.o
+  CC      crypto/rsaprivkey.asn1.o
+  AR      crypto/built-in.a
+make[1]: 离开目录“/home/liu/kernel/out”
+make: *** [Makefile:153：sub-make] 错误 2
+[ERROR] 命令失败: make -j$(nproc) O=out (在行号: 2844)
+[WARNING] 尝试继续执行...
