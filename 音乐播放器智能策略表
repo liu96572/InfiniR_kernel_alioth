@@ -1,0 +1,13 @@
+static struct music_app_policy {
+    const char *package_name;
+    int preserve_audio_session;  // 保持音频会话
+    bool allow_background_play;  // 允许后台播放
+    int memory_preserve_level;   // 内存保护级别
+} music_policies[] = {
+    {"com.netease.cloudmusic", 1, true,  PRESERVE_HIGH},    // 网易云音乐
+    {"com.tencent.qqmusic",    1, true,  PRESERVE_HIGH},    // QQ音乐
+    {"com.kugou.android",      1, true,  PRESERVE_HIGH},    // 酷狗音乐
+    {"cn.kuwo.player",         1, true,  PRESERVE_HIGH},    // 酷我音乐
+    {"com.ximalaya.ting.android", 1, true, PRESERVE_HIGH},  // 喜马拉雅
+    {NULL, 0, false, PRESERVE_NORMAL}
+};
