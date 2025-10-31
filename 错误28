@@ -1,0 +1,34 @@
+make[1]: 进入目录“/home/liu/kernel/out”
+  GEN     ./Makefile
+scripts/kconfig/conf  --syncconfig Kconfig
+  GEN     ./Makefile
+  UPD     include/config/kernel.release
+  WRAP    arch/arm64/include/generated/uapi/asm/errno.h
+  WRAP    arch/arm64/include/generated/uapi/asm/ioctl.h
+  WRAP    arch/arm64/include/generated/uapi/asm/ioctls.h
+  WRAP    arch/arm64/include/generated/uapi/asm/ipcbuf.h
+  WRAP    arch/arm64/include/generated/uapi/asm/kvm_para.h
+  WRAP    arch/arm64/include/generated/uapi/asm/mman.h
+  WRAP    arch/arm64/include/generated/uapi/asm/msgbuf.h
+  WRAP    arch/arm64/include/generated/uapi/asm/poll.h
+  WRAP    arch/arm64/include/generated/uapi/asm/resource.h
+  WRAP    arch/arm64/include/generated/uapi/asm/sembuf.h
+  WRAP    arch/arm64/include/generated/uapi/asm/shmbuf.h
+  WRAP    arch/arm64/include/generated/uapi/asm/socket.h
+  WRAP    arch/arm64/include/generated/uapi/asm/sockios.h
+  WRAP    arch/arm64/include/generated/uapi/asm/swab.h
+  WRAP    arch/arm64/include/generated/uapi/asm/termbits.h
+  WRAP    arch/arm64/include/generated/uapi/asm/termios.h
+  WRAP    arch/arm64/include/generated/uapi/asm/types.h
+  UPD     include/generated/uapi/linux/version.h
+  UPD     include/generated/utsrelease.h
+../scripts/Makefile.modbuiltin:26: ../security/app_compat/Makefile: 没有那个文件或目录
+make[3]: *** 没有规则可制作目标“../security/app_compat/Makefile”。 停止。
+make[2]: *** [../scripts/Makefile.modbuiltin:55：security/app_compat] 错误 2
+make[2]: *** 正在等待未完成的任务....
+make[1]: *** [/home/liu/kernel/Makefile:1489：security/modules.builtin] 错误 2
+make[1]: *** 正在等待未完成的任务....
+make[1]: 离开目录“/home/liu/kernel/out”
+make: *** [Makefile:153：sub-make] 错误 2
+[ERROR] 命令失败: make -j$(nproc) O=out (在行号: 3677)
+[WARNING] 尝试继续执行...
