@@ -1,0 +1,770 @@
+liu@liu-virtual-machine:~/kernel$ # 检查proc配置
+liu@liu-virtual-machine:~/kernel$ grep "CONFIG_PROC" out/.config
+CONFIG_IKCONFIG_PROC=y
+CONFIG_PROC_PID_CPUSET=y
+# CONFIG_PROCESS_RECLAIM is not set
+CONFIG_PROC_FS=y
+# CONFIG_PROC_KCORE is not set
+CONFIG_PROC_SYSCTL=y
+CONFIG_PROC_PAGE_MONITOR=y
+# CONFIG_PROC_CHILDREN is not set
+# CONFIG_PROC_UID is not set
+liu@liu-virtual-machine:~/kernel$ 
+liu@liu-virtual-machine:~/kernel$ # 重新编译
+liu@liu-virtual-machine:~/kernel$ make -j$(nproc) O=out
+make[1]: 进入目录“/home/liu/kernel/out”
+  GEN     ./Makefile
+scripts/kconfig/conf  --syncconfig Kconfig
+  GEN     ./Makefile
+  Using .. as source for kernel
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.1.dtb
+  CALL    ../scripts/checksyscalls.sh
+  CHK     include/generated/compile.h
+  CC      security/app_compat/core.o
+  AR      security/app_compat/built-in.a
+  AR      security/built-in.a
+  CC      drivers/amba/bus.o
+  CC      drivers/android/binderfs.o
+  CC      kernel/tombstone.o
+  CC      drivers/android/binder.o
+../kernel/tombstone.c: 在函数‘tombstone_insert’中:
+../kernel/tombstone.c:60:9: 警告： ISO C90 不允许混合使用声明和代码 [-Wdeclaration-after-statement]
+   60 |         struct tombstone_entry *entry = rb_entry(parent, struct tombstone_entry, node);
+      |         ^~~~~~
+../kernel/tombstone.c: 在函数‘tombstone_save_task’中:
+../kernel/tombstone.c:97:39: 错误： invalid use of undefined type ‘struct signal_struct’
+   97 |     entry->oom_score_adj = tsk->signal->oom_score_adj;
+      |                                       ^~
+在文件作用域：
+../kernel/tombstone.c:36:32: 警告： ‘tombstone_lookup’ defined but not used [-Wunused-function]
+   36 | static struct tombstone_entry *tombstone_lookup(pid_t pid)
+      |                                ^~~~~~~~~~~~~~~~
+make[2]: *** [../scripts/Makefile.build:338：kernel/tombstone.o] 错误 1
+make[1]: *** [/home/liu/kernel/Makefile:1256：kernel] 错误 2
+make[1]: *** 正在等待未完成的任务....
+  CC      drivers/android/binder_alloc.o
+  CC      drivers/android/hwui_mon.o
+  CC      drivers/android/jank_detect_demo.o
+  CC      drivers/android/simple_lmk.o
+  DTC     arch/arm64/boot/dts/vendor/qcom/alioth-sm8250-overlay.dtbo
+  AR      drivers/amba/built-in.a
+  AR      drivers/auxdisplay/built-in.a
+  CC      drivers/base/firmware_loader/fallback_table.o
+  CC      drivers/base/firmware_loader/main.o
+  CC      drivers/base/firmware_loader/fallback.o
+  CC      drivers/base/power/sysfs.o
+  CC      drivers/base/power/generic_ops.o
+  CC      drivers/base/power/common.o
+  CC      drivers/base/power/qos.o
+  CC      drivers/base/power/runtime.o
+  CC      drivers/base/regmap/regmap.o
+  CC      drivers/base/power/wakeirq.o
+  CC      drivers/base/power/main.o
+  AR      drivers/base/firmware_loader/built-in.a
+  AR      drivers/base/test/built-in.a
+  CC      drivers/base/component.o
+  CC      drivers/base/power/wakeup.o
+  CC      drivers/base/power/wakeup_stats.o
+  CC      drivers/base/power/domain.o
+  CC      drivers/base/power/domain_governor.o
+  CC      drivers/base/power/clock_ops.o
+  CC      drivers/base/core.o
+  CC      drivers/base/bus.o
+  CC      drivers/base/dd.o
+  CC      drivers/base/syscore.o
+  CC      drivers/base/driver.o
+  AR      drivers/android/built-in.a
+  CC      drivers/block/zram/zcomp.o
+  CC      drivers/base/class.o
+  CC      drivers/base/regmap/regcache.o
+  CC      drivers/base/platform.o
+  AR      drivers/base/power/built-in.a
+  CC      drivers/base/cpu.o
+  CC      drivers/block/zram/zram_drv.o
+  CC      drivers/block/zram/zram_dedup.o
+  CC      drivers/base/firmware.o
+  CC      drivers/base/init.o
+  CC      drivers/base/map.o
+  CC      drivers/base/devres.o
+  CC      drivers/bluetooth/bluetooth-power.o
+  CC      drivers/bluetooth/btfm_slim.o
+  CC      drivers/base/regmap/regcache-rbtree.o
+  CC      drivers/base/attribute_container.o
+  CC      drivers/bluetooth/btfm_slim_codec.o
+  CC      drivers/bluetooth/btfm_slim_slave.o
+  CC      drivers/base/regmap/regcache-flat.o
+  AR      drivers/block/zram/built-in.a
+  CC      drivers/block/brd.o
+  CC      drivers/base/regmap/regmap-i2c.o
+  CC      drivers/block/loop.o
+  CC      drivers/bus/mhi/controllers/mhi_qcom.o
+  CC      drivers/bus/mhi/controllers/mhi_arch_qcom.o
+  CC      drivers/bus/qcom-ebi2.o
+  CC      drivers/base/transport_class.o
+  AR      drivers/bluetooth/built-in.a
+  CC      drivers/base/topology.o
+  CC      drivers/base/container.o
+  CC      drivers/base/property.o
+  CC      drivers/base/regmap/regmap-spi.o
+  CC      drivers/base/regmap/regmap-spmi.o
+  CC      drivers/base/regmap/regmap-mmio.o
+  CC      drivers/base/cacheinfo.o
+  CC      drivers/base/devcon.o
+  AR      drivers/bus/mhi/controllers/built-in.a
+  CC      drivers/bus/mhi/core/mhi_init.o
+In file included from ../drivers/bus/mhi/core/mhi_init.c:16:
+../drivers/bus/mhi/core/mhi_init.c: 在函数‘mhi_init_timesync’中:
+../drivers/bus/mhi/core/mhi_internal.h:533:64: 警告： 建议在‘|’的操作数中的算术表达式前后加上括号 [-Wparentheses]
+  533 |  TIMESYNC_CFG_CHAN_DB_ID_SHIFT) & TIMESYNC_CFG_CHAN_DB_ID_MASK | \
+      |                                                                ^
+../drivers/bus/mhi/core/mhi_init.c:830:9: 附注： in expansion of macro ‘MHI_TIMESYNC_DB_SETUP’
+  830 |         MHI_TIMESYNC_DB_SETUP(er_index));
+      |         ^~~~~~~~~~~~~~~~~~~~~
+../drivers/bus/mhi/core/mhi_internal.h:535:43: 警告： 建议在‘|’的操作数中的算术表达式前后加上括号 [-Wparentheses]
+  535 |  ((er_index) << TIMESYNC_CFG_ER_ID_SHIFT) & TIMESYNC_CFG_ER_ID_MASK)
+      |                                           ^
+../drivers/bus/mhi/core/mhi_init.c:830:9: 附注： in expansion of macro ‘MHI_TIMESYNC_DB_SETUP’
+  830 |         MHI_TIMESYNC_DB_SETUP(er_index));
+      |         ^~~~~~~~~~~~~~~~~~~~~
+../drivers/bus/mhi/core/mhi_init.c: 在函数‘mhi_init_bw_scale’中:
+../drivers/bus/mhi/core/mhi_internal.h:538:64: 警告： 建议在‘|’的操作数中的算术表达式前后加上括号 [-Wparentheses]
+  538 |  BW_SCALE_CFG_CHAN_DB_ID_SHIFT) & BW_SCALE_CFG_CHAN_DB_ID_MASK | \
+      |                                                                ^
+../drivers/bus/mhi/core/mhi_init.c:896:9: 附注： in expansion of macro ‘MHI_BW_SCALE_SETUP’
+  896 |         MHI_BW_SCALE_SETUP(er_index));
+      |         ^~~~~~~~~~~~~~~~~~
+../drivers/bus/mhi/core/mhi_internal.h:540:43: 警告： 建议在‘|’的操作数中的算术表达式前后加上括号 [-Wparentheses]
+  540 |  ((er_index) << BW_SCALE_CFG_ER_ID_SHIFT) & BW_SCALE_CFG_ER_ID_MASK)
+      |                                           ^
+../drivers/bus/mhi/core/mhi_init.c:896:9: 附注： in expansion of macro ‘MHI_BW_SCALE_SETUP’
+  896 |         MHI_BW_SCALE_SETUP(er_index));
+      |         ^~~~~~~~~~~~~~~~~~
+  CC      drivers/bus/mhi/devices/mhi_netdev.o
+../drivers/bus/mhi/core/mhi_init.c: 在函数‘mhi_create_sysfs’中:
+../drivers/bus/mhi/core/mhi_init.c:328:2: 警告： ignoring return value of ‘sysfs_create_group’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  328 |  sysfs_create_group(&mhi_cntrl->mhi_dev->dev.kobj, &mhi_sysfs_group);
+      |  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../drivers/bus/mhi/core/mhi_init.c:330:3: 警告： ignoring return value of ‘sysfs_create_group’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  330 |   sysfs_create_group(&mhi_cntrl->mhi_dev->dev.kobj,
+      |   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  331 |        &mhi_tsync_group);
+      |        ~~~~~~~~~~~~~~~~~
+  AR      drivers/cdrom/built-in.a
+  AR      drivers/char/agp/built-in.a
+  CC      drivers/base/module.o
+  CC      drivers/char/diag/diagchar_core.o
+  CC      drivers/char/hw_random/core.o
+  CC      drivers/base/regmap/regmap-irq.o
+  CC      drivers/char/lrng/lrng_es_mgr.o
+  AR      drivers/block/built-in.a
+  CC      drivers/char/lrng/lrng_drng_mgr.o
+  AR      drivers/char/ipmi/built-in.a
+  CC      drivers/char/lrng/lrng_es_aux.o
+  CC      drivers/bus/mhi/devices/mhi_uci.o
+  CC      drivers/char/hw_random/msm_rng.o
+  CC      drivers/bus/mhi/devices/mhi_satellite.o
+  AR      drivers/base/regmap/built-in.a
+  CC      drivers/base/soc.o
+  CC      drivers/base/pinctrl.o
+  CC      drivers/bus/mhi/core/mhi_main.o
+  CC      drivers/char/lrng/lrng_sha256.o
+  CC      drivers/base/platform-msi.o
+  CC      drivers/base/arch_topology.o
+  CC      drivers/char/lrng/lrng_proc.o
+  CC      drivers/char/lrng/lrng_drng_chacha20.o
+  CC      drivers/char/hw_random/cavium-rng.o
+../drivers/bus/mhi/core/mhi_main.c: 在函数‘mhi_intvec_handlr’中:
+../drivers/bus/mhi/core/mhi_main.c:1723:3: 警告： ignoring return value of ‘mhi_read_reg_field’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+ 1723 |   mhi_read_reg_field(mhi_cntrl, mhi_cntrl->regs, MHICTRL,
+      |   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1724 |    MHICTRL_RESET_MASK, MHICTRL_RESET_SHIFT, &in_reset);
+      |    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  AR      drivers/bus/mhi/devices/built-in.a
+  CC      drivers/char/hw_random/cavium-rng-vf.o
+  CC      drivers/bus/mhi/core/mhi_pm.o
+  AR      drivers/char/lrng/built-in.a
+  CC      drivers/char/mem.o
+  CC      drivers/char/random.o
+  AR      drivers/clk/actions/built-in.a
+  AR      drivers/clk/bcm/built-in.a
+  AR      drivers/base/built-in.a
+  AR      drivers/clk/imgtec/built-in.a
+  CC      drivers/char/misc.o
+  AR      drivers/clk/mediatek/built-in.a
+  AR      drivers/clk/mvebu/built-in.a
+  AR      drivers/clk/qcom/mdss/built-in.a
+  CC      drivers/clk/qcom/common.o
+  AR      drivers/char/hw_random/built-in.a
+  CC      drivers/clk/qcom/clk-regmap.o
+  CC      drivers/char/adsprpc.o
+  CC      drivers/char/diag/diagchar_hdlc.o
+  CC      drivers/char/adsprpc_compat.o
+  CC      drivers/clk/qcom/clk-alpha-pll.o
+  CC      drivers/clk/qcom/clk-pll.o
+  CC      drivers/char/diag/diagfwd.o
+  CC      drivers/char/diag/diagfwd_peripheral.o
+  CC      drivers/bus/mhi/core/mhi_boot.o
+  CC      drivers/char/xlogchar.o
+  CC      drivers/clk/qcom/clk-rcg.o
+  CC      drivers/bus/mhi/core/mhi_dtr.o
+  CC      drivers/char/diag/diagfwd_socket.o
+  CC      drivers/char/diag/diagfwd_rpmsg.o
+  CC      drivers/clk/qcom/clk-rcg2.o
+  CC      drivers/char/diag/diag_mux.o
+  CC      drivers/clk/qcom/clk-branch.o
+  AR      drivers/clk/renesas/built-in.a
+  AR      drivers/clk/ti/built-in.a
+  CC      drivers/clk/clk-devres.o
+  AR      drivers/bus/mhi/core/built-in.a
+  AR      drivers/bus/mhi/built-in.a
+  AR      drivers/bus/built-in.a
+  CC      drivers/clocksource/timer-of.o
+  CC      drivers/clocksource/timer-probe.o
+  CC      drivers/char/diag/diag_memorydevice.o
+  CC      drivers/char/diag/diag_usb.o
+  CC      drivers/clocksource/arm_arch_timer.o
+  CC      drivers/clocksource/dummy_timer.o
+  CC      drivers/clk/clk-bulk.o
+  CC      drivers/clk/qcom/clk-regmap-divider.o
+  CC      drivers/clk/qcom/clk-regmap-mux.o
+  CC      drivers/char/diag/diagmem.o
+  CC      drivers/clk/clkdev.o
+  CC      drivers/clk/qcom/clk-regmap-mux-div.o
+  CC      drivers/char/diag/diagfwd_cntl.o
+  CC      drivers/clk/qcom/reset.o
+  CC      drivers/clk/qcom/clk-voter.o
+  CC      drivers/clk/qcom/clk-dummy.o
+  CC      drivers/clk/qcom/clk-debug.o
+  AR      drivers/clocksource/built-in.a
+  CC      drivers/cpufreq/cpufreq.o
+  CC      drivers/char/diag/diag_dci.o
+  CC      drivers/clk/qcom/gdsc-regulator.o
+  CC      drivers/clk/qcom/gdsc.o
+  CC      drivers/clk/qcom/camcc-kona.o
+  CC      drivers/clk/qcom/clk-aop-qmp.o
+  CC      drivers/char/diag/diag_masks.o
+  CC      drivers/clk/qcom/dispcc-kona.o
+  CC      drivers/clk/qcom/gcc-kona.o
+  CC      drivers/clk/clk.o
+  CC      drivers/clk/qcom/gpucc-kona.o
+  CC      drivers/clk/clk-divider.o
+  CC      drivers/clk/clk-fixed-factor.o
+  CC      drivers/clk/clk-fixed-rate.o
+  CC      drivers/clk/qcom/npucc-kona.o
+  CC      drivers/clk/qcom/videocc-kona.o
+  CC      drivers/clk/clk-gate.o
+  CC      drivers/clk/qcom/a53-pll.o
+  CC      drivers/clk/clk-multiplier.o
+  CC      drivers/clk/qcom/apcs-msm8916.o
+  CC      drivers/clk/clk-mux.o
+  CC      drivers/cpufreq/freq_table.o
+  CC      drivers/clk/clk-composite.o
+  CC      drivers/char/diag/diag_debugfs.o
+  CC      drivers/clk/qcom/clk-rpmh.o
+  CC      drivers/char/diag/diagfwd_bridge.o
+  CC      drivers/clk/qcom/clk-spmi-pmic-div.o
+  CC      drivers/clk/clk-fractional-divider.o
+  CC      drivers/char/diag/diagfwd_mhi.o
+  CC      drivers/clk/clk-gpio.o
+  CC      drivers/cpufreq/cpufreq_stats.o
+  CC      drivers/cpufreq/cpufreq_performance.o
+  AR      drivers/clk/qcom/built-in.a
+  CC      drivers/clk/clk-conf.o
+  CC      drivers/cpufreq/cpufreq_powersave.o
+  CC      drivers/clk/clk-xgene.o
+  CC      drivers/cpuidle/governors/teo.o
+  AR      drivers/crypto/hisilicon/built-in.a
+  CC      drivers/crypto/msm/qce50.o
+  CC      drivers/cpufreq/cpufreq_ondemand.o
+  CC      drivers/devfreq/devfreq.o
+  AR      drivers/char/diag/built-in.a
+  CC      drivers/devfreq/governor_simpleondemand.o
+  AR      drivers/char/built-in.a
+  AR      drivers/dma/mediatek/built-in.a
+  AR      drivers/cpuidle/governors/built-in.a
+  CC      drivers/cpuidle/cpuidle.o
+  CC      drivers/dma/qcom/gpi.o
+  CC      drivers/cpuidle/driver.o
+  CC      drivers/devfreq/governor_performance.o
+  CC      drivers/devfreq/governor_powersave.o
+  CC      drivers/cpufreq/cpufreq_governor.o
+  AR      drivers/clk/built-in.a
+  CC      drivers/cpufreq/cpufreq_governor_attr_set.o
+  CC      drivers/cpuidle/governor.o
+  CC      drivers/crypto/msm/qcedev.o
+  CC      drivers/devfreq/governor_userspace.o
+  CC      drivers/cpuidle/sysfs.o
+  CC      drivers/cpufreq/cpu-boost.o
+  CC      drivers/cpuidle/lpm-levels.o
+  CC      drivers/devfreq/governor_passive.o
+  CC      drivers/crypto/msm/qcedev_smmu.o
+../drivers/crypto/msm/qcedev.c: 在函数‘qcedev_ioctl’中:
+../drivers/crypto/msm/qcedev.c:1928:3: 警告： this ‘if’ clause does not guard... [-Wmisleading-indentation]
+ 1928 |   if (copy_to_user((void __user *)arg, &qcedev_areq->sha_op_req,
+      |   ^~
+../drivers/crypto/msm/qcedev.c:1931:4: 附注： ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+ 1931 |    goto exit_free_qcedev_areq;
+      |    ^~~~
+../drivers/crypto/msm/qcedev.c:2020:3: 警告： this ‘if’ clause does not guard... [-Wmisleading-indentation]
+ 2020 |   if (copy_to_user((void __user *)arg, &qcedev_areq->sha_op_req,
+      |   ^~
+../drivers/crypto/msm/qcedev.c:2023:4: 附注： ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+ 2023 |    goto exit_free_qcedev_areq;
+      |    ^~~~
+  CC      drivers/devfreq/bimc-bwmon.o
+  AR      drivers/dma/qcom/built-in.a
+  AR      drivers/dma/ti/built-in.a
+  AR      drivers/dma/xilinx/built-in.a
+  CC      drivers/dma/dmaengine.o
+  CC      drivers/cpuidle/lpm-levels-of.o
+  CC      drivers/crypto/msm/qcrypto.o
+  CC      drivers/cpufreq/cpu_input_boost.o
+../drivers/cpufreq/cpu_input_boost.c: 在函数‘get_input_boost_freq’中:
+../drivers/cpufreq/cpu_input_boost.c:103:2: 警告： this ‘else’ clause does not guard... [-Wmisleading-indentation]
+  103 |  else
+      |  ^~~~
+../drivers/cpufreq/cpu_input_boost.c:105:17: 附注： ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘else’
+  105 |                 return min(freq, policy->max);
+      |                 ^~~~~~
+../drivers/cpufreq/cpu_input_boost.c: 在函数‘get_max_boost_freq’中:
+../drivers/cpufreq/cpu_input_boost.c:117:9: 警告： this ‘else’ clause does not guard... [-Wmisleading-indentation]
+  117 |         else
+      |         ^~~~
+../drivers/cpufreq/cpu_input_boost.c:119:3: 附注： ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘else’
+  119 |   return min(freq, policy->max);
+      |   ^~~~~~
+  CC      drivers/cpufreq/qcom-cpufreq-hw.o
+  CC      drivers/devfreq/arm-memlat-mon.o
+  CC      drivers/dma/virt-dma.o
+  CC      drivers/devfreq/governor_bw_hwmon.o
+  CC      drivers/dma/of-dma.o
+  AR      drivers/cpufreq/built-in.a
+  CC      drivers/dma-buf/dma-buf.o
+  CC      drivers/devfreq/governor_cache_hwmon.o
+  CC      drivers/devfreq/governor_memlat.o
+  AR      drivers/cpuidle/built-in.a
+  CC      drivers/edac/edac_mc.o
+  AR      drivers/dma/built-in.a
+  AR      drivers/energy_model/built-in.a
+  CC      drivers/esoc/esoc_bus.o
+  CC      drivers/edac/edac_device.o
+  CC      drivers/devfreq/governor_msm_adreno_tz.o
+  CC      drivers/dma-buf/dma-fence.o
+  CC      drivers/dma-buf/dma-fence-array.o
+  CC      drivers/esoc/esoc_dev.o
+  CC      drivers/devfreq/governor_bw_vbif.o
+  CC      drivers/esoc/esoc_client.o
+  CC      drivers/edac/edac_mc_sysfs.o
+  CC      drivers/edac/edac_module.o
+  CC      drivers/dma-buf/reservation.o
+  CC      drivers/devfreq/governor_gpubw_mon.o
+  CC      drivers/esoc/esoc-mdm-pon.o
+  CC      drivers/dma-buf/seqno-fence.o
+  CC      drivers/devfreq/governor_cdsp_l3.o
+  CC      drivers/esoc/esoc-mdm-4x.o
+  AR      drivers/crypto/msm/built-in.a
+  AR      drivers/crypto/built-in.a
+  CC      drivers/edac/edac_device_sysfs.o
+  CC      drivers/extcon/extcon.o
+  CC      drivers/extcon/devres.o
+  CC      drivers/esoc/esoc-mdm-drv.o
+  CC      drivers/extcon/extcon-usb-gpio.o
+  CC      drivers/devfreq/devfreq_qcom_fw.o
+  CC      drivers/dma-buf/sync_file.o
+  CC      drivers/devfreq/devfreq_devbw.o
+  CC      drivers/edac/wq.o
+  CC      drivers/edac/edac_pci.o
+  CC      drivers/edac/edac_pci_sysfs.o
+  AR      drivers/firewire/built-in.a
+  AR      drivers/firmware/broadcom/built-in.a
+  AR      drivers/firmware/meson/built-in.a
+  AR      drivers/firmware/tegra/built-in.a
+  CC      drivers/firmware/psci.o
+  AR      drivers/esoc/built-in.a
+  CC      drivers/gpio/devres.o
+../drivers/dma-buf/sync_file.c: 在函数‘sync_file_ioctl’中:
+../drivers/dma-buf/sync_file.c:367:15: 警告： array subscript 0 is outside array bounds of ‘struct <匿名>[1]’ [-Warray-bounds]
+  367 |  info->status = dma_fence_get_status(fence);
+      |  ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../drivers/dma-buf/sync_file.c:419:5: 附注： while referencing ‘fence_info’
+  419 |   } fence_info;
+      |     ^~~~~~~~~~
+../drivers/dma-buf/sync_file.c:371:21: 警告： array subscript 0 is outside array bounds of ‘struct <匿名>[1]’ [-Warray-bounds]
+  371 |  info->timestamp_ns =
+      |  ~~~~~~~~~~~~~~~~~~~^
+  372 |   test_bit(DMA_FENCE_FLAG_TIMESTAMP_BIT, &fence->flags) ?
+      |   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  373 |   ktime_to_ns(fence->timestamp) :
+      |   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  374 |   ktime_set(0, 0);
+      |   ~~~~~~~~~~~~~~~    
+../drivers/dma-buf/sync_file.c:419:5: 附注： while referencing ‘fence_info’
+  419 |   } fence_info;
+      |     ^~~~~~~~~~
+../drivers/dma-buf/sync_file.c:376:13: 警告： array subscript 0 is outside array bounds of ‘struct <匿名>[1]’ [-Warray-bounds]
+  376 |  return info->status;
+      |         ~~~~^~~~~~~~
+../drivers/dma-buf/sync_file.c:419:5: 附注： while referencing ‘fence_info’
+  419 |   } fence_info;
+      |     ^~~~~~~~~~
+../drivers/dma-buf/sync_file.c:425:16: 警告： array subscript 0 is outside array bounds of ‘struct <匿名>[1]’ [-Warray-bounds]
+  425 |   finfo->flags = 0;
+      |   ~~~~~~~~~~~~~^~~
+../drivers/dma-buf/sync_file.c:419:5: 附注： while referencing ‘fence_info’
+  419 |   } fence_info;
+      |     ^~~~~~~~~~
+  CC      drivers/devfreq/devfreq_simple_dev.o
+  AR      drivers/extcon/built-in.a
+  CC      drivers/devfreq/devfreq_qcom_qoslat.o
+  AR      drivers/dma-buf/built-in.a
+  AR      drivers/gpu/drm/amd/lib/built-in.a
+  CC      drivers/gpu/msm/kgsl.o
+  AR      drivers/gpu/drm/bridge/synopsys/built-in.a
+  CC      drivers/gpu/drm/bridge/lt9611uxc.o
+  CC      drivers/firmware/qcom_scm.o
+  CC      drivers/gpu/msm/kgsl_drawobj.o
+  CC      drivers/edac/kryo_arm64_edac.o
+  CC      drivers/gpu/msm/kgsl_ioctl.o
+  CC      drivers/gpio/gpiolib.o
+  CC      drivers/devfreq/governor_staticmap.o
+../drivers/gpu/msm/kgsl_ioctl.c: 在函数‘kgsl_ioctl’中:
+../drivers/gpu/msm/kgsl_ioctl.c:206:3: 警告： 标量初始化带花括号
+  206 |   .cpus_affine = ATOMIC_INIT(BIT(raw_smp_processor_id()))
+      |   ^
+../drivers/gpu/msm/kgsl_ioctl.c:206:3: 附注： (在‘req.cpus_affine’的初始化附近)
+  CC      drivers/gpu/msm/kgsl_sharedmem.o
+  AR      drivers/edac/built-in.a
+  CC      drivers/devfreq/devfreq_boost.o
+  CC      drivers/hid/usbhid/hid-core.o
+  CC      drivers/firmware/qcom_scm-64.o
+  AR      drivers/gpu/drm/bridge/built-in.a
+  AR      drivers/gpu/drm/hisilicon/built-in.a
+  AR      drivers/gpu/drm/i2c/built-in.a
+  AR      drivers/devfreq/built-in.a
+  AR      drivers/gpu/drm/panel/built-in.a
+  AR      drivers/gpu/drm/omapdrm/displays/built-in.a
+  AR      drivers/gpu/drm/tilcdc/built-in.a
+  AR      drivers/gpu/drm/omapdrm/dss/built-in.a
+  CC      drivers/gpu/drm/drm_crtc_helper.o
+  AR      drivers/gpu/drm/omapdrm/built-in.a
+  CC      drivers/gpu/drm/drm_dp_helper.o
+  AR      drivers/firmware/built-in.a
+  CC      drivers/hwmon/hwmon.o
+  CC      drivers/gpu/msm/kgsl_pwrctrl.o
+  CC      drivers/hid/usbhid/hiddev.o
+  CC      drivers/gpu/msm/kgsl_pwrscale.o
+  CC      drivers/gpu/drm/drm_probe_helper.o
+  CC      drivers/hid/hid-core.o
+  AR      drivers/hwmon/built-in.a
+  CC      drivers/gpu/drm/drm_plane_helper.o
+  CC      drivers/gpio/gpiolib-legacy.o
+  AR      drivers/hid/usbhid/built-in.a
+  CC      drivers/gpu/drm/drm_dp_mst_topology.o
+  CC      drivers/gpu/drm/drm_atomic_helper.o
+  CC      drivers/gpu/drm/drm_kms_helper_common.o
+  CC      drivers/gpio/gpiolib-devprop.o
+  CC      drivers/gpu/msm/kgsl_mmu.o
+  CC      drivers/gpu/msm/kgsl_snapshot.o
+  CC      drivers/gpu/msm/kgsl_events.o
+  CC      drivers/gpio/gpiolib-of.o
+  CC      drivers/hid/hid-input.o
+  CC      drivers/gpu/drm/drm_dp_dual_mode_helper.o
+  CC      drivers/gpu/msm/kgsl_gmu_core.o
+  CC      drivers/gpio/gpiolib-sysfs.o
+  CC      drivers/gpu/drm/drm_simple_kms_helper.o
+  CC      drivers/gpu/msm/kgsl_gmu.o
+  CC      drivers/gpu/drm/drm_modeset_helper.o
+  CC      drivers/gpu/drm/drm_scdc_helper.o
+  CC      drivers/gpu/msm/kgsl_rgmu.o
+  CC      drivers/gpu/msm/kgsl_hfi.o
+  AR      drivers/gpio/built-in.a
+  CC      drivers/gpu/msm/kgsl_timeline.o
+  CC      drivers/gpu/msm/kgsl_trace.o
+  CC      drivers/hwspinlock/hwspinlock_core.o
+  CC      drivers/hwtracing/google/coresight-clk-placeholder.o
+  CC      drivers/hwtracing/google/coresight-clk-amba-placeholder.o
+  CC      drivers/gpu/msm/kgsl_iommu.o
+  AR      drivers/hwtracing/google/built-in.a
+  CC      drivers/gpu/drm/drm_gem_framebuffer_helper.o
+  AR      drivers/hwtracing/intel_th/built-in.a
+  CC      drivers/gpu/drm/bridge/panel.o
+  CC      drivers/gpu/drm/drm_auth.o
+  CC      drivers/gpu/drm/drm_bufs.o
+  CC      drivers/hwspinlock/qcom_hwspinlock.o
+  AR      drivers/hwspinlock/built-in.a
+  CC      drivers/i2c/algos/i2c-algo-bit.o
+  CC      drivers/gpu/drm/drm_cache.o
+  CC      drivers/i2c/busses/i2c-qcom-geni.o
+  CC      drivers/gpu/drm/drm_context.o
+  CC      drivers/hid/hid-quirks.o
+  AR      drivers/i2c/algos/built-in.a
+  CC      drivers/gpu/drm/drm_dma.o
+  CC      drivers/gpu/msm/kgsl_sync.o
+  CC      drivers/gpu/drm/drm_file.o
+  AR      drivers/i2c/muxes/built-in.a
+  CC      drivers/gpu/drm/drm_gem.o
+  CC      drivers/gpu/drm/drm_ioctl.o
+  CC      drivers/i2c/i2c-boardinfo.o
+  AR      drivers/i2c/busses/built-in.a
+  CC      drivers/hid/hidraw.o
+  CC      drivers/i2c/i2c-core-base.o
+  CC      drivers/i2c/i2c-core-smbus.o
+  CC      drivers/gpu/msm/kgsl_compat.o
+  CC      drivers/gpu/msm/kgsl_pool.o
+  CC      drivers/gpu/drm/drm_irq.o
+  CC      drivers/gpu/msm/adreno_ioctl.o
+  CC      drivers/gpu/drm/drm_lock.o
+  CC      drivers/hid/uhid.o
+  CC      drivers/gpu/drm/drm_memory.o
+  CC      drivers/gpu/msm/adreno_ringbuffer.o
+  CC      drivers/gpu/msm/adreno_drawctxt.o
+  CC      drivers/gpu/drm/drm_drv.o
+  CC      drivers/gpu/drm/drm_scatter.o
+  CC      drivers/i2c/i2c-core-of.o
+  CC      drivers/i2c/i2c-dev.o
+  CC      drivers/i2c/i2c-mux.o
+  CC      drivers/hid/hid-generic.o
+  CC      drivers/hid/hid-apple.o
+  CC      drivers/hid/hid-elecom.o
+  CC      drivers/gpu/drm/drm_pci.o
+  CC      drivers/hid/hid-magicmouse.o
+  CC      drivers/gpu/msm/adreno_dispatch.o
+  CC      drivers/hid/hid-microsoft.o
+  CC      drivers/hid/hid-multitouch.o
+  AR      drivers/i2c/built-in.a
+  CC      drivers/i3c/master/i3c-master-qcom-geni.o
+  CC      drivers/gpu/drm/drm_sysfs.o
+  CC      drivers/gpu/drm/drm_hashtab.o
+  CC      drivers/hid/hid-nintendo.o
+  CC      drivers/hid/hid-plantronics.o
+  AR      drivers/idle/built-in.a
+  AR      drivers/iio/accel/built-in.a
+  CC      drivers/iio/adc/qcom-spmi-adc5.o
+  CC      drivers/iio/adc/qcom-vadc-common.o
+  CC      drivers/hid/hid-playstation.o
+  CC      drivers/input/fingerprint/fpc_tee/fpc1020_tee.o
+  CC      drivers/input/serio/serio.o
+  AR      drivers/i3c/master/built-in.a
+  CC      drivers/i3c/device.o
+  CC      drivers/gpu/drm/drm_mm.o
+../drivers/input/fingerprint/fpc_tee/fpc1020_tee.c:970:13: 警告： ‘set_fingerprintd_nice’ defined but not used [-Wunused-function]
+  970 | static void set_fingerprintd_nice(int nice)
+      |             ^~~~~~~~~~~~~~~~~~~~~
+../drivers/input/fingerprint/fpc_tee/fpc1020_tee.c: 在函数‘vendor_update’中:
+../drivers/input/fingerprint/fpc_tee/fpc1020_tee.c:838:17: 警告： 此函数中的‘rc’在使用前未初始化 [-Wuninitialized]
+  838 |  return rc ? rc : count;
+      |         ~~~~~~~~^~~~~~~
+  CC      drivers/input/serio/libps2.o
+  AR      drivers/iio/adc/built-in.a
+  AR      drivers/iio/addac/built-in.a
+  AR      drivers/iio/afe/built-in.a
+  AR      drivers/iio/amplifiers/built-in.a
+  CC      drivers/iio/buffer/industrialio-buffer-cb.o
+  CC      drivers/gpu/msm/adreno_snapshot.o
+  CC      drivers/hid/hid-sony.o
+  CC      drivers/i3c/master.o
+  AR      drivers/input/fingerprint/fpc_tee/built-in.a
+  AR      drivers/input/fingerprint/built-in.a
+  CC      drivers/input/joystick/xpad.o
+  CC      drivers/iio/buffer/industrialio-triggered-buffer.o
+  CC      drivers/hid/hid-qvr.o
+  AR      drivers/input/serio/built-in.a
+  CC      drivers/hid/hid-trace.o
+  CC      drivers/iio/buffer/kfifo_buf.o
+  CC      drivers/gpu/drm/drm_crtc.o
+  AR      drivers/input/joystick/built-in.a
+  CC      drivers/input/keyboard/atkbd.o
+  CC      drivers/gpu/msm/adreno_a6xx.o
+  CC      drivers/input/keyboard/gpio_keys.o
+  CC      drivers/iommu/iommu.o
+  AR      drivers/hid/built-in.a
+  CC      drivers/iommu/iommu-traces.o
+  AR      drivers/iio/buffer/built-in.a
+  AR      drivers/i3c/built-in.a
+  CC      drivers/iommu/iommu-sysfs.o
+  AR      drivers/iio/chemical/built-in.a
+  AR      drivers/iio/common/cros_ec_sensors/built-in.a
+  AR      drivers/iio/common/hid-sensors/built-in.a
+  AR      drivers/iio/common/ms_sensors/built-in.a
+  AR      drivers/iio/common/ssp_sensors/built-in.a
+  AR      drivers/iio/common/st_sensors/built-in.a
+  AR      drivers/iio/common/built-in.a
+  AR      drivers/iio/counter/built-in.a
+  AR      drivers/iio/dac/built-in.a
+  AR      drivers/iio/dummy/built-in.a
+  AR      drivers/iio/frequency/built-in.a
+  AR      drivers/iio/gyro/built-in.a
+  CC      drivers/iommu/dma-iommu.o
+  AR      drivers/input/keyboard/built-in.a
+  AR      drivers/iio/health/built-in.a
+  AR      drivers/iio/humidity/built-in.a
+  CC      drivers/input/misc/aw8697_haptic_new/ringbuffer.o
+  AR      drivers/iio/imu/bmi160/built-in.a
+  AR      drivers/iio/imu/inv_mpu6050/built-in.a
+  CC      drivers/gpu/drm/drm_fourcc.o
+  AR      drivers/iio/imu/st_lsm6dsx/built-in.a
+  AR      drivers/iio/imu/built-in.a
+  AR      drivers/iio/light/built-in.a
+  AR      drivers/iio/magnetometer/built-in.a
+  AR      drivers/iio/multiplexer/built-in.a
+  AR      drivers/iio/orientation/built-in.a
+  CC      drivers/input/misc/aw8697_haptic_new/aw8697.o
+  AR      drivers/iio/potentiometer/built-in.a
+  AR      drivers/iio/potentiostat/built-in.a
+  AR      drivers/iio/pressure/built-in.a
+  CC      drivers/gpu/drm/drm_modes.o
+  AR      drivers/iio/proximity/inv_ch101/built-in.a
+  CC      drivers/iio/proximity/us_prox.o
+  CC      drivers/gpu/msm/adreno_a6xx_snapshot.o
+  CC      drivers/iommu/msm_dma_iommu_mapping.o
+  CC      drivers/gpu/drm/drm_edid.o
+  AR      drivers/iio/proximity/built-in.a
+  CC      drivers/gpu/drm/drm_info.o
+  AR      drivers/iio/resolver/built-in.a
+  CC      drivers/gpu/drm/drm_encoder_slave.o
+  AR      drivers/iio/temperature/built-in.a
+  AR      drivers/iio/trigger/built-in.a
+  CC      drivers/iio/industrialio-core.o
+  CC      drivers/iommu/io-pgtable.o
+  CC      drivers/iio/industrialio-event.o
+  CC      drivers/iio/inkern.o
+  CC      drivers/gpu/msm/adreno_a6xx_preempt.o
+  CC      drivers/iommu/io-pgtable-arm.o
+  CC      drivers/gpu/msm/adreno_a6xx_gmu.o
+  CC      drivers/gpu/msm/adreno_a6xx_rgmu.o
+  CC      drivers/gpu/msm/adreno_sysfs.o
+  CC      drivers/iio/industrialio-buffer.o
+  AR      drivers/input/misc/aw8697_haptic_new/built-in.a
+  CC      drivers/input/misc/qpnp-power-on.o
+  CC      drivers/gpu/drm/drm_trace_points.o
+  CC      drivers/iommu/iova.o
+  CC      drivers/input/misc/uinput.o
+  CC      drivers/gpu/msm/adreno.o
+  CC      drivers/iommu/io-pgtable-fast.o
+  CC      drivers/iommu/dma-mapping-fast.o
+  CC      drivers/gpu/drm/drm_global.o
+  CC      drivers/gpu/msm/adreno_cp_parser.o
+  CC      drivers/gpu/drm/drm_prime.o
+  CC      drivers/iio/industrialio-trigger.o
+  CC      drivers/gpu/drm/drm_rect.o
+  CC      drivers/iommu/of_iommu.o
+  AR      drivers/input/misc/built-in.a
+  CC      drivers/input/tablet/acecad.o
+  CC      drivers/input/tablet/aiptek.o
+  CC      drivers/gpu/msm/adreno_perfcounter.o
+  AR      drivers/iio/built-in.a
+  CC      drivers/iommu/arm-smmu.o
+  CC      drivers/input/tablet/gtco.o
+  CC      drivers/input/tablet/hanwang.o
+  CC      drivers/gpu/drm/drm_vma_manager.o
+  CC      drivers/iommu/arm-smmu-debug.o
+  CC      drivers/iommu/iommu-logger.o
+  CC      drivers/input/tablet/kbtab.o
+  CC      drivers/gpu/drm/drm_flip_work.o
+  CC      drivers/gpu/drm/drm_modeset_lock.o
+  CC      drivers/gpu/msm/adreno_trace.o
+  CC      drivers/gpu/drm/drm_atomic.o
+  AR      drivers/input/tablet/built-in.a
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_core.o
+  CC      drivers/gpu/drm/drm_bridge.o
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_ex_fun.o
+../drivers/gpu/drm/drm_atomic.c: 在函数‘drm_mode_atomic_ioctl’中:
+../drivers/gpu/drm/drm_atomic.c:2755:3: 警告： 标量初始化带花括号
+ 2755 |   .cpus_affine = ATOMIC_INIT(BIT(raw_smp_processor_id()) |
+      |   ^
+../drivers/gpu/drm/drm_atomic.c:2755:3: 附注： (在‘req.cpus_affine’的初始化附近)
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_ex_mode.o
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_gesture.o
+  CC      drivers/gpu/drm/drm_framebuffer.o
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_esdcheck.o
+  CC      drivers/gpu/drm/drm_connector.o
+  CC      drivers/gpu/msm/adreno_iommu.o
+  CC      drivers/input/touchscreen/xiaomi/xiaomi_touch.o
+  CC      drivers/input/touchscreen/of_touchscreen.o
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_spi.o
+  AR      drivers/input/touchscreen/xiaomi/built-in.a
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_point_report_check.o
+  CC      drivers/gpu/msm/adreno_compat.o
+  CC      drivers/gpu/drm/drm_blend.o
+  AR      drivers/iommu/built-in.a
+  CC      drivers/irqchip/irqchip.o
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_flash.o
+  CC      drivers/input/touchscreen/tp_common.o
+  CC      drivers/irqchip/irq-gic.o
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_flash/focaltech_upgrade_ft3658u.o
+  CC      drivers/irqchip/irq-gic-common.o
+  CC      drivers/input/input.o
+  AR      drivers/gpu/msm/built-in.a
+  AR      drivers/gpu/vga/built-in.a
+  CC      drivers/input/input-compat.o
+In file included from ../drivers/input/touchscreen/focaltech_spi/focaltech_common.h:34,
+                 from ../drivers/input/touchscreen/focaltech_spi/focaltech_core.h:65,
+                 from ../drivers/input/touchscreen/focaltech_spi/focaltech_flash.c:36:
+../drivers/input/touchscreen/focaltech_spi/focaltech_config.h:265:29: 错误： #include 中文件名为空
+  265 | #define FTS_UPGRADE_FW_FILE ""
+      |                             ^~
+../drivers/input/touchscreen/focaltech_spi/focaltech_config.h:271:50: 致命错误： include/firmware/fw_sample.i：没有那个文件或目录
+  271 | #define FTS_UPGRADE_FW2_FILE                     "include/firmware/fw_sample.i"
+      |                                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+编译中断。
+make[5]: *** [../scripts/Makefile.build:339：drivers/input/touchscreen/focaltech_spi/focaltech_flash.o] 错误 1
+make[5]: *** 正在等待未完成的任务....
+  CC      drivers/input/input-mt.o
+  CC      drivers/gpu/drm/drm_encoder.o
+  CC      drivers/irqchip/irq-gic-v2m.o
+  CC      drivers/gpu/drm/drm_mode_object.o
+make[4]: *** [../scripts/Makefile.build:642：drivers/input/touchscreen/focaltech_spi] 错误 2
+make[3]: *** [../scripts/Makefile.build:642：drivers/input/touchscreen] 错误 2
+make[3]: *** 正在等待未完成的任务....
+  CC      drivers/gpu/drm/drm_property.o
+  CC      drivers/irqchip/irq-gic-v3.o
+  CC      drivers/irqchip/irq-gic-v3-mbi.o
+  CC      drivers/irqchip/irq-gic-v3-its.o
+  CC      drivers/irqchip/irq-gic-v3-its-platform-msi.o
+  CC      drivers/leds/trigger/ledtrig-timer.o
+  AR      drivers/macintosh/built-in.a
+  CC      drivers/gpu/drm/drm_plane.o
+  CC      drivers/irqchip/irq-gic-v4.o
+  CC      drivers/mailbox/mailbox.o
+  CC      drivers/leds/led-core.o
+  CC      drivers/leds/led-class.o
+  AR      drivers/leds/trigger/built-in.a
+  CC      drivers/mailbox/qcom-apcs-ipc-mailbox.o
+make[2]: *** [../scripts/Makefile.build:642：drivers/input] 错误 2
+make[2]: *** 正在等待未完成的任务....
+  CC      drivers/mailbox/msm_qmp.o
+  CC      drivers/irqchip/irq-gic-v3-its-pci-msi.o
+  CC      drivers/leds/led-triggers.o
+  CC      drivers/leds/leds-qti-tri-led.o
+  CC      drivers/leds/leds-qpnp-flash-v2.o
+  CC      drivers/gpu/drm/drm_color_mgmt.o
+  CC      drivers/irqchip/irq-partition-percpu.o
+  AR      drivers/mailbox/built-in.a
+  CC      drivers/irqchip/qcom-pdc.o
+  CC      drivers/leds/leds-qpnp-flash-common.o
+  CC      drivers/gpu/drm/drm_print.o
+  CC      drivers/gpu/drm/drm_dumb_buffers.o
+  CC      drivers/gpu/drm/drm_mode_config.o
+  CC      drivers/gpu/drm/drm_vblank.o
+  AR      drivers/irqchip/built-in.a
+  CC      drivers/gpu/drm/drm_syncobj.o
+  CC      drivers/gpu/drm/drm_lease.o
+  CC      drivers/gpu/drm/drm_writeback.o
+  CC      drivers/gpu/drm/drm_client.o
+  CC      drivers/gpu/drm/drm_notifier_mi.o
+  AR      drivers/leds/built-in.a
+  CC      drivers/gpu/drm/drm_ioc32.o
+  CC      drivers/gpu/drm/ati_pcigart.o
+  CC      drivers/gpu/drm/drm_panel.o
+  CC      drivers/gpu/drm/drm_of.o
+  CC      drivers/gpu/drm/drm_mipi_dsi.o
+  CC      drivers/gpu/drm/drm_panel_orientation_quirks.o
+  AR      drivers/gpu/drm/built-in.a
+  AR      drivers/gpu/built-in.a
+make[1]: *** [/home/liu/kernel/Makefile:1256：drivers] 错误 2
+make[1]: 离开目录“/home/liu/kernel/out”
+make: *** [Makefile:153：sub-make] 错误 2
+[ERROR] 命令失败: make -j$(nproc) O=out (在行号: 3026)
+[WARNING] 尝试继续执行...
