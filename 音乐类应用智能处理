@@ -1,0 +1,40 @@
+// 音乐播放器专用策略
+static void music_app_intelligent_policy(struct task_struct *tsk) {
+    struct app_usage_pattern *pattern = get_usage_pattern(tsk);
+    
+    // 检测音频播放状态
+    if (is_audio_playing(tsk)) {
+        // 播放中：完全保活，不压缩内存
+        set_preservation_level(tsk, PRESERVE_MUSIC_PLAYING);
+        prevent_memory_compression(tsk);
+        allow_background_audio(tsk);
+        
+        // 学习播放习惯
+        if (pattern) {
+            pattern->behavior = BEHAVIOR_MUSIC_STREAMING;
+            update_usage_statistics(pattern);
+        }
+    } 
+    else if (is_music_app_in_background(tsk)) {
+        // 后台但可能随时播放：轻度保活
+        set_preservation_level(tsk, PRESERVE_MUSIC_BACKGROUND);
+        allow_quick_restore(tsk);
+        
+        // 基于历史使用时间预测
+        if (pattern && is_preferred_music_time(pattern)) {
+            pre_warm_music_app(tsk);
+        }
+    }
+}
+
+// 音频状态检测
+static bool is_audio_playing(struct task_struct *tsk) {
+    // 检测音频流状态
+    if (tsk->audio_state & AUDIO_STATE_PLAYING) return true;
+    
+    // 检测音频焦点
+    if (has_audio_focus(tsk)) return true;
+    
+    // 检测音频会话
+    return has_active_audio_session(tsk);
+}
