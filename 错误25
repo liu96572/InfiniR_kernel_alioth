@@ -1,0 +1,112 @@
+  GEN     ./Makefile
+  Using .. as source for kernel
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.1.dtb
+  CALL    ../scripts/checksyscalls.sh
+  CHK     include/generated/compile.h
+  UPD     kernel/config_data.h
+  CC      kernel/tombstone.o
+  CC      kernel/ai_engine.o
+../kernel/ai_engine.c: 在函数‘ai_engine_init’中:
+../kernel/ai_engine.c:148:24: 错误： expected ‘)’ before ‘AI’
+  148 |     printk(KERN_INFO ""AI Engine initialized\n");
+      |                        ^~
+      |                        )
+../kernel/ai_engine.c:148:45: 错误： 程序中有游离的‘\’
+  148 |     printk(KERN_INFO ""AI Engine initialized\n");
+      |                                             ^
+../kernel/ai_engine.c:148:47: 警告： 缺少结尾的 " 字符
+  148 |     printk(KERN_INFO ""AI Engine initialized\n");
+      |                                               ^
+../kernel/ai_engine.c:148:47: 错误： 缺少结尾的 " 字符
+  148 |     printk(KERN_INFO ""AI Engine initialized\n");
+      |                                               ^~~
+../kernel/ai_engine.c:149:14: 错误： expected ‘;’ before ‘}’ token
+  149 |     return 0;
+      |              ^
+      |              ;
+  150 | }
+      | ~             
+../kernel/ai_engine.c:150:1: 错误： 在有返回值的函数中未发现 return 语句 [-Werror=return-type]
+  150 | }
+      | ^
+../kernel/ai_engine.c: 在函数‘ai_engine_exit’中:
+../kernel/ai_engine.c:166:24: 错误： expected ‘)’ before ‘AI’
+  166 |     printk(KERN_INFO ""AI Engine exited\n");
+      |                        ^~
+      |                        )
+../kernel/ai_engine.c:166:40: 错误： 程序中有游离的‘\’
+  166 |     printk(KERN_INFO ""AI Engine exited\n");
+      |                                        ^
+../kernel/ai_engine.c:166:42: 警告： 缺少结尾的 " 字符
+  166 |     printk(KERN_INFO ""AI Engine exited\n");
+      |                                          ^
+../kernel/ai_engine.c:166:42: 错误： 缺少结尾的 " 字符
+  166 |     printk(KERN_INFO ""AI Engine exited\n");
+      |                                          ^~~
+../kernel/ai_engine.c:166:42: 错误： expected ‘;’ before ‘}’ token
+  166 |     printk(KERN_INFO ""AI Engine exited\n");
+      |                                          ^
+      |                                          ;
+  167 | }
+      | ~                                         
+cc1：有些警告被当作是错误
+make[2]: *** [../scripts/Makefile.build:339：kernel/ai_engine.o] 错误 1
+make[2]: *** 正在等待未完成的任务....
+../kernel/tombstone.c: 在函数‘tombstone_insert’中:
+../kernel/tombstone.c:51:9: 警告： ISO C90 不允许混合使用声明和代码 [-Wdeclaration-after-statement]
+   51 |         struct tombstone_entry *entry = rb_entry(parent, struct tombstone_entry, node);
+      |         ^~~~~~
+../kernel/tombstone.c: 在函数‘tombstone_save_task’中:
+../kernel/tombstone.c:86:43: 错误： invalid use of undefined type ‘struct signal_struct’
+   86 |         entry->oom_score_adj = tsk->signal->oom_score_adj;
+      |                                           ^~
+在文件作用域：
+../kernel/tombstone.c:27:32: 警告： ‘tombstone_lookup’ defined but not used [-Wunused-function]
+   27 | static struct tombstone_entry *tombstone_lookup(pid_t pid)
+      |                                ^~~~~~~~~~~~~~~~
+make[2]: *** [../scripts/Makefile.build:339：kernel/tombstone.o] 错误 1
+make[1]: *** [/home/liu/kernel/Makefile:1256：kernel] 错误 2
+make[1]: *** 正在等待未完成的任务....
+  DTC     arch/arm64/boot/dts/vendor/qcom/alioth-sm8250-overlay.dtbo
+  CC      drivers/input/touchscreen/of_touchscreen.o
+  CC      drivers/input/touchscreen/xiaomi/xiaomi_touch.o
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_flash.o
+  CC      drivers/input/touchscreen/tp_common.o
+  CC      drivers/leds/trigger/ledtrig-timer.o
+  AR      drivers/macintosh/built-in.a
+  CC      drivers/leds/led-core.o
+In file included from ../drivers/input/touchscreen/focaltech_spi/focaltech_common.h:34,
+                 from ../drivers/input/touchscreen/focaltech_spi/focaltech_core.h:65,
+                 from ../drivers/input/touchscreen/focaltech_spi/focaltech_flash.c:36:
+../drivers/input/touchscreen/focaltech_spi/focaltech_config.h:265:29: 错误： #include 中文件名为空
+  265 | #define FTS_UPGRADE_FW_FILE ""
+      |                             ^~
+../drivers/input/touchscreen/focaltech_spi/focaltech_config.h:271:50: 致命错误： include/firmware/fw_sample.i：没有那个文件或目录
+  271 | #define FTS_UPGRADE_FW2_FILE                     "include/firmware/fw_sample.i"
+      |                                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+编译中断。
+  CC      drivers/mailbox/mailbox.o
+make[5]: *** [../scripts/Makefile.build:338：drivers/input/touchscreen/focaltech_spi/focaltech_flash.o] 错误 1
+make[4]: *** [../scripts/Makefile.build:642：drivers/input/touchscreen/focaltech_spi] 错误 2
+make[4]: *** 正在等待未完成的任务....
+  CC      drivers/leds/led-class.o
+  AR      drivers/input/touchscreen/xiaomi/built-in.a
+  CC      drivers/leds/led-triggers.o
+make[3]: *** [../scripts/Makefile.build:642：drivers/input/touchscreen] 错误 2
+make[2]: *** [../scripts/Makefile.build:642：drivers/input] 错误 2
+make[2]: *** 正在等待未完成的任务....
+  CC      drivers/leds/leds-qti-tri-led.o
+  AR      drivers/leds/trigger/built-in.a
+  CC      drivers/leds/leds-qpnp-flash-v2.o
+  CC      drivers/leds/leds-qpnp-flash-common.o
+  CC      drivers/mailbox/qcom-apcs-ipc-mailbox.o
+  CC      drivers/mailbox/msm_qmp.o
+  AR      drivers/mailbox/built-in.a
+  AR      drivers/leds/built-in.a
+make[1]: *** [/home/liu/kernel/Makefile:1256：drivers] 错误 2
+make[1]: 离开目录“/home/liu/kernel/out”
+make: *** [Makefile:153：sub-make] 错误 2
+[ERROR] 命令失败: make -j$(nproc) O=out (在行号: 3287)
+[WARNING] 尝试继续执行...
