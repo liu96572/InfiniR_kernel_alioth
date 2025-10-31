@@ -1,0 +1,241 @@
+make[1]: 进入目录“/home/liu/kernel/out”
+  GEN     ./Makefile
+  Using .. as source for kernel
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.dtb
+  DTC     arch/arm64/boot/dts/vendor/qcom/kona-v2.1.dtb
+  CALL    ../scripts/checksyscalls.sh
+  CHK     include/generated/compile.h
+  CC      techpack/audio/asoc/codecs/bolero/bolero-cdc.o
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c: 在函数‘bolero_set_port_map’中:
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:63:29: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   63 |   if (priv->macro_params[map->id].set_port_map)
+      |                             ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:64:26: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   64 |    priv->macro_params[map->id].set_port_map(component,
+      |                          ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:65:10: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   65 |       map->uc,
+      |          ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:66:7: 错误： ‘SWR_MSTR_PORT_LEN’未声明(在此函数内第一次使用)
+   66 |       SWR_MSTR_PORT_LEN,
+      |       ^~~~~~~~~~~~~~~~~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:66:7: 附注： 每个未声明的标识符在其出现的函数内只报告一次
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:67:10: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   67 |       map->swr_port_params);
+      |          ^~
+../techpack/audio/asoc/codecs/bolero/bolero-cdc.c:68:7: 错误： invalid use of undefined type ‘struct swr_mstr_port_map’
+   68 |   map += 1;
+      |       ^~
+make[6]: *** [../scripts/Makefile.build:338：techpack/audio/asoc/codecs/bolero/bolero-cdc.o] 错误 1
+make[5]: *** [../scripts/Makefile.build:642：techpack/audio/asoc/codecs/bolero] 错误 2
+make[4]: *** [../scripts/Makefile.build:642：techpack/audio/asoc/codecs] 错误 2
+make[3]: *** [../scripts/Makefile.build:642：techpack/audio/asoc] 错误 2
+make[2]: *** [../scripts/Makefile.build:642：techpack/audio] 错误 2
+make[1]: *** [/home/liu/kernel/Makefile:1256：techpack] 错误 2
+make[1]: *** 正在等待未完成的任务....
+  DTC     arch/arm64/boot/dts/vendor/qcom/alioth-sm8250-overlay.dtbo
+  CC      drivers/mfd/mfd-core.o
+  AR      drivers/media/common/b2c2/built-in.a
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_flash.o
+  AR      drivers/media/common/saa7146/built-in.a
+  AR      drivers/media/common/siano/built-in.a
+  CC      drivers/input/touchscreen/focaltech_spi/focaltech_flash/focaltech_upgrade_ft3658u.o
+  AR      drivers/media/common/v4l2-tpg/built-in.a
+  CC      drivers/mfd/qcom-i2c-pmic.o
+  CC      drivers/media/common/videobuf2/videobuf2-core.o
+  AR      drivers/misc/cb710/built-in.a
+  AR      drivers/mmc/built-in.a
+  AR      drivers/misc/eeprom/built-in.a
+  CC      drivers/mtd/chips/chipreg.o
+  CC      drivers/misc/kprofiles/main.o
+In file included from ../drivers/input/touchscreen/focaltech_spi/focaltech_common.h:34,
+                 from ../drivers/input/touchscreen/focaltech_spi/focaltech_core.h:65,
+                 from ../drivers/input/touchscreen/focaltech_spi/focaltech_flash.c:36:
+../drivers/input/touchscreen/focaltech_spi/focaltech_config.h:265:50: 致命错误： include/firmware/fw_ft3658_k11.i：没有那个文件或目录
+  265 | #define FTS_UPGRADE_FW_FILE                      "include/firmware/fw_ft3658_k11.i"
+      |                                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+编译中断。
+make[5]: *** [../scripts/Makefile.build:339：drivers/input/touchscreen/focaltech_spi/focaltech_flash.o] 错误 1
+make[5]: *** 正在等待未完成的任务....
+  AR      drivers/misc/lis3lv02d/built-in.a
+  CC      drivers/mtd/devices/block2mtd.o
+  AR      drivers/misc/mic/bus/built-in.a
+  AR      drivers/misc/mic/built-in.a
+  AR      drivers/misc/qrc/built-in.a
+  AR      drivers/misc/ti-st/built-in.a
+  CC      drivers/media/common/videobuf2/vb2-trace.o
+make[4]: *** [../scripts/Makefile.build:642：drivers/input/touchscreen/focaltech_spi] 错误 2
+make[3]: *** [../scripts/Makefile.build:642：drivers/input/touchscreen] 错误 2
+make[2]: *** [../scripts/Makefile.build:642：drivers/input] 错误 2
+make[2]: *** 正在等待未完成的任务....
+  CC      drivers/mfd/qcom-spmi-pmic.o
+  CC      drivers/media/common/videobuf2/videobuf2-v4l2.o
+  AR      drivers/misc/kprofiles/built-in.a
+  CC      drivers/misc/hdcp_qseecom.o
+  CC      drivers/misc/msm_hdcp.o
+  AR      drivers/mtd/chips/built-in.a
+  AR      drivers/mtd/lpddr/built-in.a
+  AR      drivers/mtd/maps/built-in.a
+  AR      drivers/mtd/nand/onenand/built-in.a
+  AR      drivers/mtd/nand/raw/built-in.a
+  AR      drivers/mtd/nand/spi/built-in.a
+  AR      drivers/mtd/nand/built-in.a
+  AR      drivers/mtd/parsers/built-in.a
+  AR      drivers/mtd/tests/built-in.a
+  CC      drivers/mtd/mtdcore.o
+  CC      drivers/mfd/syscon.o
+../drivers/mtd/devices/block2mtd.c: 在函数‘_block2mtd_write’中:
+../drivers/mtd/devices/block2mtd.c:197:4: 警告： ignoring return value of ‘write_one_page’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  197 |    write_one_page(page);
+      |    ^~~~~~~~~~~~~~~~~~~~
+../drivers/mtd/devices/block2mtd.c: 在函数‘_block2mtd_erase’中:
+../drivers/mtd/devices/block2mtd.c:109:5: 警告： ignoring return value of ‘write_one_page’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  109 |     write_one_page(page);
+      |     ^~~~~~~~~~~~~~~~~~~~
+  CC      drivers/misc/qseecom.o
+  AR      drivers/mtd/devices/built-in.a
+  CC      drivers/mtd/mtdsuper.o
+  CC      drivers/media/common/videobuf2/videobuf2-memops.o
+  CC      drivers/media/common/videobuf2/videobuf2-vmalloc.o
+  AR      drivers/mfd/built-in.a
+  CC      drivers/mtd/mtdconcat.o
+  CC      drivers/misc/uid_sys_stats.o
+  CC      drivers/mtd/mtdpart.o
+  CC      drivers/mtd/mtdchar.o
+  CC      drivers/mtd/ofpart.o
+  AR      drivers/media/common/videobuf2/built-in.a
+  AR      drivers/media/common/built-in.a
+  CC      drivers/media/dvb-core/dvbdev.o
+  CC      drivers/mtd/mtd_blkdevs.o
+  AR      drivers/media/dvb-frontends/built-in.a
+  AR      drivers/media/firewire/built-in.a
+  CC      drivers/mtd/mtdblock.o
+  AR      drivers/media/i2c/soc_camera/built-in.a
+  CC      drivers/media/i2c/ir-kbd-i2c.o
+  CC      drivers/mtd/mtdoops.o
+  AR      drivers/media/mmc/siano/built-in.a
+  AR      drivers/media/mmc/built-in.a
+  AR      drivers/media/pci/b2c2/built-in.a
+  AR      drivers/media/pci/ddbridge/built-in.a
+  AR      drivers/media/pci/dm1105/built-in.a
+  AR      drivers/media/pci/intel/ipu3/built-in.a
+  AR      drivers/media/pci/intel/built-in.a
+  AR      drivers/media/pci/mantis/built-in.a
+  AR      drivers/media/pci/netup_unidvb/built-in.a
+  AR      drivers/media/pci/ngene/built-in.a
+  AR      drivers/media/pci/pluto2/built-in.a
+  AR      drivers/media/pci/pt1/built-in.a
+  AR      drivers/media/pci/pt3/built-in.a
+  AR      drivers/media/pci/saa7146/built-in.a
+  AR      drivers/media/pci/smipcie/built-in.a
+  AR      drivers/media/pci/ttpci/built-in.a
+  AR      drivers/media/platform/cros-ec-cec/built-in.a
+  AR      drivers/media/platform/davinci/built-in.a
+  AR      drivers/media/pci/built-in.a
+  AR      drivers/media/platform/meson/built-in.a
+  CC      drivers/media/dvb-core/dmxdev.o
+  AR      drivers/media/radio/built-in.a
+  CC      drivers/media/platform/msm/cvp/msm_v4l2_cvp.o
+  CC      drivers/media/platform/msm/cvp/msm_v4l2_private.o
+  AR      drivers/media/rc/keymaps/built-in.a
+  CC      drivers/media/rc/rc-main.o
+  CC      drivers/media/dvb-core/dvb_demux.o
+  AR      drivers/media/i2c/built-in.a
+  AR      drivers/media/spi/built-in.a
+  CC      drivers/media/tuners/tuner-xc2028.o
+  AR      drivers/mtd/built-in.a
+  CC      drivers/media/tuners/tuner-simple.o
+  CC      drivers/media/platform/msm/cvp/msm_cvp_platform.o
+  CC      drivers/media/platform/msm/cvp/msm_cvp_common.o
+  CC      drivers/media/platform/msm/cvp/msm_cvp_core.o
+  CC      drivers/media/rc/rc-ir-raw.o
+  CC      drivers/media/tuners/tuner-types.o
+  CC      drivers/media/tuners/mt20xx.o
+  CC      drivers/media/platform/msm/cvp/msm_cvp.o
+  CC      drivers/media/platform/msm/cvp/msm_smem.o
+  CC      drivers/media/dvb-core/dvb_ca_en50221.o
+  CC      drivers/media/tuners/tda8290.o
+  CC      drivers/media/rc/lirc_dev.o
+  CC      drivers/media/dvb-core/dvb_frontend.o
+  CC      drivers/media/dvb-core/dvb_net.o
+  CC      drivers/media/tuners/tda9887.o
+  CC      drivers/media/platform/msm/cvp/msm_cvp_debug.o
+  CC      drivers/media/tuners/tda827x.o
+  CC      drivers/media/rc/ir-spi.o
+  CC      drivers/media/dvb-core/dvb_ringbuffer.o
+  AR      drivers/misc/built-in.a
+  CC      drivers/media/platform/msm/cvp/msm_cvp_res_parse.o
+  AR      drivers/media/rc/built-in.a
+  CC      drivers/media/platform/msm/cvp/cvp_hfi.o
+  CC      drivers/media/platform/msm/cvp/hfi_response_handler.o
+  CC      drivers/media/dvb-core/dvb_math.o
+  CC      drivers/media/tuners/tda18271-maps.o
+  CC      drivers/media/platform/msm/cvp/hfi_packetization.o
+  AR      drivers/media/usb/b2c2/built-in.a
+  AR      drivers/media/usb/dvb-usb/built-in.a
+  AR      drivers/media/usb/dvb-usb-v2/built-in.a
+  AR      drivers/media/usb/s2255/built-in.a
+  AR      drivers/media/usb/siano/built-in.a
+../drivers/media/platform/msm/cvp/hfi_response_handler.c: 在函数‘hfi_process_session_init_done’中:
+../drivers/media/platform/msm/cvp/hfi_response_handler.c:237:55: 警告： 初始值设定周围缺少花括号 [-Wmissing-braces]
+  237 |  struct cvp_hal_session_init_done session_init_done = { {0} };
+      |                                                       ^
+      |                                                          {}
+  AR      drivers/media/usb/stkwebcam/built-in.a
+  AR      drivers/media/dvb-core/built-in.a
+  AR      drivers/media/usb/ttusb-budget/built-in.a
+  CC      drivers/media/platform/msm/cvp/cvp_core_hfi.o
+  AR      drivers/media/usb/zr364xx/built-in.a
+  AR      drivers/media/usb/ttusb-dec/built-in.a
+  CC      drivers/media/platform/msm/cvp/msm_cvp_clocks.o
+  CC      drivers/media/tuners/tda18271-common.o
+  AR      drivers/media/usb/built-in.a
+  CC      drivers/media/tuners/tda18271-fe.o
+  CC      drivers/media/v4l2-core/v4l2-dev.o
+  CC      drivers/media/v4l2-core/v4l2-ioctl.o
+  CC      drivers/media/v4l2-core/v4l2-device.o
+  CC      drivers/media/platform/msm/cvp/msm_cvp_dsp.o
+  CC      drivers/media/media-device.o
+  CC      drivers/media/tuners/xc5000.o
+  CC      drivers/media/tuners/xc4000.o
+  CC      drivers/media/v4l2-core/v4l2-fh.o
+  CC      drivers/media/tuners/mc44s803.o
+  CC      drivers/media/v4l2-core/v4l2-event.o
+  AR      drivers/media/platform/msm/cvp/built-in.a
+  CC      drivers/media/platform/msm/npu/npu_dbg.o
+  CC      drivers/media/media-devnode.o
+  CC      drivers/media/media-entity.o
+  CC      drivers/media/platform/msm/npu/npu_dev.o
+  CC      drivers/media/v4l2-core/v4l2-ctrls.o
+  CC      drivers/media/v4l2-core/v4l2-subdev.o
+  CC      drivers/media/v4l2-core/v4l2-clk.o
+  CC      drivers/media/v4l2-core/v4l2-async.o
+  CC      drivers/media/v4l2-core/v4l2-compat-ioctl32.o
+  AR      drivers/media/tuners/built-in.a
+  CC      drivers/media/v4l2-core/v4l2-trace.o
+  AR      drivers/media/platform/omap/built-in.a
+  AR      drivers/media/platform/stm32/built-in.a
+  CC      drivers/media/v4l2-core/v4l2-mc.o
+  CC      drivers/media/v4l2-core/v4l2-common.o
+  AR      drivers/media/platform/msm/sde/built-in.a
+  CC      drivers/media/platform/msm/synx/synx.o
+  CC      drivers/media/v4l2-core/v4l2-dv-timings.o
+  CC      drivers/media/platform/msm/npu/npu_debugfs.o
+  CC      drivers/media/platform/msm/npu/npu_host_ipc.o
+  CC      drivers/media/v4l2-core/v4l2-mem2mem.o
+  CC      drivers/media/platform/msm/npu/npu_hw_access.o
+  CC      drivers/media/platform/msm/npu/npu_mgr.o
+  CC      drivers/media/platform/msm/synx/synx_util.o
+  CC      drivers/media/platform/msm/synx/synx_debugfs.o
+  AR      drivers/media/platform/msm/synx/built-in.a
+  AR      drivers/media/v4l2-core/built-in.a
+  AR      drivers/media/platform/msm/npu/built-in.a
+  AR      drivers/media/platform/msm/built-in.a
+  AR      drivers/media/platform/built-in.a
+  AR      drivers/media/built-in.a
+make[1]: *** [/home/liu/kernel/Makefile:1256：drivers] 错误 2
+make[1]: 离开目录“/home/liu/kernel/out”
+make: *** [Makefile:153：sub-make] 错误 2
+[ERROR] 命令失败: make -j$(nproc) O=out (在行号: 1478)
+[WARNING] 尝试继续执行...
